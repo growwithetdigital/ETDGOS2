@@ -1,0 +1,81 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+    
+    function incoming() {
+      return request.resource.data;
+    }
+    
+    function existing() {
+      return resource.data;
+    }
+    
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidBooking(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() <= 100
+        && data.email is string && data.email.size() > 0 && data.email.size() <= 100
+        && data.company is string && data.company.size() > 0 && data.company.size() <= 100
+        && data.objective is string && data.objective.size() > 0 && data.objective.size() <= 100
+        && (!data.keys().contains('notes') || (data.notes is string && data.notes.size() <= 1000))
+        && data.createdAt == request.time;
+    }
+
+    // Public Bookings
+    match /bookings/{bookingId} {
+      allow create: if isValidId(bookingId) 
+        && incoming().keys().hasAll(['name', 'email', 'company', 'objective', 'createdAt'])
+        && (incoming().keys().size() == 5 || (incoming().keys().size() == 6 && incoming().keys().contains('notes')))
+        && isValidBooking(incoming());
+      
+      allow read: if isSignedIn();
+      allow delete: if isSignedIn();
+    }
+
+    // Playbook Lead Downloads
+    match /playbook_downloads/{leadId} {
+      allow create: if isValidId(leadId)
+        && incoming().name is string && incoming().name.size() > 0
+        && incoming().email is string && incoming().email.size() > 0
+        && incoming().createdAt == request.time;
+      allow read: if isSignedIn();
+    }
+
+    // Website Audits (Anonymous submission allowed; handoff binds UID)
+    match /audits/{auditId} {
+      allow create: if isValidId(auditId)
+        && incoming().website_url is string && incoming().website_url.size() > 0
+        && incoming().business_name is string && incoming().business_name.size() > 0;
+      allow read: if !isSignedIn() || (isSignedIn() && (resource.data.uid == null || resource.data.uid == request.auth.uid));
+      allow update: if isSignedIn() && (resource.data.uid == null || resource.data.uid == request.auth.uid);
+    }
+
+    // User Profile Documents
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if false;
+
+      // User Content Library Subcollection
+      match /content_library/{contentId} {
+        allow read: if isOwner(userId);
+        allow create, update, delete: if isOwner(userId);
+      }
+    }
+  }
+}

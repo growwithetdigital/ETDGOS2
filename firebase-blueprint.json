@@ -1,0 +1,106 @@
+{
+  "entities": {
+    "booking": {
+      "title": "Booking",
+      "description": "A book a free session lead submission.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Prospect full name" },
+        "email": { "type": "string", "format": "email", "description": "Prospect contact email" },
+        "company": { "type": "string", "description": "Company or brand name" },
+        "objective": { "type": "string", "description": "Primary business growth objective" },
+        "notes": { "type": "string", "description": "Optional details about marketing goals" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp of creation" }
+      },
+      "required": ["name", "email", "company", "objective"]
+    },
+    "playbook_download": {
+      "title": "Playbook Download Lead",
+      "description": "Prospects downloading the Digital Growth Playbook.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "company": { "type": "string" },
+        "resource": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "email"]
+    },
+    "audit": {
+      "title": "Website Growth Audit",
+      "description": "Website audit data captured before or during onboarding.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Bound user UID or null for anonymous" },
+        "website_url": { "type": "string" },
+        "business_name": { "type": "string" },
+        "primary_niche": { "type": "string" },
+        "target_audience": { "type": "string" },
+        "growth_bottlenecks": { "type": "array", "items": { "type": "string" } },
+        "current_monthly_visitors": { "type": "string" },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["website_url", "business_name"]
+    },
+    "user_profile": {
+      "title": "User Profile",
+      "description": "User account and tier status with 90-day rate limit tracking.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "tier": { "type": "string", "enum": ["free", "monthly", "consultation"] },
+        "status": { "type": "string", "enum": ["active", "suspended", "canceled"] },
+        "has_seen_welcome": { "type": "boolean" },
+        "last_generated_timestamp": { "type": "string", "format": "date-time" },
+        "next_eligible_timestamp": { "type": "string", "format": "date-time" },
+        "total_generations_count": { "type": "number" },
+        "audit_id": { "type": "string" },
+        "business_name": { "type": "string" },
+        "website_url": { "type": "string" },
+        "created_at": { "type": "string", "format": "date-time" },
+        "updated_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "tier", "has_seen_welcome"]
+    },
+    "content_library_item": {
+      "title": "Generated Growth Content",
+      "description": "SEO blog post, social captions, and branded AI graphic.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "uid": { "type": "string" },
+        "type": { "type": "string" },
+        "blog_post": { "type": "object" },
+        "social_captions": { "type": "object" },
+        "graphic": { "type": "object" },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "uid", "blog_post", "social_captions", "graphic"]
+    }
+  },
+  "firestore": {
+    "bookings/{bookingId}": {
+      "schema": "booking",
+      "description": "Leads submitted via the branded Book a Free Session form."
+    },
+    "playbook_downloads/{leadId}": {
+      "schema": "playbook_download",
+      "description": "Leads submitted to download the playbook."
+    },
+    "audits/{auditId}": {
+      "schema": "audit",
+      "description": "Website diagnostic audits."
+    },
+    "users/{userId}": {
+      "schema": "user_profile",
+      "description": "User profile with tier and onboarding status."
+    },
+    "users/{userId}/content_library/{contentId}": {
+      "schema": "content_library_item",
+      "description": "User generated content library items."
+    }
+  }
+}
