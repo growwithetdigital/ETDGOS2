@@ -110,7 +110,7 @@ export default function FounderNotePanel({
           </div>
 
           <p>
-            That is exactly why I built this Free Tier for you. The <strong>Business DNA</strong> scanner extracts what makes you distinct. The <strong>Market Report</strong> gives you the ground reality of what buyers want today. The <strong>Auditor</strong> diagnoses where your revenue is leaking. And the <strong>Content Studio</strong> hands you one scroll-stopping piece of strategic authority in your authentic voice, plus four multi-platform promotion angles to distribute it.
+            That is exactly why I built this dashboard for you. The <strong>Business DNA</strong> scanner extracts what makes you distinct. The <strong>Market Report</strong> gives you the ground reality of what buyers want today. The <strong>Auditor</strong> diagnoses where your revenue is leaking. And the <strong>Content Studio</strong> hands you one scroll-stopping piece of strategic authority in your authentic voice, plus four multi-platform promotion angles to distribute it.
           </p>
 
           <p>
@@ -146,7 +146,7 @@ export default function FounderNotePanel({
               Ready to Tell More of Your Story?
             </h3>
             <p className="text-xs sm:text-sm text-slate-300 max-w-xl">
-              Upgrade from the Free Tier to the Full Growth OS Executive Suite and partner directly with Eric Thomas to engineer your multi-touch growth engine.
+              Upgrade to the Full Growth OS Executive Suite for monthly content plus tailored strategy calls with Eric Thomas to engineer your multi-touch growth engine.
             </p>
           </div>
 
@@ -166,7 +166,7 @@ export default function FounderNotePanel({
           <div className="p-5 rounded-2xl bg-slate-950/60 border border-slate-800/80 space-y-3">
             <div className="flex items-center justify-between">
               <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">Current Plan</span>
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-800 text-slate-300">Free Tier</span>
+              <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-800 text-slate-300">Standard Tier</span>
             </div>
             <ul className="space-y-2 text-xs text-slate-400">
               <li className="flex items-center gap-2">
@@ -183,7 +183,7 @@ export default function FounderNotePanel({
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                <span>Free Website Diagnostic Grader</span>
+                <span>Website Diagnostic Grader</span>
               </li>
             </ul>
           </div>
@@ -204,7 +204,7 @@ export default function FounderNotePanel({
               </li>
               <li className="flex items-center gap-2">
                 <Sparkles className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                <span>Continuous Editorial Engine with Custom Visuals</span>
+                <span>Monthly Content Plus Tailored Strategy Calls</span>
               </li>
               <li className="flex items-center gap-2">
                 <Sparkles className="w-3.5 h-3.5 text-cyan-400 shrink-0" />

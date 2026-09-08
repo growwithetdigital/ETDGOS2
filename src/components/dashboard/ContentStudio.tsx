@@ -85,10 +85,10 @@ export default function ContentStudio({
         <div>
           <div className="flex items-center gap-2 mb-1.5">
             <span className="font-mono text-[11px] uppercase tracking-wider text-[var(--accent)] font-semibold">
-              Content Studio · Quarterly Strategic Authority
+              Content Studio · Strategic Authority Asset
             </span>
             <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wide bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/30">
-              Free Tier Active
+              Core Engine
             </span>
           </div>
           <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-[var(--text)]">
@@ -546,14 +546,14 @@ export default function ContentStudio({
               <span>Looking for 1,000+ Word Authority Pillars?</span>
             </div>
             <p className="text-xs text-[var(--muted)] leading-relaxed">
-              Industry research demonstrates that comprehensive 1,000+ word guides capture 3.2x more backlinks and top-tier AI search citations. Free accounts receive 1 strategic blueprint per quarter.
+              Industry research demonstrates that comprehensive 1,000+ word guides capture 3.2x more backlinks and top-tier AI search citations. Upgrade to receive monthly content plus tailored strategy calls with Eric Thomas.
             </p>
             <button
               type="button"
               onClick={onOpenBooking}
-              className="w-full py-2.5 px-3 rounded-xl bg-[#C9974D] hover:bg-[#b0833f] text-slate-950 font-mono text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer text-center"
+              className="w-full py-3 px-4 rounded-xl bg-[#C9974D] hover:bg-[#b0833f] text-slate-950 font-mono text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-center min-h-[44px] flex items-center justify-center shadow-sm"
             >
-              Explore Monthly & Bi-Weekly Growth Schedules
+              Unlock Monthly Content + Tailored Strategy Calls
             </button>
           </div>
 

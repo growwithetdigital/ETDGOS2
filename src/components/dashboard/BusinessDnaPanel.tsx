@@ -153,35 +153,35 @@ export default function BusinessDnaPanel({
         
         {/* Left Column: URL + Writing Sample Inputs (5 cols) */}
         <div className="lg:col-span-5 space-y-5">
-          <div className="rounded-3xl border border-slate-800 bg-slate-900/90 backdrop-blur-md p-6 shadow-xl">
-            <div className="flex items-center gap-2.5 mb-5 pb-3 border-b border-slate-800">
-              <Globe className="w-4 h-4 text-cyan-400" />
-              <h3 className="font-display text-sm font-bold text-white uppercase tracking-wider">
+          <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm">
+            <div className="flex items-center gap-2.5 mb-5 pb-3 border-b border-[var(--border)]">
+              <Globe className="w-4 h-4 text-cyan-500" />
+              <h3 className="font-display text-sm font-bold text-[var(--text)] uppercase tracking-wider">
                 1. Connect Your Source
               </h3>
             </div>
 
             <form onSubmit={handleScanDna} className="space-y-4">
               <div>
-                <label className="block font-mono text-[10px] uppercase tracking-wider text-slate-400 mb-1.5">
+                <label className="block font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] mb-1.5 font-semibold">
                   Website URL or Landing Page
                 </label>
                 <div className="relative">
-                  <Globe className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <Globe className="w-4 h-4 text-[var(--muted)] absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="url"
                     required
                     value={websiteUrl}
                     onChange={(e) => setWebsiteUrl(e.target.value)}
                     placeholder="https://yourbrand.com"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[var(--surface2)] border border-[var(--border)] text-xs text-[var(--text)] placeholder:text-[var(--muted)] focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 min-h-[42px]"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-mono text-[10px] uppercase tracking-wider text-slate-400 mb-1.5">
+                  <label className="block font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] mb-1.5 font-semibold">
                     Business Name
                   </label>
                   <input
@@ -189,12 +189,12 @@ export default function BusinessDnaPanel({
                     value={businessName}
                     onChange={(e) => setBusinessName(e.target.value)}
                     placeholder="ET Digital"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--surface2)] border border-[var(--border)] text-xs text-[var(--text)] focus:outline-none focus:border-cyan-500 min-h-[42px]"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-mono text-[10px] uppercase tracking-wider text-slate-400 mb-1.5">
+                  <label className="block font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] mb-1.5 font-semibold">
                     Location / Market
                   </label>
                   <input
@@ -202,13 +202,13 @@ export default function BusinessDnaPanel({
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
                     placeholder="Los Angeles, CA"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--surface2)] border border-[var(--border)] text-xs text-[var(--text)] focus:outline-none focus:border-cyan-500 min-h-[42px]"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block font-mono text-[10px] uppercase tracking-wider text-slate-400 mb-1.5">
+                <label className="block font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] mb-1.5 font-semibold">
                   Target Audience
                 </label>
                 <input
@@ -216,27 +216,27 @@ export default function BusinessDnaPanel({
                   value={targetAudience}
                   onChange={(e) => setTargetAudience(e.target.value)}
                   placeholder="e.g. B2B founders, dental clinic owners, executives"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--surface2)] border border-[var(--border)] text-xs text-[var(--text)] focus:outline-none focus:border-cyan-500 min-h-[42px]"
                 />
               </div>
 
               {/* Short Writing Sample Calibrator */}
               <div className="pt-2">
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="block font-mono text-[10px] uppercase tracking-wider text-cyan-400 font-bold flex items-center gap-1.5">
+                  <label className="block font-mono text-[10px] uppercase tracking-wider text-cyan-600 font-bold flex items-center gap-1.5">
                     <PenTool className="w-3.5 h-3.5" />
                     Short Writing Sample (Your Voice)
                   </label>
-                  <span className="text-[10px] font-mono text-slate-500">2-4 Sentences</span>
+                  <span className="text-[10px] font-mono text-[var(--muted)]">2-4 Sentences</span>
                 </div>
                 <textarea
                   rows={4}
                   value={writingSample}
                   onChange={(e) => setWritingSample(e.target.value)}
                   placeholder="Paste a short sample of how you speak or write (from an email, post, speech)..."
-                  className="w-full p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 leading-relaxed resize-none"
+                  className="w-full p-3 rounded-xl bg-[var(--surface2)] border border-[var(--border)] text-xs text-[var(--text)] placeholder:text-[var(--muted)] focus:outline-none focus:border-cyan-500 leading-relaxed resize-none"
                 />
-                <p className="mt-1 text-[11px] text-slate-400">
+                <p className="mt-1 text-[11px] text-[var(--muted)]">
                   Our system learns your authentic cadence, sentence length, and vocabulary from this sample.
                 </p>
               </div>
@@ -244,7 +244,7 @@ export default function BusinessDnaPanel({
               <button
                 type="submit"
                 disabled={isScanning}
-                className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-display text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 transition-all cursor-pointer disabled:opacity-50"
+                className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 text-white font-display text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer disabled:opacity-50 min-h-[44px]"
               >
                 {isScanning ? (
                   <>
@@ -264,7 +264,7 @@ export default function BusinessDnaPanel({
               </button>
 
               {savedSuccess && (
-                <div className="p-3 rounded-xl bg-emerald-950/60 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2">
+                <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 text-xs flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 shrink-0" />
                   <span>Brand DNA successfully saved and calibrated for Content Studio!</span>
                 </div>
@@ -277,44 +277,44 @@ export default function BusinessDnaPanel({
         <div className="lg:col-span-7 space-y-5">
           
           {/* Main DNA Header Card */}
-          <div className="rounded-3xl border border-slate-800 bg-slate-900/90 backdrop-blur-md p-6 sm:p-7 shadow-xl space-y-6">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+          <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-7 shadow-sm space-y-6">
+            <div className="flex items-center justify-between pb-4 border-b border-[var(--border)]">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-600">
                   <Target className="w-5 h-5" />
                 </div>
                 <div>
-                  <span className="font-mono text-[10px] uppercase tracking-widest text-cyan-400 font-bold">
+                  <span className="font-mono text-[10px] uppercase tracking-widest text-cyan-600 font-bold">
                     Extracted Brand Matrix
                   </span>
-                  <h3 className="font-display text-lg font-bold text-white">
+                  <h3 className="font-display text-lg font-bold text-[var(--text)]">
                     {businessName} DNA Profile
                   </h3>
                 </div>
               </div>
 
-              <span className="font-mono text-[10px] text-emerald-400 bg-emerald-950/80 px-2.5 py-1 rounded-full border border-emerald-500/30 flex items-center gap-1.5">
+              <span className="font-mono text-[10px] text-emerald-600 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/30 flex items-center gap-1.5 font-bold">
                 <ShieldCheck className="w-3 h-3" />
                 Ready For Editorial
               </span>
             </div>
 
             {/* Voice Archetype & Descriptors */}
-            <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800/80 space-y-2.5">
+            <div className="p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] space-y-2.5">
               <div className="flex items-center justify-between">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] font-semibold">
                   Primary Voice Archetype
                 </span>
                 <button
                   type="button"
                   onClick={() => copyText(currentDna.voice_archetype, 'voice')}
-                  className="text-[11px] font-mono text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer"
+                  className="text-[11px] font-mono text-cyan-600 hover:underline flex items-center gap-1 cursor-pointer"
                 >
-                  {copiedSection === 'voice' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                  {copiedSection === 'voice' ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
                   <span>{copiedSection === 'voice' ? 'Copied' : 'Copy'}</span>
                 </button>
               </div>
-              <div className="text-base font-display font-bold text-cyan-300">
+              <div className="text-base font-display font-bold text-cyan-600">
                 {currentDna.voice_archetype}
               </div>
               
@@ -322,7 +322,7 @@ export default function BusinessDnaPanel({
                 {currentDna.tone_descriptors?.map((tone, idx) => (
                   <span
                     key={idx}
-                    className="px-2.5 py-0.5 rounded-md bg-cyan-950/50 border border-cyan-500/20 text-cyan-400 text-[11px] font-mono"
+                    className="px-2.5 py-0.5 rounded-md bg-cyan-500/10 border border-cyan-500/20 text-cyan-600 text-[11px] font-mono font-medium"
                   >
                     #{tone}
                   </span>
@@ -331,45 +331,45 @@ export default function BusinessDnaPanel({
             </div>
 
             {/* Core Value Proposition Hook */}
-            <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800/80 space-y-2">
+            <div className="p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] space-y-2">
               <div className="flex items-center justify-between">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] font-semibold">
                   Core Value Proposition & Differentiator
                 </span>
                 <button
                   type="button"
                   onClick={() => copyText(currentDna.core_value_prop, 'cvp')}
-                  className="text-[11px] font-mono text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer"
+                  className="text-[11px] font-mono text-cyan-600 hover:underline flex items-center gap-1 cursor-pointer"
                 >
-                  {copiedSection === 'cvp' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                  {copiedSection === 'cvp' ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
                   <span>{copiedSection === 'cvp' ? 'Copied' : 'Copy'}</span>
                 </button>
               </div>
-              <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-sans">
+              <p className="text-xs sm:text-sm text-[var(--text)] leading-relaxed font-sans font-medium">
                 "{currentDna.core_value_prop}"
               </p>
             </div>
 
             {/* Target Persona & Semantic Keywords */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800/80 space-y-2">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
+              <div className="p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] space-y-2">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] font-semibold">
                   Target Customer Persona
                 </span>
-                <p className="text-xs text-slate-300 leading-relaxed">
+                <p className="text-xs text-[var(--text)] leading-relaxed">
                   {currentDna.target_persona}
                 </p>
               </div>
 
-              <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800/80 space-y-2">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
+              <div className="p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] space-y-2">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] font-semibold">
                   Semantic Keyword Entities
                 </span>
                 <div className="flex flex-wrap gap-1.5">
                   {currentDna.extracted_keywords?.map((kw, i) => (
                     <span
                       key={i}
-                      className="px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-[10px] font-mono text-slate-300"
+                      className="px-2 py-0.5 rounded bg-[var(--surface)] border border-[var(--border)] text-[10px] font-mono text-[var(--text)]"
                     >
                       {kw}
                     </span>
@@ -379,12 +379,12 @@ export default function BusinessDnaPanel({
             </div>
 
             {/* Editorial Readiness Callout */}
-            <div className="p-4 rounded-2xl bg-gradient-to-r from-cyan-950/40 via-slate-950 to-blue-950/40 border border-cyan-500/20 flex items-center justify-between gap-4">
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-950 to-cyan-950/70 border border-cyan-500/30 flex items-center justify-between gap-4 text-white shadow-md">
               <div className="space-y-0.5">
                 <div className="font-display text-xs font-bold text-white">
                   DNA Engine Synced With Content Studio
                 </div>
-                <div className="text-[11px] text-slate-400">
+                <div className="text-[11px] text-slate-300">
                   Your 1 blog post and 4 social promotion angles will use this exact DNA.
                 </div>
               </div>
@@ -392,7 +392,7 @@ export default function BusinessDnaPanel({
               <button
                 type="button"
                 onClick={onNavigateToContentStudio}
-                className="px-3.5 py-2 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-display text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shrink-0"
+                className="px-4 py-2 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-display text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shrink-0 min-h-[40px]"
               >
                 <span>Write Post</span>
                 <ArrowRight className="w-3.5 h-3.5" />

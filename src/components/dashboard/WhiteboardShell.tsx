@@ -120,9 +120,15 @@ export default function WhiteboardShell({
   onOpenBooking,
   onSignOut,
 }: WhiteboardShellProps) {
-  // Default to Business DNA as requested for Free Tier
+  // Default to Business DNA as requested for Core Tier
   const [activeTab, setActiveTab] = useState<NavTabId>('business_dna');
-  const [dark, setDark] = useState(true);
+  const [dark, setDark] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('et_gos_theme');
+      if (saved) return saved === 'dark';
+    }
+    return false; // Default to balanced contrast matching the website
+  });
   const [contentList, setContentList] = useState<GeneratedContentItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<GeneratedContentItem | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -144,26 +150,26 @@ export default function WhiteboardShell({
 
   const isFreeTier = profile?.tier === 'free' || !profile?.tier;
 
-  // Theme Variables
+  // Theme Variables - Balanced Contrast matches the public website's dark executive header + crisp light cards
   const themeStyles = useMemo(() => {
     return dark
       ? {
-          "--bg": "#05080E",
-          "--surface": "#0C111C",
-          "--surface2": "#131926",
-          "--border": "#1E2738",
-          "--text": "#F1F5F9",
+          "--bg": "#0B1120",
+          "--surface": "#131C31",
+          "--surface2": "#1E293B",
+          "--border": "#2E3D5B",
+          "--text": "#FFFFFF",
           "--muted": "#94A3B8",
           "--accent": palette.cyanBright,
-          "--track": "#1E2738",
+          "--track": "#1E293B",
         }
       : {
-          "--bg": "#F8FAFC",
+          "--bg": "#F1F5F9",
           "--surface": "#FFFFFF",
-          "--surface2": "#F1F5F9",
-          "--border": "#E2E8F0",
+          "--surface2": "#F8FAFC",
+          "--border": "#CBD5E1",
           "--text": "#0F172A",
-          "--muted": "#64748B",
+          "--muted": "#475569",
           "--accent": palette.cyan,
           "--track": "#E2E8F0",
         };
@@ -263,18 +269,18 @@ By prioritizing clear storytelling over corporate jargon, **${clientName}** tran
     loadContent();
   }, [user?.uid, defaultSampleItem]);
 
-  // Explicit Free Tier Tabs as requested:
+  // Explicit Core Tier Tabs:
   // 1. business_dna (Business DNA - Google Pomelli style)
   // 2. market_report (Market Report for their Industry)
-  // 3. auditor (Free Auditor Tool)
-  // 4. content_studio (Content Studio: 1 blog post in their voice + 4 social media versions giving 3 options to promote)
-  // 5. founder_note (Note from Founder Eric Thomas & Upgrade Lead Gen)
-  const freeTierNavItems = [
+  // 3. auditor (Auditor Diagnostic Tool)
+  // 4. content_studio (Content Studio: 1 blog post in their voice + 4 social media promotion angles)
+  // 5. founder_note (Note from Founder Eric Thomas & Scale Suite)
+  const coreNavItems = [
     { id: 'business_dna', label: 'Business DNA', icon: Cpu, badge: 'Pomelli' },
     { id: 'market_report', label: 'Market Report', icon: FileBarChart, badge: 'Q1 Intel' },
-    { id: 'auditor', label: 'Auditor Tool', icon: BarChart3, badge: 'Free' },
+    { id: 'auditor', label: 'Auditor Tool', icon: BarChart3, badge: 'Diagnostic' },
     { id: 'content_studio', label: 'Content Studio', icon: Layers, badge: '1 Post + 4 Angles' },
-    { id: 'founder_note', label: 'Note From Founder', icon: Heart, badge: 'Upgrade' },
+    { id: 'founder_note', label: 'Note From Founder', icon: Heart, badge: 'Scale' },
   ];
 
   // Extended Executive Modules for Consultation / Owner / Pro users
@@ -291,7 +297,7 @@ By prioritizing clear storytelling over corporate jargon, **${clientName}** tran
     { id: 'founder_note', label: 'Founder Letter & Scale', icon: Heart },
   ];
 
-  const activeNavItems = (!isFreeTier || showAllModules || isOwner) ? proNavItems : freeTierNavItems;
+  const activeNavItems = (!isFreeTier || showAllModules || isOwner) ? proNavItems : coreNavItems;
 
   const handleSignOutClick = async () => {
     if (onSignOut) {
@@ -338,7 +344,7 @@ By prioritizing clear storytelling over corporate jargon, **${clientName}** tran
               {profile?.brand_dna ? '● DNA Calibrated' : '○ DNA Pending Link'}
             </span>
             <span className="font-mono text-[9px] uppercase tracking-wider text-cyan-400 bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-500/30">
-              {profile?.tier === 'monthly' ? 'VIP Monthly Suite' : 'Free Growth Tier'}
+              {profile?.tier === 'monthly' ? 'VIP Monthly Suite' : 'Growth OS Standard'}
             </span>
           </div>
         </div>
@@ -347,14 +353,14 @@ By prioritizing clear storytelling over corporate jargon, **${clientName}** tran
       {/* ==================================================================== */}
       {/* 2. EXECUTIVE APP BAR (Apple / Microsoft Style Header) */}
       {/* ==================================================================== */}
-      <header className="sticky top-0 z-40 bg-[var(--surface)]/90 backdrop-blur-xl border-b border-[var(--border)] px-4 sm:px-8 py-3.5 shadow-sm">
+      <header className="sticky top-0 z-40 bg-[var(--surface)]/95 backdrop-blur-xl border-b border-[var(--border)] px-4 sm:px-8 py-3.5 shadow-sm">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           
           {/* Left: Brand Identity & Return to Site */}
           <div className="flex items-center gap-3 text-left">
             <button
               onClick={onCloseDashboard}
-              className="p-2 rounded-xl bg-[var(--surface2)] hover:bg-[var(--border)] text-[var(--muted)] hover:text-[var(--text)] transition-colors cursor-pointer"
+              className="p-2.5 rounded-xl bg-[var(--surface2)] hover:bg-[var(--border)] text-[var(--muted)] hover:text-[var(--text)] transition-colors cursor-pointer min-h-[40px] flex items-center justify-center"
               title="Return to Public Overview"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -365,7 +371,7 @@ By prioritizing clear storytelling over corporate jargon, **${clientName}** tran
                 <span className="text-sm sm:text-base font-bold text-[var(--text)] tracking-tight font-display">
                   {clientName}
                 </span>
-                <span className="font-mono text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded border bg-cyan-500/10 text-cyan-400 border-cyan-500/30">
+                <span className="font-mono text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded border bg-cyan-500/10 text-cyan-600 border-cyan-500/30">
                   Growth OS
                 </span>
               </div>
@@ -375,18 +381,37 @@ By prioritizing clear storytelling over corporate jargon, **${clientName}** tran
             </div>
           </div>
 
-          {/* Right: Controls, Telemetry & Clean Sign Out */}
+          {/* Right: Controls, Theme, Telemetry & Clean Sign Out */}
           <div className="flex items-center gap-2 sm:gap-3">
             
+            {/* Theme Balance Toggle (Balanced Light/Dark vs Midnight) */}
+            <button
+              type="button"
+              onClick={() => {
+                const next = !dark;
+                setDark(next);
+                if (typeof window !== 'undefined') {
+                  localStorage.setItem('et_gos_theme', next ? 'dark' : 'balanced');
+                }
+              }}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-[var(--border)] bg-[var(--surface2)] text-[var(--text)] hover:bg-[var(--surface)] font-mono text-xs transition-all cursor-pointer shadow-xs min-h-[40px]"
+              title={dark ? "Switch to Balanced Contrast (Website Match)" : "Switch to Midnight Dark"}
+            >
+              {dark ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5 text-cyan-600" />}
+              <span className="hidden sm:inline font-mono text-[10px] font-bold">
+                {dark ? 'Balanced' : 'Midnight'}
+              </span>
+            </button>
+
             {/* Toggle All Modules (for users who want to explore full suite) */}
             {isFreeTier && (
               <button
                 type="button"
                 onClick={() => setShowAllModules(!showAllModules)}
-                className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-[var(--border)] bg-[var(--surface2)] text-[var(--muted)] hover:text-[var(--text)] font-mono text-[10px] transition-all cursor-pointer"
-                title="Toggle between Free Tier and Full Executive Suite"
+                className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-[var(--border)] bg-[var(--surface2)] text-[var(--muted)] hover:text-[var(--text)] font-mono text-[10px] transition-all cursor-pointer min-h-[40px]"
+                title="Toggle between Core Modules and Full Executive Suite"
               >
-                <span>{showAllModules ? 'Show Free Tabs Only' : 'Explore All Modules'}</span>
+                <span>{showAllModules ? 'Show Core Modules Only' : 'Explore All Modules'}</span>
               </button>
             )}
 
@@ -395,7 +420,7 @@ By prioritizing clear storytelling over corporate jargon, **${clientName}** tran
               <button
                 type="button"
                 onClick={() => setIsTelemetryOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-cyan-500/40 bg-cyan-950/50 text-cyan-300 font-mono text-[11px] font-bold hover:bg-cyan-900/60 transition-all cursor-pointer shadow-sm"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-cyan-500/40 bg-cyan-950/50 text-cyan-300 font-mono text-[11px] font-bold hover:bg-cyan-900/60 transition-all cursor-pointer shadow-sm min-h-[40px]"
                 title="View Platform Usage Telemetry"
               >
                 <BarChart3 className="w-3.5 h-3.5 text-brand-cyan" />
@@ -408,9 +433,9 @@ By prioritizing clear storytelling over corporate jargon, **${clientName}** tran
             <button
               type="button"
               onClick={onOpenBooking}
-              className="inline-flex items-center gap-1.5 bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 text-slate-950 font-display text-[11px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-xl transition-all cursor-pointer shadow-sm"
+              className="inline-flex items-center gap-1.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 text-white font-display text-[11px] font-bold uppercase tracking-wider px-3.5 py-1.5 rounded-xl transition-all cursor-pointer shadow-sm min-h-[40px]"
             >
-              <Crown className="w-3.5 h-3.5" />
+              <Crown className="w-3.5 h-3.5 text-amber-300" />
               <span className="hidden sm:inline">Consult with Eric</span>
               <span className="sm:hidden">Consult</span>
             </button>
@@ -419,7 +444,7 @@ By prioritizing clear storytelling over corporate jargon, **${clientName}** tran
             <button
               type="button"
               onClick={handleSignOutClick}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono font-bold text-[var(--muted)] hover:text-white rounded-xl bg-[var(--surface2)] hover:bg-rose-950/60 hover:text-rose-300 hover:border-rose-500/40 border border-[var(--border)] transition-all cursor-pointer shadow-xs"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono font-bold text-[var(--muted)] hover:text-white rounded-xl bg-[var(--surface2)] hover:bg-rose-950/60 hover:text-rose-300 hover:border-rose-500/40 border border-[var(--border)] transition-all cursor-pointer shadow-xs min-h-[40px]"
               title="Sign Out of Growth OS"
               id="whiteboard-signout-btn"
             >
@@ -751,7 +776,7 @@ By prioritizing clear storytelling over corporate jargon, **${clientName}** tran
                 </div>
                 <div className="space-y-2.5">
                   <Card padding="p-3.5">
-                    <p className="text-sm text-[var(--text)]">Expand into comprehensive authority pillars on monthly cadence</p>
+                    <p className="text-sm text-[var(--text)]">Expand into comprehensive authority pillars: monthly content plus tailored strategy calls</p>
                   </Card>
                   <Card padding="p-3.5">
                     <p className="text-sm text-[var(--text)]">Implement automated multi-touch conversion attribution</p>

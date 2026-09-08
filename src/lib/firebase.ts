@@ -12,7 +12,9 @@ import {
   sendEmailVerification,
   sendPasswordResetEmail,
   updateProfile,
-  signInAnonymously
+  signInAnonymously,
+  setPersistence,
+  browserLocalPersistence
 } from 'firebase/auth';
 import { 
   getFirestore, 
@@ -26,6 +28,7 @@ import {
   serverTimestamp,
   increment,
   query,
+  where,
   orderBy
 } from 'firebase/firestore';
 import { UserProfile, AuditRecord, GeneratedContentItem, PlatformTelemetryEvent } from '../types';
@@ -60,6 +63,9 @@ try {
     dbInstance = getFirestore(app);
   }
   authInstance = getAuth(app);
+  if (typeof window !== 'undefined' && authInstance) {
+    setPersistence(authInstance, browserLocalPersistence).catch(() => {});
+  }
 } catch (e) {
   console.warn('Firebase initialization notice:', e);
 }
@@ -79,7 +85,7 @@ if (typeof window !== 'undefined') {
   });
 }
 
-// Google Auth Provider setup with Workspace scopes
+// Google Auth Provider setup with Workspace scopes (for connecting Google Drive, Calendar, Docs)
 export const workspaceProvider = new GoogleAuthProvider();
 workspaceProvider.setCustomParameters({ prompt: 'select_account' });
 workspaceProvider.addScope('https://www.googleapis.com/auth/drive');
@@ -95,9 +101,8 @@ workspaceProvider.addScope('https://www.googleapis.com/auth/classroom.courses');
 workspaceProvider.addScope('https://www.googleapis.com/auth/classroom.announcements');
 workspaceProvider.addScope('https://www.googleapis.com/auth/classroom.rosters');
 
-// Standard Google provider for Growth OS sign-in (email & profile only)
+// Standard Google provider for Growth OS sign-in (email & profile only - ultra-fast single click)
 export const standardGoogleProvider = new GoogleAuthProvider();
-standardGoogleProvider.setCustomParameters({ prompt: 'select_account' });
 
 // Backward compatibility export
 export const provider = workspaceProvider;
@@ -126,7 +131,9 @@ export const googleSignIn = async (includeWorkspaceScopes = false): Promise<{ us
   try {
     isSigningIn = true;
     const authProvider = includeWorkspaceScopes ? workspaceProvider : standardGoogleProvider;
-    authProvider.setCustomParameters({ prompt: 'select_account' });
+    if (includeWorkspaceScopes) {
+      authProvider.setCustomParameters({ prompt: 'select_account' });
+    }
     const result = await signInWithPopup(auth, authProvider);
     const credential = GoogleAuthProvider.credentialFromResult(result);
     cachedAccessToken = credential?.accessToken || '';
@@ -877,23 +884,43 @@ export const googleSignInWithProfile = async (): Promise<User> => {
 };
 
 export const getUserProfile = async (uid: string): Promise<UserProfile | null> => {
-  // Check local profile cache first for speed and offline resilience
+  // Stale-while-revalidate: check local profile cache first for instantaneous 0ms response
+  let cachedProfile: UserProfile | null = null;
   if (typeof window !== 'undefined') {
     const cached = localStorage.getItem(`et_profile_${uid}`);
     if (cached) {
       try {
         const parsed = JSON.parse(cached);
-        if (parsed && parsed.business_name) {
-          return parsed as UserProfile;
+        if (parsed && (parsed.uid || parsed.email || parsed.displayName || parsed.business_name)) {
+          cachedProfile = parsed as UserProfile;
         }
       } catch (e) {}
     }
   }
 
+  // If local cache exists, return it instantly and revalidate silently in the background
+  if (cachedProfile) {
+    Promise.resolve().then(async () => {
+      try {
+        const snap = await Promise.race([
+          getDoc(doc(db, 'users', uid)),
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 1200))
+        ]);
+        if (snap && (snap as any).exists && (snap as any).exists()) {
+          const profileData = (snap as any).data() as UserProfile;
+          if (typeof window !== 'undefined') {
+            localStorage.setItem(`et_profile_${uid}`, JSON.stringify(profileData));
+          }
+        }
+      } catch (e) {}
+    });
+    return cachedProfile;
+  }
+
   try {
     const snap = await Promise.race([
       getDoc(doc(db, 'users', uid)),
-      new Promise<null>((resolve) => setTimeout(() => resolve(null), 1500))
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 1000))
     ]);
     if (snap && (snap as any).exists && (snap as any).exists()) {
       const profileData = (snap as any).data() as UserProfile;
@@ -1068,37 +1095,53 @@ export const updateUserProfile = async (uid: string, profileData: Partial<UserPr
 };
 
 export const fetchUserAudits = async (uid: string): Promise<AuditRecord[]> => {
-  try {
-    const q = query(collection(db, 'audits'));
-    const snap = await getDocs(q);
-    const results: AuditRecord[] = [];
-    snap.forEach(d => {
-      const data = d.data();
-      if (data.uid === uid) {
-        results.push({ id: d.id, ...data } as AuditRecord);
-      }
-    });
-
+  let localAudits: AuditRecord[] = [];
+  if (typeof window !== 'undefined') {
     try {
-      const subSnap = await getDocs(collection(db, 'users', uid, 'audits'));
-      subSnap.forEach(d => {
-        const data = d.data();
-        if (!results.find(r => r.id === d.id)) {
-          results.push({ id: d.id, ...data } as AuditRecord);
+      const cached = localStorage.getItem(`et_audits_${uid}`);
+      if (cached) localAudits = JSON.parse(cached);
+    } catch (e) {}
+  }
+
+  // If local audits exist, return immediately (0ms) and revalidate in background
+  if (localAudits.length > 0) {
+    Promise.resolve().then(async () => {
+      try {
+        const subSnap = await Promise.race([
+          getDocs(collection(db, 'users', uid, 'audits')),
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 1500))
+        ]);
+        if (subSnap && (subSnap as any).forEach) {
+          const fresh: AuditRecord[] = [];
+          (subSnap as any).forEach((d: any) => fresh.push({ id: d.id, ...d.data() } as AuditRecord));
+          if (fresh.length > 0 && typeof window !== 'undefined') {
+            localStorage.setItem(`et_audits_${uid}`, JSON.stringify(fresh));
+          }
         }
+      } catch (e) {}
+    });
+    return localAudits;
+  }
+
+  try {
+    const subSnap = await Promise.race([
+      getDocs(collection(db, 'users', uid, 'audits')),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 1200))
+    ]);
+    const results: AuditRecord[] = [];
+    if (subSnap && (subSnap as any).forEach) {
+      (subSnap as any).forEach((d: any) => {
+        results.push({ id: d.id, ...d.data() } as AuditRecord);
       });
-    } catch (e) {
-      // Subcollection optional
     }
 
-    return results.sort((a, b) => {
-      const tA = a.created_at ? (typeof a.created_at === 'string' ? new Date(a.created_at).getTime() : a.created_at.toMillis ? a.created_at.toMillis() : 0) : 0;
-      const tB = b.created_at ? (typeof b.created_at === 'string' ? new Date(b.created_at).getTime() : b.created_at.toMillis ? b.created_at.toMillis() : 0) : 0;
-      return tB - tA;
-    });
+    if (results.length > 0 && typeof window !== 'undefined') {
+      localStorage.setItem(`et_audits_${uid}`, JSON.stringify(results));
+    }
+    return results;
   } catch (error) {
     console.warn('Error fetching user audits:', error);
-    return [];
+    return localAudits;
   }
 };
 
@@ -1165,19 +1208,44 @@ export const fetchUserContentLibrary = async (uid: string): Promise<GeneratedCon
     } catch (e) {}
   }
 
+  // If local items exist, return immediately (0ms) and revalidate silently in background
+  if (localItems.length > 0) {
+    Promise.resolve().then(async () => {
+      try {
+        const collectionRef = collection(db, 'users', uid, 'content_library');
+        const snap = await Promise.race([
+          getDocs(query(collectionRef)),
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 1500))
+        ]);
+        if (snap && (snap as any).forEach) {
+          const remoteItems: GeneratedContentItem[] = [];
+          (snap as any).forEach((d: any) => {
+            remoteItems.push({ id: d.id, ...d.data() } as GeneratedContentItem);
+          });
+          if (remoteItems.length > 0 && typeof window !== 'undefined') {
+            localStorage.setItem(`et_content_${uid}`, JSON.stringify(remoteItems));
+          }
+        }
+      } catch (e) {}
+    });
+    return localItems;
+  }
+
   try {
     const collectionRef = collection(db, 'users', uid, 'content_library');
-    const q = query(collectionRef);
-    const snap = await getDocs(q);
+    const snap = await Promise.race([
+      getDocs(query(collectionRef)),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 1200))
+    ]);
     const remoteItems: GeneratedContentItem[] = [];
-    snap.forEach((d) => {
-      remoteItems.push({ id: d.id, ...d.data() } as GeneratedContentItem);
-    });
+    if (snap && (snap as any).forEach) {
+      (snap as any).forEach((d: any) => {
+        remoteItems.push({ id: d.id, ...d.data() } as GeneratedContentItem);
+      });
+    }
 
-    if (remoteItems.length > 0) {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(`et_content_${uid}`, JSON.stringify(remoteItems));
-      }
+    if (remoteItems.length > 0 && typeof window !== 'undefined') {
+      localStorage.setItem(`et_content_${uid}`, JSON.stringify(remoteItems));
       return remoteItems;
     }
   } catch (error) {

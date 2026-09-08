@@ -43,9 +43,19 @@ export default function App() {
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
 
   const fetchProfile = async (uid: string) => {
+    // 1. Immediately hydrate from cache to eliminate UI delay (0ms)
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem(`et_profile_${uid}`);
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          if (parsed) setUserProfile(parsed);
+        } catch (e) {}
+      }
+    }
     try {
       const p = await getUserProfile(uid);
-      setUserProfile(p);
+      if (p) setUserProfile(p);
       const welcomeSeen = typeof window !== 'undefined' ? localStorage.getItem(`et_welcome_seen_${uid}`) === 'true' : false;
       if (p && p.has_seen_welcome === false && !welcomeSeen) {
         setShowWelcomeModal(true);
@@ -91,6 +101,35 @@ export default function App() {
       }
 
       if (user) {
+        if (typeof window !== 'undefined') {
+          const existing = localStorage.getItem(`et_profile_${user.uid}`);
+          if (!existing) {
+            const isOwner = user.email === 'ericlamarthomas@gmail.com' || user.uid.includes('owner');
+            const immediateProfile: UserProfile = {
+              uid: user.uid,
+              email: user.email || '',
+              displayName: user.displayName || (isOwner ? 'Eric Thomas' : 'Growth Partner'),
+              photoURL: user.photoURL || undefined,
+              emailVerified: user.emailVerified,
+              business_name: user.displayName || (isOwner ? 'ET Digital Growth OS' : 'Growth Partner'),
+              contact: user.displayName || 'Growth Partner',
+              website_url: '',
+              location: '',
+              mission_statement: '',
+              competitor_website: '',
+              target_audience: '',
+              brand_voice: 'Authoritative & Strategic',
+              tier: isOwner ? 'consultation' : 'free',
+              status: 'active',
+              has_seen_welcome: false,
+              total_generations_count: 0,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            };
+            localStorage.setItem(`et_profile_${user.uid}`, JSON.stringify(immediateProfile));
+            setUserProfile(immediateProfile);
+          }
+        }
         setCurrentUser(user);
         setIsAuthModalOpen(false);
         fetchProfile(user.uid);
@@ -187,7 +226,7 @@ export default function App() {
 
   if (isWhiteboardOpen && currentUser) {
     return (
-      <div className="min-h-screen bg-slate-950 text-white selection:bg-brand-cyan/30">
+      <div className="min-h-screen selection:bg-brand-cyan/30">
         <WhiteboardShell
           user={currentUser}
           profile={userProfile}
