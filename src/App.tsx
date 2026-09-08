@@ -92,6 +92,7 @@ export default function App() {
 
       if (user) {
         setCurrentUser(user);
+        setIsAuthModalOpen(false);
         fetchProfile(user.uid);
       } else {
         const localUserJson = typeof window !== 'undefined' ? localStorage.getItem('et_growth_os_local_user') : null;
@@ -100,6 +101,7 @@ export default function App() {
             const localUser = JSON.parse(localUserJson);
             if (localUser && localUser.uid) {
               setCurrentUser(localUser as User);
+              setIsAuthModalOpen(false);
               fetchProfile(localUser.uid);
               return;
             }

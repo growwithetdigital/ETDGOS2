@@ -596,8 +596,13 @@ export const signInWithEmail = async (email: string, pass: string): Promise<User
       localStorage.removeItem('et_signed_out');
       localStorage.setItem('et_growth_os_local_user', JSON.stringify(cred.user));
     }
-    await bindPendingAuditToUser(cred.user.uid);
-    await trackPlatformUsage(cred.user.uid, normalizedEmail, cred.user.displayName || normalizedEmail, 'login');
+    // Run audit binding and usage tracking in background (non-blocking)
+    Promise.resolve().then(async () => {
+      try {
+        await bindPendingAuditToUser(cred.user.uid);
+        await trackPlatformUsage(cred.user.uid, normalizedEmail, cred.user.displayName || normalizedEmail, 'login');
+      } catch (e) {}
+    });
     return cred.user;
   } catch (authErr: any) {
     const errCode = String(authErr?.code || '');
@@ -710,46 +715,6 @@ export const signInWithInstantAccess = async (
   customEmail = 'ericlamarthomas@gmail.com',
   customName = 'Eric Thomas'
 ): Promise<User> => {
-  // 1. Try Firebase anonymous authentication so Firestore has a valid authenticated UID
-  try {
-    const cred = await signInAnonymously(auth);
-    if (cred.user) {
-      try {
-        await updateProfile(cred.user, { displayName: customName });
-      } catch (e) {
-        // Safe fallback
-      }
-
-      const userDocRef = doc(db, 'users', cred.user.uid);
-      const snap = await getDoc(userDocRef);
-      if (!snap.exists()) {
-        const initialProfile: Partial<UserProfile> = {
-          uid: cred.user.uid,
-          email: customEmail,
-          displayName: customName,
-          tier: 'free',
-          status: 'active',
-          has_seen_welcome: false,
-          total_generations_count: 0,
-          created_at: serverTimestamp(),
-          updated_at: serverTimestamp(),
-        };
-        await setDoc(userDocRef, initialProfile, { merge: true });
-      }
-
-      await bindPendingAuditToUser(cred.user.uid);
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('et_growth_os_active_uid', cred.user.uid);
-      }
-
-      await trackPlatformUsage(cred.user.uid, customEmail, customName, 'login');
-      return cred.user;
-    }
-  } catch (anonErr) {
-    console.warn('Anonymous sign-in unavailable, utilizing local authenticated session:', anonErr);
-  }
-
-  // 2. Resilient local authenticated session fallback (bypasses all OAuth domain restrictions)
   const localUid = 'et_owner_' + btoa(customEmail).replace(/[^a-zA-Z0-9]/g, '').slice(0, 16);
   const localUser: any = {
     uid: localUid,
@@ -761,11 +726,59 @@ export const signInWithInstantAccess = async (
   };
 
   if (typeof window !== 'undefined') {
+    localStorage.removeItem('et_signed_out');
     localStorage.setItem('et_growth_os_local_user', JSON.stringify(localUser));
     localStorage.setItem('et_growth_os_active_uid', localUid);
+
+    const initialProfile: UserProfile = {
+      uid: localUid,
+      email: customEmail,
+      displayName: customName,
+      business_name: 'ET Digital Growth OS',
+      contact: customName,
+      website_url: 'https://growwithetdigital.com',
+      location: '',
+      mission_statement: '',
+      competitor_website: '',
+      target_audience: '',
+      brand_voice: 'Authoritative & Strategic',
+      tier: 'consultation',
+      status: 'active',
+      has_seen_welcome: false,
+      total_generations_count: 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    localStorage.setItem(`et_profile_${localUid}`, JSON.stringify(initialProfile));
   }
 
-  await trackPlatformUsage(localUid, customEmail, customName, 'login');
+  // Background non-blocking sync
+  Promise.resolve().then(async () => {
+    try {
+      const cred = await Promise.race([
+        signInAnonymously(auth),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 1200))
+      ]);
+      if (cred && (cred as any).user) {
+        updateProfile((cred as any).user, { displayName: customName }).catch(() => {});
+        const userDocRef = doc(db, 'users', (cred as any).user.uid);
+        await setDoc(userDocRef, {
+          uid: (cred as any).user.uid,
+          email: customEmail,
+          displayName: customName,
+          tier: 'consultation',
+          status: 'active',
+          updated_at: serverTimestamp(),
+        }, { merge: true });
+        await bindPendingAuditToUser((cred as any).user.uid);
+      }
+    } catch (e) {}
+
+    try {
+      await trackPlatformUsage(localUid, customEmail, customName, 'login');
+    } catch (e) {}
+  });
+
   return localUser as User;
 };
 
@@ -774,32 +787,82 @@ export const googleSignInWithProfile = async (): Promise<User> => {
     const res = await googleSignIn();
     if (!res?.user) throw new Error('Google sign-in did not complete.');
 
-    const userDocRef = doc(db, 'users', res.user.uid);
-    const snap = await getDoc(userDocRef);
-    if (!snap.exists()) {
-      const initialProfile: Partial<UserProfile> = {
-        uid: res.user.uid,
-        email: res.user.email || '',
-        displayName: res.user.displayName || 'Growth Partner',
-        photoURL: res.user.photoURL || undefined,
-        emailVerified: res.user.emailVerified,
-        tier: 'free',
+    const user = res.user;
+
+    // 1. Immediately cache credentials so UI & navbar update instantly
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('et_signed_out');
+      localStorage.setItem('et_growth_os_local_user', JSON.stringify(user));
+      localStorage.setItem('et_growth_os_active_uid', user.uid);
+
+      const isOwner = user.email === 'ericlamarthomas@gmail.com' || user.uid.includes('owner');
+      const immediateProfile: UserProfile = {
+        uid: user.uid,
+        email: user.email || '',
+        displayName: user.displayName || (isOwner ? 'Eric Thomas' : 'Growth Partner'),
+        photoURL: user.photoURL || undefined,
+        emailVerified: user.emailVerified,
+        business_name: user.displayName || (isOwner ? 'ET Digital Growth OS' : 'Growth Partner'),
+        contact: user.displayName || 'Growth Partner',
+        website_url: '',
+        location: '',
+        mission_statement: '',
+        competitor_website: '',
+        target_audience: '',
+        brand_voice: 'Authoritative & Strategic',
+        tier: isOwner ? 'consultation' : 'free',
         status: 'active',
         has_seen_welcome: false,
         total_generations_count: 0,
-        created_at: serverTimestamp(),
-        updated_at: serverTimestamp(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       };
-      await setDoc(userDocRef, initialProfile);
+      
+      const existing = localStorage.getItem(`et_profile_${user.uid}`);
+      if (!existing) {
+        localStorage.setItem(`et_profile_${user.uid}`, JSON.stringify(immediateProfile));
+      }
     }
 
-    // Auto-bind pending audit
-    await bindPendingAuditToUser(res.user.uid);
+    // 2. Perform Firestore persistence asynchronously in the background so the modal never stalls
+    Promise.resolve().then(async () => {
+      try {
+        const userDocRef = doc(db, 'users', user.uid);
+        const snap = await Promise.race([
+          getDoc(userDocRef),
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 1500))
+        ]);
 
-    // Track usage telemetry
-    await trackPlatformUsage(res.user.uid, res.user.email || '', res.user.displayName || '', 'login');
+        if (snap && (snap as any).exists && !(snap as any).exists()) {
+          const initialProfile: Partial<UserProfile> = {
+            uid: user.uid,
+            email: user.email || '',
+            displayName: user.displayName || 'Growth Partner',
+            photoURL: user.photoURL || undefined,
+            emailVerified: user.emailVerified,
+            tier: (user.email === 'ericlamarthomas@gmail.com') ? 'consultation' : 'free',
+            status: 'active',
+            has_seen_welcome: false,
+            total_generations_count: 0,
+            created_at: serverTimestamp(),
+            updated_at: serverTimestamp(),
+          };
+          await setDoc(userDocRef, initialProfile, { merge: true });
+        }
+      } catch (fsErr) {
+        console.warn('Background profile sync deferred:', fsErr);
+      }
 
-    return res.user;
+      try {
+        await bindPendingAuditToUser(user.uid);
+      } catch (e) {}
+
+      try {
+        await trackPlatformUsage(user.uid, user.email || '', user.displayName || '', 'login');
+      } catch (e) {}
+    });
+
+    return user;
   } catch (error: any) {
     const code = String(error?.code || '');
     const msg = String(error?.message || '');
@@ -828,9 +891,12 @@ export const getUserProfile = async (uid: string): Promise<UserProfile | null> =
   }
 
   try {
-    const snap = await getDoc(doc(db, 'users', uid));
-    if (snap.exists()) {
-      const profileData = snap.data() as UserProfile;
+    const snap = await Promise.race([
+      getDoc(doc(db, 'users', uid)),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 1500))
+    ]);
+    if (snap && (snap as any).exists && (snap as any).exists()) {
+      const profileData = (snap as any).data() as UserProfile;
       if (typeof window !== 'undefined') {
         localStorage.setItem(`et_profile_${uid}`, JSON.stringify(profileData));
       }
