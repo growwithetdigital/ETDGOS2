@@ -9,7 +9,8 @@ import {
   signInWithEmail, 
   signUpWithEmail, 
   resetPasswordEmail, 
-  googleSignInWithProfile 
+  googleSignInWithProfile,
+  signInWithInstantAccess
 } from '../../lib/firebase';
 import { User } from 'firebase/auth';
 
@@ -79,6 +80,25 @@ export default function AuthModal({
       setError(errMsg);
     } finally {
       setIsGoogleLoading(false);
+    }
+  };
+
+  // 1.5. Founder Instant Access (bypasses domain authorization when configuring Firebase)
+  const handleOwnerInstantAccess = async () => {
+    setError(null);
+    setIsLoading(true);
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('et_signed_out');
+      }
+      const user = await signInWithInstantAccess('ericlamarthomas@gmail.com', 'Eric Thomas');
+      onSuccess(user);
+      onClose();
+    } catch (err: any) {
+      console.warn('Instant access error:', err);
+      setError('Could not initialize instant access session.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -169,9 +189,19 @@ export default function AuthModal({
 
         {/* Error Alert */}
         {error && (
-          <div className="mb-4 p-3.5 rounded-xl bg-rose-950/50 border border-rose-800/60 text-xs text-rose-300 flex items-start gap-2.5 animate-in fade-in duration-150">
-            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-            <span className="leading-relaxed">{error}</span>
+          <div className="mb-4 p-3.5 rounded-xl bg-rose-950/50 border border-rose-800/60 text-xs text-rose-300 flex flex-col gap-2.5 animate-in fade-in duration-150">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+              <span className="leading-relaxed">{error}</span>
+            </div>
+            <button
+              type="button"
+              onClick={handleOwnerInstantAccess}
+              className="mt-1 w-full py-2 px-3 rounded-lg bg-cyan-950/80 hover:bg-cyan-900 border border-brand-cyan/40 text-brand-cyan font-display text-xs font-bold transition-all text-center cursor-pointer flex items-center justify-center gap-2"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-brand-cyan" />
+              <span>Enter as Eric Thomas (Instant Access)</span>
+            </button>
           </div>
         )}
 

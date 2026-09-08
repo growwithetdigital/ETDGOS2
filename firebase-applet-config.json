@@ -1,12 +1,11 @@
 {
-  "projectId": "jittery-ascent-x07pf",
-  "appId": "1:260881775272:web:c1b91576a423771ab2609d",
-  "apiKey": "AIzaSyD-ker70X9Vmcg69aQ-10pd1XjHUhxeJik",
-  "authDomain": "jittery-ascent-x07pf.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-etdigitalgrowtho-ddf7f10e-0d75-41a6-b859-4f2b1e66d530",
-  "storageBucket": "jittery-ascent-x07pf.firebasestorage.app",
-  "messagingSenderId": "260881775272",
-  "measurementId": "",
-  "oAuthClientId": "260881775272-s6r3pv8hf7or5pjrjlqd3v7jj2a4dk7l.apps.googleusercontent.com",
+  "projectId": "et-digital-gos",
+  "appId": "1:649979304641:web:be99baabc60c3967291240",
+  "apiKey": "AIzaSyCrUPG-qI6HIvpDmLzSAUlKOJ-wxkD8O3E",
+  "authDomain": "et-digital-gos.firebaseapp.com",
+  "firestoreDatabaseId": "",
+  "storageBucket": "et-digital-gos.firebasestorage.app",
+  "messagingSenderId": "649979304641",
+  "measurementId": "G-NZ3FP4E8GZ",
   "recaptchaSiteKey": ""
 }

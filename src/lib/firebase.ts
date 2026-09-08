@@ -49,7 +49,16 @@ let authInstance: any;
 
 try {
   app = initializeApp(firebaseConfig);
-  dbInstance = getFirestore(app, (firebaseConfig as any).firestoreDatabaseId);
+  const dbId = (firebaseConfig as any).firestoreDatabaseId;
+  if (dbId && typeof dbId === 'string' && dbId.trim() !== '' && dbId !== '(default)') {
+    try {
+      dbInstance = getFirestore(app, dbId);
+    } catch {
+      dbInstance = getFirestore(app);
+    }
+  } else {
+    dbInstance = getFirestore(app);
+  }
   authInstance = getAuth(app);
 } catch (e) {
   console.warn('Firebase initialization notice:', e);
