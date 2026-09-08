@@ -11,6 +11,8 @@ interface GrowthAuditToolProps {
   onOpenBooking: () => void;
   onOpenCalendar?: () => void;
   onOpenAuthModal?: () => void;
+  onOpenDashboard?: () => void;
+  user?: any;
 }
 
 type AuditChannel = 'website' | 'social' | 'gbp';
@@ -26,7 +28,7 @@ interface AuditOption {
 
 const WEB3FORMS_ACCESS_KEY = (import.meta as any).env?.VITE_WEB3FORMS_ACCESS_KEY || '0d9d7632-cf6b-4566-b29e-09b7b8bb7806';
 
-export default function GrowthAuditTool({ onOpenBooking, onOpenCalendar, onOpenAuthModal }: GrowthAuditToolProps) {
+export default function GrowthAuditTool({ onOpenBooking, onOpenCalendar, onOpenAuthModal, onOpenDashboard, user }: GrowthAuditToolProps) {
   const [selectedChannel, setSelectedChannel] = useState<AuditChannel>('website');
   const [inputValue, setInputValue] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -1031,19 +1033,19 @@ Prospect has seen Priority #3 to spark interest without giving away core infrast
                         </span>
                       </div>
                       <h4 className="font-display text-lg sm:text-xl font-black text-white tracking-tight">
-                        Save Your Audit & Sign In to Growth Operating System™
+                        Save Your Audit & {user ? 'Launch Growth Operating System™' : 'Sign In to Growth Operating System™'}
                       </h4>
                     </div>
 
-                    {onOpenAuthModal && (
+                    {(onOpenDashboard || onOpenAuthModal) && (
                       <button
                         type="button"
-                        onClick={onOpenAuthModal}
+                        onClick={user && onOpenDashboard ? onOpenDashboard : (onOpenAuthModal || onOpenDashboard)}
                         className="inline-flex items-center justify-center gap-2 bg-brand-cyan hover:bg-cyan-400 text-slate-950 font-display text-xs font-black uppercase tracking-widest px-6 py-3.5 rounded-xl transition-all shadow-md hover:shadow-cyan-950/50 cursor-pointer shrink-0"
                         id="save-audit-to-growth-os-btn"
                       >
                         <Sparkles className="w-4 h-4 text-slate-950" />
-                        <span>Sign In to Growth Operating System</span>
+                        <span>{user ? 'Launch My Growth OS' : 'Sign In to Growth Operating System'}</span>
                       </button>
                     )}
                   </div>
@@ -1087,14 +1089,14 @@ Prospect has seen Priority #3 to spark interest without giving away core infrast
 
                   {/* Action Bar */}
                   <div className="flex flex-wrap items-center gap-3 pt-2">
-                    {onOpenAuthModal && (
+                    {(onOpenDashboard || onOpenAuthModal) && (
                       <button
                         type="button"
-                        onClick={onOpenAuthModal}
+                        onClick={user && onOpenDashboard ? onOpenDashboard : (onOpenAuthModal || onOpenDashboard)}
                         className="bg-cyan-950/90 hover:bg-cyan-900 border border-brand-cyan/60 text-brand-cyan hover:text-white font-display text-[10px] font-black uppercase tracking-widest px-5 py-3.5 rounded-xl transition-all cursor-pointer flex items-center gap-2"
                       >
                         <Bookmark className="w-3.5 h-3.5 text-brand-cyan" />
-                        <span>Save Audit to Growth OS</span>
+                        <span>{user ? 'Save & Launch Growth OS' : 'Save Audit to Growth OS'}</span>
                       </button>
                     )}
 

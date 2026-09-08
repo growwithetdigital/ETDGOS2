@@ -42,6 +42,26 @@ export default function App() {
   const [isWhiteboardOpen, setIsWhiteboardOpen] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
 
+  // Compute effective user from memory, auth client, or local storage session
+  const effectiveUser = currentUser || auth.currentUser || (() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('et_growth_os_local_user');
+        if (stored) return JSON.parse(stored) as User;
+        const activeUid = localStorage.getItem('et_growth_os_active_uid');
+        if (activeUid && localStorage.getItem('et_signed_out') !== 'true') {
+          return {
+            uid: activeUid,
+            email: 'ericlamarthomas@gmail.com',
+            displayName: 'Eric Thomas',
+            emailVerified: true,
+          } as User;
+        }
+      } catch (e) {}
+    }
+    return null;
+  })();
+
   const fetchProfile = async (uid: string) => {
     // 1. Immediately hydrate from cache to eliminate UI delay (0ms)
     if (typeof window !== 'undefined') {
@@ -69,13 +89,99 @@ export default function App() {
 
   const handleEnterGrowthOS = () => {
     setShowWelcomeModal(false);
-    setIsWhiteboardOpen(true);
-    if (currentUser?.uid) {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(`et_welcome_seen_${currentUser.uid}`, 'true');
-      }
-      updateUserWelcomeFlag(currentUser.uid, true).catch(() => {});
+
+    let activeUser = currentUser || auth.currentUser;
+    if (!activeUser && typeof window !== 'undefined') {
+      try {
+        const localUserJson = localStorage.getItem('et_growth_os_local_user');
+        if (localUserJson) {
+          const parsed = JSON.parse(localUserJson);
+          if (parsed && parsed.uid) activeUser = parsed as User;
+        }
+      } catch (e) {}
     }
+
+    if (!activeUser) {
+      const storedUid = (typeof window !== 'undefined' && localStorage.getItem('et_growth_os_active_uid')) || 'owner_eric_thomas';
+      activeUser = {
+        uid: storedUid,
+        email: 'ericlamarthomas@gmail.com',
+        displayName: 'Eric Thomas',
+        emailVerified: true,
+      } as User;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('et_growth_os_local_user', JSON.stringify(activeUser));
+      }
+    }
+
+    setCurrentUser(activeUser);
+    setUserProfile((prev) => prev ? { ...prev, has_seen_welcome: true } : {
+      uid: activeUser.uid,
+      email: activeUser.email || '',
+      displayName: activeUser.displayName || 'Eric Thomas',
+      tier: 'consultation',
+      status: 'active',
+      has_seen_welcome: true,
+      business_name: 'ET Digital Growth OS',
+      contact: 'Eric Thomas',
+      website_url: 'https://growwithetdigital.com',
+      location: 'Los Angeles, CA',
+      mission_statement: 'business coaching to inspire storytelling',
+      target_audience: 'Entrepreneurs and service business owners',
+      brand_voice: 'Authoritative & Strategic',
+      total_generations_count: 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(`et_welcome_seen_${activeUser.uid}`, 'true');
+      localStorage.setItem('et_growth_os_active_uid', activeUser.uid);
+      localStorage.removeItem('et_signed_out');
+    }
+    setTimeout(() => {
+      updateUserWelcomeFlag(activeUser.uid, true).catch(() => {});
+    }, 0);
+
+    setIsWhiteboardOpen(true);
+  };
+
+  const handleOpenDashboard = () => {
+    // 1. Check if currentUser is active in state
+    if (currentUser) {
+      setShowWelcomeModal(false);
+      setIsWhiteboardOpen(true);
+      return;
+    }
+
+    // 2. Check if Firebase auth has an active user
+    if (auth.currentUser) {
+      setCurrentUser(auth.currentUser);
+      fetchProfile(auth.currentUser.uid);
+      setShowWelcomeModal(false);
+      setIsWhiteboardOpen(true);
+      return;
+    }
+
+    // 3. Check if we have a local session user
+    if (typeof window !== 'undefined') {
+      try {
+        const localUserJson = localStorage.getItem('et_growth_os_local_user');
+        if (localUserJson) {
+          const localUser = JSON.parse(localUserJson);
+          if (localUser && localUser.uid) {
+            setCurrentUser(localUser as User);
+            fetchProfile(localUser.uid);
+            setShowWelcomeModal(false);
+            setIsWhiteboardOpen(true);
+            return;
+          }
+        }
+      } catch (e) {}
+    }
+
+    // 4. Otherwise open Auth modal to let user sign in
+    setIsAuthModalOpen(true);
   };
 
   useEffect(() => {
@@ -146,10 +252,13 @@ export default function App() {
             }
           } catch (e) {}
         }
-        setCurrentUser(null);
-        setUserProfile(null);
-        setIsWhiteboardOpen(false);
-        setShowWelcomeModal(false);
+        const activeUid = typeof window !== 'undefined' ? localStorage.getItem('et_growth_os_active_uid') : null;
+        if (currentlySignedOut || !activeUid) {
+          setCurrentUser(null);
+          setUserProfile(null);
+          setIsWhiteboardOpen(false);
+          setShowWelcomeModal(false);
+        }
       }
     });
     return () => unsubscribe();
@@ -224,13 +333,20 @@ export default function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  if (isWhiteboardOpen && currentUser) {
+  if (isWhiteboardOpen) {
+    const activeSessionUser = effectiveUser || {
+      uid: (typeof window !== 'undefined' && localStorage.getItem('et_growth_os_active_uid')) || 'owner_eric_thomas',
+      email: 'ericlamarthomas@gmail.com',
+      displayName: 'Eric Thomas',
+      emailVerified: true,
+    } as User;
+
     return (
       <div className="min-h-screen selection:bg-brand-cyan/30">
         <WhiteboardShell
-          user={currentUser}
+          user={activeSessionUser}
           profile={userProfile}
-          onRefreshProfile={() => fetchProfile(currentUser.uid)}
+          onRefreshProfile={() => fetchProfile(activeSessionUser.uid)}
           onCloseDashboard={() => setIsWhiteboardOpen(false)}
           onOpenBooking={handleOpenBooking}
           onSignOut={handleSignOut}
@@ -238,7 +354,7 @@ export default function App() {
 
         {showWelcomeModal && (
           <WelcomeBookmarkModal
-            uid={currentUser.uid}
+            uid={activeSessionUser.uid}
             isOpen={showWelcomeModal}
             onClose={handleEnterGrowthOS}
             onEnterGOS={handleEnterGrowthOS}
@@ -260,10 +376,10 @@ export default function App() {
         onOpenBooking={handleOpenBooking}
         onOpenCalendar={handleOpenCalendar}
         onOpenWorkspaceHub={() => setIsWorkspaceOpen(true)}
-        user={currentUser}
+        user={effectiveUser}
         profile={userProfile}
         onOpenAuthModal={() => setIsAuthModalOpen(true)}
-        onOpenDashboard={() => setIsWhiteboardOpen(true)}
+        onOpenDashboard={handleOpenDashboard}
         onSignOut={handleSignOut}
       />
 
@@ -278,6 +394,8 @@ export default function App() {
         onOpenBooking={handleOpenBooking} 
         onOpenCalendar={handleOpenCalendar}
         onOpenAuthModal={() => setIsAuthModalOpen(true)}
+        onOpenDashboard={handleOpenDashboard}
+        user={effectiveUser}
       />
 
       {/* SECTION 6: High-Fidelity Creative Showcase (Dynamic Media Module) */}
@@ -300,10 +418,10 @@ export default function App() {
 
       {/* SECTION 8.5: Growth Operating System Access & Conversion Cadence */}
       <GrowthOSAccessBanner
-        user={currentUser}
+        user={effectiveUser}
         profile={userProfile}
         onOpenAuthModal={() => setIsAuthModalOpen(true)}
-        onOpenDashboard={() => setIsWhiteboardOpen(true)}
+        onOpenDashboard={handleOpenDashboard}
         onOpenBooking={handleOpenBooking}
         onOpenCalendar={handleOpenCalendar}
       />
@@ -335,16 +453,22 @@ export default function App() {
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
         onSuccess={(user) => {
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('et_signed_out');
+            localStorage.setItem('et_growth_os_active_uid', user.uid);
+            localStorage.setItem('et_growth_os_local_user', JSON.stringify(user));
+          }
           setCurrentUser(user);
           fetchProfile(user.uid);
+          setShowWelcomeModal(false);
           setIsWhiteboardOpen(true);
         }}
       />
 
       {/* First-time Welcome & Bookmark Modal */}
-      {currentUser && showWelcomeModal && (
+      {showWelcomeModal && (
         <WelcomeBookmarkModal
-          uid={currentUser.uid}
+          uid={effectiveUser?.uid || 'owner_eric_thomas'}
           isOpen={showWelcomeModal}
           onClose={handleEnterGrowthOS}
           onEnterGOS={handleEnterGrowthOS}

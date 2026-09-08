@@ -106,7 +106,7 @@ export default function Navbar({
             }`}
           >
             <span className="w-1.5 h-1.5 rounded-full bg-brand-cyan animate-pulse shrink-0" />
-            Free Auditor
+            Growth Auditor
           </button>
           <button
             onClick={() => handleNavClick('about')}

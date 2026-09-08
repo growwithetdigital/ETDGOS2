@@ -13,21 +13,34 @@ interface WelcomeBookmarkModalProps {
 export default function WelcomeBookmarkModal({ uid, isOpen, onClose, onEnterGOS }: WelcomeBookmarkModalProps) {
   if (!isOpen) return null;
 
-  const handleEnterGOS = async () => {
-    try {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(`et_welcome_seen_${uid}`, 'true');
-      }
-      if (uid) {
-        await updateUserWelcomeFlag(uid, true).catch(() => {});
-      }
-    } catch (err) {
-      console.warn('Notice updating welcome flag:', err);
-    } finally {
-      if (onEnterGOS) {
+  const handleEnterGOS = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    // 1. Immediately record in localStorage so this modal never reappears
+    if (typeof window !== 'undefined' && uid) {
+      localStorage.setItem(`et_welcome_seen_${uid}`, 'true');
+    }
+
+    // 2. Immediately trigger transition to Growth OS without any network wait
+    if (onEnterGOS) {
+      try {
         onEnterGOS();
+      } catch (e) {
+        console.error('Error in onEnterGOS:', e);
       }
+    }
+    try {
       onClose();
+    } catch (e) {}
+
+    // 3. Fire-and-forget background update to Firestore (non-blocking)
+    if (uid) {
+      setTimeout(() => {
+        updateUserWelcomeFlag(uid, true).catch(() => {});
+      }, 0);
     }
   };
 

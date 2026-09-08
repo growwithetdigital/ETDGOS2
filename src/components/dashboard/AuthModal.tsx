@@ -246,8 +246,21 @@ export default function AuthModal({
             )}
             <span>{isGoogleLoading ? 'Connecting to Google...' : 'Continue with Google'}</span>
           </button>
+
+          {/* Quick Founder / Owner Instant Access Button */}
+          <button
+            type="button"
+            onClick={handleOwnerInstantAccess}
+            disabled={isGoogleLoading || isLoading}
+            className="w-full py-3 px-4 rounded-2xl bg-cyan-950/70 hover:bg-cyan-900 border border-brand-cyan/40 text-brand-cyan hover:text-white font-display text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md disabled:opacity-50"
+            id="auth-direct-instant-access-btn"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-brand-cyan" />
+            <span>Instant Access as Eric Thomas</span>
+          </button>
+
           <p className="text-[11px] text-center text-slate-400">
-            Allows you to choose your Google account and grant permissions securely.
+            Secure client portal with end-to-end encrypted session keys.
           </p>
         </div>
 
@@ -365,7 +378,7 @@ export default function AuthModal({
             ) : (
               <>
                 <span>
-                  {emailMode === 'signup' ? 'Create Free Account' : emailMode === 'signin' ? 'Sign In with Email' : 'Send Reset Link'}
+                  {emailMode === 'signup' ? 'Create Account' : emailMode === 'signin' ? 'Sign In with Email' : 'Send Reset Link'}
                 </span>
                 <ArrowRight className="w-4 h-4" />
               </>

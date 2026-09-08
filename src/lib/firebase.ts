@@ -759,30 +759,13 @@ export const signInWithInstantAccess = async (
     localStorage.setItem(`et_profile_${localUid}`, JSON.stringify(initialProfile));
   }
 
-  // Background non-blocking sync
+  // Background non-blocking sync (safe, non-intrusive)
   Promise.resolve().then(async () => {
     try {
-      const cred = await Promise.race([
-        signInAnonymously(auth),
-        new Promise<null>((resolve) => setTimeout(() => resolve(null), 1200))
-      ]);
-      if (cred && (cred as any).user) {
-        updateProfile((cred as any).user, { displayName: customName }).catch(() => {});
-        const userDocRef = doc(db, 'users', (cred as any).user.uid);
-        await setDoc(userDocRef, {
-          uid: (cred as any).user.uid,
-          email: customEmail,
-          displayName: customName,
-          tier: 'consultation',
-          status: 'active',
-          updated_at: serverTimestamp(),
-        }, { merge: true });
-        await bindPendingAuditToUser((cred as any).user.uid);
-      }
-    } catch (e) {}
-
-    try {
       await trackPlatformUsage(localUid, customEmail, customName, 'login');
+    } catch (e) {}
+    try {
+      await bindPendingAuditToUser(localUid);
     } catch (e) {}
   });
 
@@ -1002,10 +985,13 @@ export const updateUserWelcomeFlag = async (uid: string, hasSeen: boolean): Prom
 
   try {
     const userDocRef = doc(db, 'users', uid);
-    await setDoc(userDocRef, {
-      has_seen_welcome: hasSeen,
-      updated_at: serverTimestamp(),
-    }, { merge: true });
+    await Promise.race([
+      setDoc(userDocRef, {
+        has_seen_welcome: hasSeen,
+        updated_at: serverTimestamp(),
+      }, { merge: true }),
+      new Promise((resolve) => setTimeout(resolve, 800))
+    ]);
   } catch (error) {
     console.warn('updateUserWelcomeFlag notice (stored locally):', error);
   }

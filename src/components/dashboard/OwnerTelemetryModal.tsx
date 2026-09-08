@@ -189,7 +189,7 @@ export default function OwnerTelemetryModal({
                               ? 'bg-cyan-950/50 text-cyan-300 border-cyan-500/30'
                               : 'bg-slate-800 text-slate-400 border-slate-700'
                           }`}>
-                            {user.tier === 'consultation' ? 'VIP Consultation' : user.tier === 'monthly' ? 'Monthly OS' : 'Free Tier'}
+                            {user.tier === 'consultation' ? 'VIP Consultation' : user.tier === 'monthly' ? 'Monthly OS' : 'Standard OS'}
                           </span>
                         </td>
                         <td className="py-3 px-3 text-center font-mono font-bold text-white">
