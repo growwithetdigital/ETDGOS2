@@ -8,7 +8,7 @@ import {
   Instagram, Facebook, Mail, Gift, Search, ArrowLeft, LogOut,
   Crown, Lock, RefreshCw, Clock, Target, BarChart3, BookOpen,
   ShieldCheck, AlertCircle, Copy, Check, Heart, Cpu, Globe,
-  TrendingUp, Zap, HelpCircle
+  TrendingUp, Zap, HelpCircle, Archive, Tv
 } from 'lucide-react';
 import { 
   UserProfile, 
@@ -24,6 +24,7 @@ import {
   stripMarkdownFormatting, 
   CURATED_NATURAL_PHOTOS, 
   generateSocialPromotionAngles,
+  generateEvergreenBlogPost,
   SocialAnglePackage 
 } from '../../utils/contentEngineHelpers';
 import ContentStudio from './ContentStudio';
@@ -34,6 +35,9 @@ import OwnerTelemetryModal from './OwnerTelemetryModal';
 import BusinessDnaPanel from './BusinessDnaPanel';
 import MarketReportPanel from './MarketReportPanel';
 import FounderNotePanel from './FounderNotePanel';
+import ContentArchivePanel from './ContentArchivePanel';
+import MarketingShortsPanel from './MarketingShortsPanel';
+import { isAuthorizedForTelemetry } from '../../utils/telemetryAuth';
 import { WORKING_MARKETING_TIPS } from '../../data/marketingTips';
 
 interface WhiteboardShellProps {
@@ -100,10 +104,12 @@ export function StatusPill({ status }: { status: string }) {
 }
 
 export type NavTabId = 
+  | 'content_studio' 
+  | 'archive'
+  | 'marketing_shorts'
   | 'business_dna' 
   | 'market_report' 
   | 'auditor' 
-  | 'content_studio' 
   | 'founder_note'
   | 'overview' 
   | 'foundation' 
@@ -120,8 +126,8 @@ export default function WhiteboardShell({
   onOpenBooking,
   onSignOut,
 }: WhiteboardShellProps) {
-  // Default to Business DNA as requested for Core Tier
-  const [activeTab, setActiveTab] = useState<NavTabId>('business_dna');
+  // Default to Content Studio (1-Asset Operating System)
+  const [activeTab, setActiveTab] = useState<NavTabId>('content_studio');
   const [dark, setDark] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('et_gos_theme');
@@ -140,17 +146,12 @@ export default function WhiteboardShell({
   const [dailyTipIndex, setDailyTipIndex] = useState(0);
   const [copiedDailyTip, setCopiedDailyTip] = useState(false);
 
-  // Check if current user is owner / admin
-  const isOwner = Boolean(
-    user?.email === 'ericlamarthomas@gmail.com' ||
-    user?.uid?.includes('owner') ||
-    profile?.role === 'owner' ||
-    profile?.role === 'admin'
-  );
+  // Check if current user is owner / admin strictly matching the 3 authorized emails
+  const isOwner = isAuthorizedForTelemetry(user?.email, profile?.email);
 
   const isFreeTier = profile?.tier === 'free' || !profile?.tier;
 
-  // Theme Variables - Balanced Contrast matches the public website's dark executive header + crisp light cards
+  // Theme Variables - Balanced Contrast: crisp, WCAG-compliant readability on both light and dark surfaces
   const themeStyles = useMemo(() => {
     return dark
       ? {
@@ -164,13 +165,13 @@ export default function WhiteboardShell({
           "--track": "#1E293B",
         }
       : {
-          "--bg": "#F1F5F9",
+          "--bg": "#F8FAFC",
           "--surface": "#FFFFFF",
-          "--surface2": "#F8FAFC",
+          "--surface2": "#F1F5F9",
           "--border": "#CBD5E1",
           "--text": "#0F172A",
-          "--muted": "#475569",
-          "--accent": palette.cyan,
+          "--muted": "#334155",
+          "--accent": "#0891B2",
           "--track": "#E2E8F0",
         };
   }, [dark]);
@@ -183,39 +184,10 @@ export default function WhiteboardShell({
   const clientCompetitor = profile?.competitor_website || 'https://ericthomas.com/';
   const clientWebsite = profile?.website_url || 'https://growwithetdigital.com';
 
-  // Fallback initial sample package so Content Studio is instantly active
+  // Fallback initial sample package based on evergreen blog generator so Content Studio is instantly active
   const defaultSampleItem: GeneratedContentItem = useMemo(() => {
-    const title = `${clientName}: The Strategic Growth Blueprint for ${clientLocation}`;
-    const targetKeyword = `${clientName} ${clientLocation} category authority`;
-    const markdown = `# ${title}
-
-In today's fast-evolving market, high-intent buyers in **${clientLocation}** don't have time to wade through generic marketing noise. They want definitive solutions from trusted authorities who understand their specific challenges.
-
-At **${clientName}**, our core mission is clear: *"${clientMission}"*. Yet even market-leading organizations face an urgent bottleneck: converting online discovery into qualified, predictable customer conversations.
-
----
-
-## 1. The Differentiation Advantage
-
-While competitors continue relying on outdated, sporadic marketing tactics, modern buyers evaluate trust through clear proof, structured authority, and direct answers. 
-
-To lead the market, **${clientName}** must leverage three strategic differentiators:
-* **Hyper-Relevant Geographic Visibility:** Capturing high-intent local and regional search queries from **${clientAudience}**.
-* **Zero-Friction Conversion:** Replacing convoluted contact forms with instant diagnostic tools and frictionless intake channels.
-* **Consistent Brand Narrative:** Maintaining an **Authoritative & Strategic** tone across every digital touchpoint—from first impression through direct contact with ${clientName}.
-
----
-
-## 2. Eliminating Conversion Friction
-
-A high-performing digital footprint is not a billboard—it is a conversion machine. High-intent visitors must immediately understand:
-1. What exact problem you solve.
-2. Who you have successfully solved it for.
-3. The frictionless next step to work with you.
-
-By prioritizing clear storytelling over corporate jargon, **${clientName}** transforms passive web visitors into high-trust client relationships.`;
-
-    const angles = generateSocialPromotionAngles(profile, title, markdown);
+    const evergreen = generateEvergreenBlogPost(profile);
+    const angles = generateSocialPromotionAngles(profile, evergreen.title, evergreen.markdown_content);
 
     return {
       id: 'cp_initial_package',
@@ -223,14 +195,14 @@ By prioritizing clear storytelling over corporate jargon, **${clientName}** tran
       type: 'quarterly_growth_pack',
       created_at: new Date().toISOString(),
       blog_post: {
-        title,
-        target_keyword: targetKeyword,
-        word_count: 420,
-        markdown_content: markdown,
-        meta_description: `An executive growth roadmap for ${clientName} in ${clientLocation}: How authentic storytelling and predictable intake outperform conventional agencies.`,
+        title: evergreen.title,
+        target_keyword: evergreen.target_keyword,
+        word_count: evergreen.word_count,
+        markdown_content: evergreen.markdown_content,
+        meta_description: evergreen.meta_description,
         natural_photo_url: CURATED_NATURAL_PHOTOS[0].url,
         photo_caption: CURATED_NATURAL_PHOTOS[0].title,
-        read_time: '3 Min Read'
+        read_time: evergreen.read_time
       },
       social_captions: {
         linkedin: angles[0].linkedin,
@@ -245,7 +217,7 @@ By prioritizing clear storytelling over corporate jargon, **${clientName}** tran
       },
       social_angles: angles
     };
-  }, [clientName, clientLocation, clientMission, clientAudience, clientCompetitor, profile, user]);
+  }, [profile, clientLocation, user]);
 
   // Load user content library
   useEffect(() => {
@@ -269,28 +241,29 @@ By prioritizing clear storytelling over corporate jargon, **${clientName}** tran
     loadContent();
   }, [user?.uid, defaultSampleItem]);
 
-  // Explicit Core Tier Tabs:
-  // 1. business_dna (Business DNA - Google Pomelli style)
-  // 2. market_report (Market Report for their Industry)
-  // 3. auditor (Auditor Diagnostic Tool)
-  // 4. content_studio (Content Studio: 1 blog post in their voice + 4 social media promotion angles)
-  // 5. founder_note (Note from Founder Eric Thomas & Scale Suite)
+  // Core Tier Tabs with 3 Pillars & Roadmap included
   const coreNavItems = [
-    { id: 'business_dna', label: 'Business DNA', icon: Cpu, badge: 'Pomelli' },
-    { id: 'market_report', label: 'Market Report', icon: FileBarChart, badge: 'Q1 Intel' },
-    { id: 'auditor', label: 'Auditor Tool', icon: BarChart3, badge: 'Diagnostic' },
-    { id: 'content_studio', label: 'Content Studio', icon: Layers, badge: '1 Post + 4 Angles' },
-    { id: 'founder_note', label: 'Note From Founder', icon: Heart, badge: 'Scale' },
+    { id: 'content_studio', label: 'Content Studio', icon: Layers, badge: '1-Asset Kit' },
+    { id: 'archive', label: 'Dispatches Archive', icon: Archive, badge: 'History' },
+    { id: 'marketing_shorts', label: 'Marketing Shorts', icon: Tv, badge: 'Updates' },
+    { id: 'foundation', label: 'Engage · Convert · Grow', icon: Compass, badge: '3 Pillars' },
+    { id: 'business_dna', label: 'Brand DNA & Scanner', icon: Cpu, badge: 'Pomelli DNA' },
+    { id: 'market_report', label: 'Market Intel', icon: FileBarChart, badge: '1 Headline' },
+    { id: 'auditor', label: 'Site Diagnostic', icon: BarChart3, badge: 'Audit' },
+    { id: 'roadmap', label: 'Quarterly Trajectory', icon: Map, badge: '90-Day' },
+    { id: 'founder_note', label: 'Letter from Founder', icon: Heart, badge: 'Scale' },
   ];
 
   // Extended Executive Modules for Consultation / Owner / Pro users
   const proNavItems = [
+    { id: 'content_studio', label: 'Content Studio', icon: Layers },
+    { id: 'archive', label: 'Dispatches Archive', icon: Archive },
+    { id: 'marketing_shorts', label: 'Marketing Shorts', icon: Tv },
     { id: 'overview', label: 'Command Center', icon: LayoutDashboard },
     { id: 'business_dna', label: 'Business DNA', icon: Cpu },
     { id: 'market_report', label: 'Market Report', icon: FileBarChart },
     { id: 'auditor', label: 'Auditor & Diagnostics', icon: BarChart3 },
-    { id: 'content_studio', label: 'Content Studio', icon: Layers },
-    { id: 'foundation', label: '10 Foundation Pillars', icon: Compass },
+    { id: 'foundation', label: '3 Foundation Pillars', icon: Compass },
     { id: 'roadmap', label: 'Quarterly Roadmap', icon: Map },
     { id: 'competitors', label: 'Competitor Insights', icon: Users },
     { id: 'insights', label: 'Tactics Vault', icon: BookOpen },
@@ -343,8 +316,9 @@ By prioritizing clear storytelling over corporate jargon, **${clientName}** tran
             <span className="font-mono text-[9px] uppercase tracking-wider text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/30">
               {profile?.brand_dna ? '● DNA Calibrated' : '○ DNA Pending Link'}
             </span>
-            <span className="font-mono text-[9px] uppercase tracking-wider text-cyan-400 bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-500/30">
-              {profile?.tier === 'monthly' ? 'VIP Monthly Suite' : 'Growth OS Standard'}
+            <span className="font-mono text-[9px] uppercase tracking-wider text-cyan-400 bg-cyan-950/60 px-2.5 py-1 rounded border border-cyan-500/30 flex items-center gap-1.5 font-bold">
+              <Crown className="w-3 h-3 text-amber-400" />
+              {profile?.tier === 'monthly' ? 'VIP Monthly Retainer ($2,500/mo)' : 'Executive Starter Tier ($2,500/mo Architecture)'}
             </span>
           </div>
         </div>
@@ -471,15 +445,15 @@ By prioritizing clear storytelling over corporate jargon, **${clientName}** tran
                 onClick={() => setActiveTab(tab.id as NavTabId)}
                 className={`relative px-4 py-2 rounded-xl font-display text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer shrink-0 ${
                   isActive
-                    ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 shadow-md shadow-cyan-500/25 font-black scale-100'
-                    : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--surface)]'
+                    ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-slate-950 shadow-md shadow-cyan-500/25 font-black scale-100'
+                    : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--surface)] border border-transparent hover:border-[var(--border)]'
                 }`}
               >
-                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-slate-950' : 'text-cyan-400'}`} />
+                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-slate-950' : 'text-[var(--accent)]'}`} />
                 <span>{tab.label}</span>
                 {'badge' in tab && (
-                  <span className={`text-[9px] font-mono px-1.5 py-0.2 rounded ${
-                    isActive ? 'bg-slate-950/20 text-slate-950' : 'bg-cyan-950/60 text-cyan-400 border border-cyan-500/20'
+                  <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded font-semibold ${
+                    isActive ? 'bg-slate-950/20 text-slate-950' : 'bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/30'
                   }`}>
                     {tab.badge}
                   </span>
@@ -496,7 +470,7 @@ By prioritizing clear storytelling over corporate jargon, **${clientName}** tran
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
         
         {/* ==================================================================== */}
-        {/* FREE TAB 1: BUSINESS DNA (Google Pomelli Style) */}
+        {/* CORE TAB: BUSINESS & BRAND VOICE DNA */}
         {/* ==================================================================== */}
         {activeTab === 'business_dna' && (
           <BusinessDnaPanel
@@ -511,8 +485,37 @@ By prioritizing clear storytelling over corporate jargon, **${clientName}** tran
         {/* ==================================================================== */}
         {activeTab === 'market_report' && (
           <MarketReportPanel
+            user={user}
             profile={profile}
             onOpenBooking={onOpenBooking}
+          />
+        )}
+
+        {/* ==================================================================== */}
+        {/* TAB: CONTENT ARCHIVE (Saved blog posts, graphics & captions) */}
+        {/* ==================================================================== */}
+        {activeTab === 'archive' && (
+          <ContentArchivePanel
+            user={user}
+            profile={profile}
+            items={contentList.length > 0 ? contentList : [defaultSampleItem]}
+            onSelectAndLoad={(item) => {
+              setSelectedItem(item);
+              setActiveTab('content_studio');
+            }}
+            onNavigateToContentStudio={() => setActiveTab('content_studio')}
+            onOpenBooking={onOpenBooking}
+          />
+        )}
+
+        {/* ==================================================================== */}
+        {/* TAB: MARKETING SHORTS (Curated video shorts from Neil Patel, Gary Vee, Tom Ferry, Eric) */}
+        {/* ==================================================================== */}
+        {activeTab === 'marketing_shorts' && (
+          <MarketingShortsPanel
+            profile={profile}
+            onOpenBooking={onOpenBooking}
+            onNavigateToContentStudio={() => setActiveTab('content_studio')}
           />
         )}
 
@@ -560,6 +563,7 @@ By prioritizing clear storytelling over corporate jargon, **${clientName}** tran
               item={selectedItem || defaultSampleItem}
               profile={profile}
               onOpenBooking={onOpenBooking}
+              onNavigateToBrandDna={() => setActiveTab('business_dna')}
             />
           </div>
         )}
@@ -589,16 +593,16 @@ By prioritizing clear storytelling over corporate jargon, **${clientName}** tran
             {(() => {
               const currentTip = WORKING_MARKETING_TIPS[dailyTipIndex % WORKING_MARKETING_TIPS.length];
               return (
-                <div className="rounded-3xl border border-cyan-500/30 bg-gradient-to-br from-slate-900 via-[var(--surface)] to-[var(--surface2)] p-6 sm:p-7 shadow-lg relative overflow-hidden text-left">
+                <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-7 shadow-sm relative overflow-hidden text-left">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[var(--border)] pb-4 mb-4">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-mono text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                      <span className="font-mono text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/30">
                         Daily Growth Dispatch
                       </span>
-                      <span className="font-mono text-[9px] font-bold text-amber-400 bg-amber-950/40 px-2 py-0.5 rounded border border-amber-500/20">
+                      <span className="font-mono text-[9px] font-bold text-amber-700 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
                         {currentTip.category}
                       </span>
-                      <span className="font-mono text-[9px] font-bold text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-500/20">
+                      <span className="font-mono text-[9px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
                         {currentTip.impactMetric}
                       </span>
                     </div>
@@ -609,14 +613,14 @@ By prioritizing clear storytelling over corporate jargon, **${clientName}** tran
                         onClick={() => setDailyTipIndex(prev => (prev + 1) % WORKING_MARKETING_TIPS.length)}
                         className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[var(--surface2)] hover:bg-[var(--border)] text-[var(--muted)] hover:text-[var(--text)] font-mono text-[10px] font-bold transition-all cursor-pointer border border-[var(--border)]"
                       >
-                        <RefreshCw className="w-3 h-3 text-cyan-400" />
+                        <RefreshCw className="w-3 h-3 text-[var(--accent)]" />
                         <span>Next Tactic ({((dailyTipIndex % WORKING_MARKETING_TIPS.length) + 1)}/{WORKING_MARKETING_TIPS.length})</span>
                       </button>
 
                       <button
                         type="button"
                         onClick={() => setActiveTab('insights')}
-                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 font-mono text-[10px] font-bold transition-all cursor-pointer border border-cyan-500/30"
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-[var(--accent)]/10 hover:bg-[var(--accent)]/20 text-[var(--accent)] font-mono text-[10px] font-bold transition-all cursor-pointer border border-[var(--accent)]/30"
                       >
                         <span>Tactics Vault</span>
                         <ArrowUpRight className="w-3 h-3" />
@@ -635,7 +639,7 @@ By prioritizing clear storytelling over corporate jargon, **${clientName}** tran
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 mb-4">
                       <div className="p-3.5 rounded-2xl bg-[var(--surface2)] border border-[var(--border)]">
-                        <span className="font-mono text-[10px] uppercase tracking-wider text-amber-400 font-bold block mb-1">
+                        <span className="font-mono text-[10px] uppercase tracking-wider text-amber-700 dark:text-amber-400 font-bold block mb-1">
                           Research Proof & Mechanism
                         </span>
                         <p className="text-xs text-[var(--muted)] leading-relaxed">
@@ -644,13 +648,13 @@ By prioritizing clear storytelling over corporate jargon, **${clientName}** tran
                       </div>
 
                       <div className="p-3.5 rounded-2xl bg-[var(--surface2)] border border-[var(--border)]">
-                        <span className="font-mono text-[10px] uppercase tracking-wider text-cyan-400 font-bold block mb-1">
+                        <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--accent)] font-bold block mb-1">
                           Action Blueprint Steps
                         </span>
                         <ul className="space-y-1 text-xs text-[var(--text)]">
                           {currentTip.stepByStep.slice(0, 2).map((s, idx) => (
                             <li key={idx} className="flex items-start gap-1.5">
-                              <span className="font-mono text-[10px] text-cyan-400 shrink-0 mt-0.5">0{idx + 1}.</span>
+                              <span className="font-mono text-[10px] text-[var(--accent)] shrink-0 mt-0.5">0{idx + 1}.</span>
                               <span className="line-clamp-2">{s}</span>
                             </li>
                           ))}
@@ -665,40 +669,133 @@ By prioritizing clear storytelling over corporate jargon, **${clientName}** tran
         )}
 
         {/* ==================================================================== */}
-        {/* PRO TAB: MARKETING FOUNDATION */}
+        {/* TAB: 3 FOUNDATION PILLARS (Engage, Convert, Grow) */}
         {/* ==================================================================== */}
         {activeTab === 'foundation' && (
-          <div className="space-y-6 text-left">
+          <div className="space-y-6 text-left" id="three-foundation-pillars">
             <SectionHeader
-              eyebrow="Marketing Foundation"
-              title="Marketing Foundation Audit"
-              desc="A professional assessment of your core marketing pillars with concrete, high-velocity next actions."
+              eyebrow="Core Operating Architecture"
+              title="3 Foundation Pillars: Engage · Convert · Grow"
+              desc={`Custom tailored for ${clientName} based on your strategic footprint and latest evergreen blog release: "${selectedItem?.blog_post.title || defaultSampleItem.blog_post.title}".`}
             />
-            <div className="space-y-3">
-              {[
-                { area: "Website Conversion", status: "Developing", note: "Current website establishes executive presence but features competing calls to action on primary service sections.", next: "Define a single high-conversion primary intake action (Diagnostic Intake) across all key landing areas." },
-                { area: "Local Search (SEO)", status: "Needs Attention", note: `Untapped search demand from ${clientAudience} searching for executive business coaching and storytelling in ${clientLocation}.`, next: "Optimize title tags, meta descriptions, and localized entity headers for commercial search intent." },
-                { area: "AI Search Readiness (AEO)", status: "Needs Attention", note: "Answer engines (ChatGPT, Gemini, Perplexity) lack structured FAQPage and Person schema to cite as the primary authority.", next: "Deploy structured semantic entity markup and answer the top 5 questions buyers ask before booking." },
-                { area: "Brand Messaging", status: "Strong", note: `Core mission ("${clientMission}") provides an authentic, defensible moat against commoditized competitors.`, next: "Keep messaging focused on measurable transformation and authentic lived proof." },
-              ].map((item) => (
-                <Card key={item.area}>
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="sm:w-1/4">
-                      <div className="text-sm font-medium text-[var(--text)]">{item.area}</div>
-                      <div className="mt-2">
-                        <StatusPill status={item.status} />
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Pillar 1: ENGAGE */}
+              <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-7 shadow-sm space-y-4 relative overflow-hidden flex flex-col justify-between">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-[var(--accent)] font-mono font-black text-sm">
+                        01
+                      </div>
+                      <div>
+                        <span className="font-mono text-[10px] uppercase tracking-widest text-[var(--accent)] font-bold block">
+                          Pillar 01
+                        </span>
+                        <h3 className="font-display text-xl font-bold text-[var(--text)]">
+                          Engage
+                        </h3>
                       </div>
                     </div>
-                    <div className="sm:w-3/4 sm:border-l sm:border-[var(--border)] sm:pl-5">
-                      <p className="text-sm leading-relaxed text-[var(--text)]">{item.note}</p>
-                      <div className="mt-2 flex items-start gap-1.5 text-sm text-[var(--accent)]">
-                        <ArrowUpRight className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                        <span>{item.next}</span>
-                      </div>
-                    </div>
+                    <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-cyan-500/10 text-[var(--accent)] border border-cyan-500/30">
+                      Discovery Hook
+                    </span>
                   </div>
-                </Card>
-              ))}
+
+                  <div className="p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] space-y-2">
+                    <div className="flex items-center gap-1.5 text-[var(--accent)] font-mono text-[10px] font-bold uppercase tracking-wider">
+                      <Target className="w-3.5 h-3.5" />
+                      <span>The 1 Strategic Tip for {clientName}</span>
+                    </div>
+                    <p className="text-xs text-[var(--text)] leading-relaxed font-sans font-medium">
+                      Publish the conversational premise of <em>"{selectedItem?.blog_post.title || defaultSampleItem.blog_post.title}"</em> directly onto LinkedIn and regional industry networks. Open with the exact high-friction challenge facing {clientAudience} in {clientLocation}, immediately framing your brand voice as the definitive authority before commoditized competitors can react.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-[var(--border)] flex items-start gap-2 text-xs text-[var(--muted)]">
+                  <ArrowUpRight className="w-3.5 h-3.5 mt-0.5 text-[var(--accent)] shrink-0" />
+                  <span><strong>Execution:</strong> Deploy your 1 engaging social caption and 1:1 editorial thumbnail from Content Studio to fuel discovery.</span>
+                </div>
+              </div>
+
+              {/* Pillar 2: CONVERT */}
+              <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-7 shadow-sm space-y-4 relative overflow-hidden flex flex-col justify-between">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-400 font-mono font-black text-sm">
+                        02
+                      </div>
+                      <div>
+                        <span className="font-mono text-[10px] uppercase tracking-widest text-amber-600 dark:text-amber-400 font-bold block">
+                          Pillar 02
+                        </span>
+                        <h3 className="font-display text-xl font-bold text-[var(--text)]">
+                          Convert
+                        </h3>
+                      </div>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30">
+                      Zero-Friction Intake
+                    </span>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] space-y-2">
+                    <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400 font-mono text-[10px] font-bold uppercase tracking-wider">
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>The 1 Strategic Tip for {clientName}</span>
+                    </div>
+                    <p className="text-xs text-[var(--text)] leading-relaxed font-sans font-medium">
+                      Place a direct diagnostic or consultation CTA at the bottom of your 300-word post. When {clientAudience} finish reading <em>"{selectedItem?.blog_post.title || defaultSampleItem.blog_post.title}"</em>, invite them into a direct intake evaluation that reinforces your mission: <em>"{clientMission}"</em>. Prospects convert 3.8x faster when moving from editorial authority directly to an intake evaluation.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-[var(--border)] flex items-start gap-2 text-xs text-[var(--muted)]">
+                  <ArrowUpRight className="w-3.5 h-3.5 mt-0.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                  <span><strong>Execution:</strong> Send your 1 150-word eblast and publish the Google Business Profile post to convert active searchers.</span>
+                </div>
+              </div>
+
+              {/* Pillar 3: GROW */}
+              <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-7 shadow-sm space-y-4 relative overflow-hidden flex flex-col justify-between">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-mono font-black text-sm">
+                        03
+                      </div>
+                      <div>
+                        <span className="font-mono text-[10px] uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-bold block">
+                          Pillar 03
+                        </span>
+                        <h3 className="font-display text-xl font-bold text-[var(--text)]">
+                          Grow
+                        </h3>
+                      </div>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
+                      Compounding Authority
+                    </span>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] space-y-2">
+                    <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 font-mono text-[10px] font-bold uppercase tracking-wider">
+                      <TrendingUp className="w-3.5 h-3.5" />
+                      <span>The 1 Strategic Tip for {clientName}</span>
+                    </div>
+                    <p className="text-xs text-[var(--text)] leading-relaxed font-sans font-medium">
+                      Syndicate key takeaway quotes from <em>"{selectedItem?.blog_post.title || defaultSampleItem.blog_post.title}"</em> into recurring client email briefings and regional partnerships. Pair the downloadable 1:1 editorial thumbnail with strategic partner shoutouts across {clientLocation} to spark compounding referral loops that drive continuous inbound revenue.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-[var(--border)] flex items-start gap-2 text-xs text-[var(--muted)]">
+                  <ArrowUpRight className="w-3.5 h-3.5 mt-0.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <span><strong>Execution:</strong> Download your 1:1 editorial graphic (PNG) with your business name overlay from Content Studio and syndicate with key partners.</span>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -723,67 +820,100 @@ By prioritizing clear storytelling over corporate jargon, **${clientName}** tran
         )}
 
         {/* ==================================================================== */}
-        {/* PRO TAB: QUARTERLY ROADMAP */}
+        {/* TAB: QUARTERLY ROADMAP (Engage, Convert, Grow) */}
         {/* ==================================================================== */}
         {activeTab === 'roadmap' && (
-          <div className="space-y-6 text-left">
+          <div className="space-y-6 text-left" id="quarterly-roadmap-pillars">
             <SectionHeader
-              eyebrow="Quarterly Roadmap"
-              title="Execution Priorities (Now / Next / Later)"
-              desc="Every milestone directly serves customer acquisition velocity and brand authority."
+              eyebrow="Quarterly Execution Architecture"
+              title="Quarterly Roadmap: Engage · Convert · Grow"
+              desc={`A 90-day sequential trajectory structured around your 3 foundation pillars and anchored by: "${selectedItem?.blog_post.title || defaultSampleItem.blog_post.title}".`}
             />
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <div className="mb-3 flex items-center gap-2">
-                  <span className="font-mono text-[11px] uppercase tracking-wide text-[var(--muted)]">Now (30 Days)</span>
-                  <div className="h-px flex-1 bg-[var(--border)]" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Month 1: Engage */}
+              <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-7 shadow-sm space-y-4 flex flex-col justify-between">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
+                    <span className="font-mono text-[11px] uppercase tracking-wider text-[var(--accent)] font-bold">
+                      Month 1 (30 Days) · Engage
+                    </span>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/30 font-bold">
+                      Pillar 01
+                    </span>
+                  </div>
+                  <h4 className="font-display text-base font-bold text-[var(--text)]">
+                    Activate Voice & Publish Editorial
+                  </h4>
+                  <div className="p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] space-y-2">
+                    <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] font-bold block">
+                      The 1 Strategic Priority
+                    </span>
+                    <p className="text-xs text-[var(--text)] leading-relaxed font-sans font-medium">
+                      Publish <em>"{selectedItem?.blog_post.title || defaultSampleItem.blog_post.title}"</em> on {clientWebsite || 'your website'} and distribute the 4 social angles to {clientAudience}. Lock in your authentic Brand DNA so every public touchpoint sounds unmistakably like {clientName}.
+                    </p>
+                  </div>
                 </div>
-                <div className="space-y-2.5">
-                  <Card padding="p-3.5">
-                    <p className="text-sm text-[var(--text)]">Publish quarterly strategic blueprint in your authentic voice</p>
-                  </Card>
-                  <Card padding="p-3.5">
-                    <p className="text-sm text-[var(--text)]">Extract and lock in Business DNA for all marketing assets</p>
-                  </Card>
-                  <Card padding="p-3.5">
-                    <p className="text-sm text-[var(--text)]">Deploy first 4-angle social promotion series on LinkedIn & X</p>
-                  </Card>
-                </div>
-              </div>
-
-              <div>
-                <div className="mb-3 flex items-center gap-2">
-                  <span className="font-mono text-[11px] uppercase tracking-wide text-[var(--muted)]">Next (60 Days)</span>
-                  <div className="h-px flex-1 bg-[var(--border)]" />
-                </div>
-                <div className="space-y-2.5">
-                  <Card padding="p-3.5">
-                    <p className="text-sm text-[var(--text)]">Deploy structured FAQPage and Person schema for AI search citation</p>
-                  </Card>
-                  <Card padding="p-3.5">
-                    <p className="text-sm text-[var(--text)]">Streamline consultation intake to reduce booking friction</p>
-                  </Card>
-                  <Card padding="p-3.5">
-                    <p className="text-sm text-[var(--text)]">Launch monthly executive email newsletter for {clientAudience}</p>
-                  </Card>
+                <div className="pt-3 border-t border-[var(--border)] flex items-center gap-1.5 text-xs text-[var(--accent)] font-medium">
+                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                  <span>Milestone: Published post + 4 organic distribution waves</span>
                 </div>
               </div>
 
-              <div>
-                <div className="mb-3 flex items-center gap-2">
-                  <span className="font-mono text-[11px] uppercase tracking-wide text-[var(--muted)]">Later (90 Days+)</span>
-                  <div className="h-px flex-1 bg-[var(--border)]" />
+              {/* Month 2: Convert */}
+              <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-7 shadow-sm space-y-4 flex flex-col justify-between">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
+                    <span className="font-mono text-[11px] uppercase tracking-wider text-amber-700 dark:text-amber-400 font-bold">
+                      Month 2 (60 Days) · Convert
+                    </span>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30 font-bold">
+                      Pillar 02
+                    </span>
+                  </div>
+                  <h4 className="font-display text-base font-bold text-[var(--text)]">
+                    Zero-Friction Intake Diagnostic
+                  </h4>
+                  <div className="p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] space-y-2">
+                    <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] font-bold block">
+                      The 1 Strategic Priority
+                    </span>
+                    <p className="text-xs text-[var(--text)] leading-relaxed font-sans font-medium">
+                      Integrate an interactive diagnostic intake on the landing page of <em>"{selectedItem?.blog_post.title || defaultSampleItem.blog_post.title}"</em>. Transition readers from passive consumers into qualified consultations, eliminating cold intake friction in {clientLocation}.
+                    </p>
+                  </div>
                 </div>
-                <div className="space-y-2.5">
-                  <Card padding="p-3.5">
-                    <p className="text-sm text-[var(--text)]">Expand into comprehensive authority pillars: monthly content plus tailored strategy calls</p>
-                  </Card>
-                  <Card padding="p-3.5">
-                    <p className="text-sm text-[var(--text)]">Implement automated multi-touch conversion attribution</p>
-                  </Card>
-                  <Card padding="p-3.5">
-                    <p className="text-sm text-[var(--text)]">Schedule 1-on-1 Growth Consultation with Eric Thomas</p>
-                  </Card>
+                <div className="pt-3 border-t border-[var(--border)] flex items-center gap-1.5 text-xs text-amber-700 dark:text-amber-400 font-medium">
+                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                  <span>Milestone: Frictionless diagnostic intake live</span>
+                </div>
+              </div>
+
+              {/* Month 3: Grow */}
+              <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-7 shadow-sm space-y-4 flex flex-col justify-between">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
+                    <span className="font-mono text-[11px] uppercase tracking-wider text-emerald-700 dark:text-emerald-400 font-bold">
+                      Month 3 (90 Days) · Grow
+                    </span>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 font-bold">
+                      Pillar 03
+                    </span>
+                  </div>
+                  <h4 className="font-display text-base font-bold text-[var(--text)]">
+                    Compounding Authority & Scaling
+                  </h4>
+                  <div className="p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] space-y-2">
+                    <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] font-bold block">
+                      The 1 Strategic Priority
+                    </span>
+                    <p className="text-xs text-[var(--text)] leading-relaxed font-sans font-medium">
+                      Syndicate the core insights of <em>"{selectedItem?.blog_post.title || defaultSampleItem.blog_post.title}"</em> to key strategic partners in {clientLocation} and schedule your private 1-on-1 Growth Consultation with Eric Thomas to expand into a multi-channel acquisition flywheel.
+                    </p>
+                  </div>
+                </div>
+                <div className="pt-3 border-t border-[var(--border)] flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-400 font-medium">
+                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                  <span>Milestone: Compounding referral flywheel & 1-on-1 Scale Session</span>
                 </div>
               </div>
             </div>

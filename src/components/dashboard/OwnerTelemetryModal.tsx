@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { 
   X, Users, Activity, Layers, BarChart3, Clock, 
-  ShieldCheck, RefreshCw, CheckCircle2, ArrowUpRight, Sparkles, Mail
+  ShieldCheck, RefreshCw, CheckCircle2, ArrowUpRight, Sparkles, Mail, Lock
 } from 'lucide-react';
 import { getPlatformUsageStats } from '../../lib/firebase';
 import { PlatformTelemetryEvent } from '../../types';
+import { isAuthorizedForTelemetry } from '../../utils/telemetryAuth';
 
 interface OwnerTelemetryModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ export default function OwnerTelemetryModal({
   currentEmail
 }: OwnerTelemetryModalProps) {
   const [loading, setLoading] = useState(true);
+  const isAuthorized = isAuthorizedForTelemetry(currentEmail);
   const [stats, setStats] = useState<{
     users: any[];
     events: PlatformTelemetryEvent[];
@@ -35,6 +37,7 @@ export default function OwnerTelemetryModal({
   });
 
   const fetchStats = async () => {
+    if (!isAuthorized) return;
     setLoading(true);
     try {
       const data = await getPlatformUsageStats();
@@ -47,12 +50,37 @@ export default function OwnerTelemetryModal({
   };
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && isAuthorized) {
       fetchStats();
     }
-  }, [isOpen]);
+  }, [isOpen, isAuthorized]);
 
   if (!isOpen) return null;
+
+  if (!isAuthorized) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
+        <div className="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl text-white text-center">
+          <div className="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center mx-auto mb-4">
+            <Lock className="w-6 h-6 text-rose-400" />
+          </div>
+          <h3 className="text-lg font-bold font-display text-white mb-2">
+            Restricted Telemetry Access
+          </h3>
+          <p className="text-xs text-slate-400 mb-6 leading-relaxed">
+            Platform-wide telemetry and usage analytics are confidential agency insider data restricted to designated administrator accounts.
+          </p>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-mono text-xs font-bold transition-all cursor-pointer"
+          >
+            Return to Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md overflow-y-auto">

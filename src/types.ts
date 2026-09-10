@@ -133,8 +133,10 @@ export interface GeneratedContentItem {
   blog_post: {
     title: string;
     target_keyword: string;
+    category?: string;
     word_count?: number;
     markdown_content: string;
+    body?: string;
     meta_description: string;
     natural_photo_url?: string;
     photo_caption?: string;
@@ -165,4 +167,23 @@ export interface GeneratedContentItem {
     email_body?: string;
     lead_magnet_hook?: string;
   }>;
+  eblast?: {
+    subject: string;
+    preview: string;
+    body: string;
+    word_count: number;
+  };
+  gbp_post?: {
+    content: string;
+    call_to_action: string;
+    target_keyword: string;
+  };
+  market_intel?: {
+    leading_headline: string;
+    article_title: string;
+    article_source: string;
+    article_url: string;
+    executive_takeaway: string;
+    market_shift_stat: string;
+  };
 }
