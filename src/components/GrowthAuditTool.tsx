@@ -209,8 +209,8 @@ export default function GrowthAuditTool({ onOpenBooking, onOpenCalendar, onOpenA
           bg: 'bg-cyan-950/40 border-brand-cyan/40 text-brand-cyan',
           letterColor: 'text-brand-cyan',
           badgeText: 'SOLID BASELINE • HIGH GROWTH POTENTIAL',
-          headline: 'Solid Online Baseline • Room for Market Dominance',
-          summary: 'Your digital presence is functional, but you are leaving valuable revenue and high-ticket leads on the table. We identified 3 critical areas where optimization will outrank local competitors.',
+          headline: 'Solid Online Baseline • Strong Growth Upside',
+          summary: 'Your digital presence is functional, but you are leaving valuable organic visibility and high-value leads on the table. We identified 3 critical areas where optimization will elevate your category presence.',
           colorHex: '#22d3ee',
         };
       case 'C':
@@ -561,7 +561,7 @@ export default function GrowthAuditTool({ onOpenBooking, onOpenCalendar, onOpenA
 
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 18px "Montserrat", sans-serif';
-    ctx.fillText('UNLOCK YOUR MASTER PRIORITIES #1 & #2 WITH ERIC THOMAS', 85, 585);
+    ctx.fillText('UNLOCK YOUR MASTER PRIORITIES #1 & #2 WITH OUR TEAM', 85, 585);
 
     ctx.fillStyle = '#cbd5e1';
     ctx.font = '13px sans-serif';
@@ -970,7 +970,7 @@ Prospect has seen Priority #3 to spark interest without giving away core infrast
                         </h4>
                       </div>
                       <p className="font-sans text-xs text-slate-400">
-                        Our diagnostic surfaced 3 strategic leverage points. Area #1 is detailed below. The remaining 2 growth protocols and complete execution roadmap are addressed directly during your 1-on-1 growth consultation with Eric Thomas.
+                        Our diagnostic surfaced 3 strategic leverage points. Area #1 is detailed below. The remaining 2 growth protocols and complete execution roadmap are addressed directly during your 1-on-1 growth consultation with our team.
                       </p>
                     </div>
 
@@ -1051,7 +1051,7 @@ Prospect has seen Priority #3 to spark interest without giving away core infrast
                   </div>
 
                   <p className="font-sans text-xs sm:text-sm text-slate-300 leading-relaxed max-w-3xl">
-                    Your diagnostic audit findings are ready to be attached to your account. Sign in to your Growth OS to access your dedicated digital whiteboard, track historical channel benchmarks, and collaborate on your organic visibility roadmap with Eric Thomas.
+                    Your diagnostic audit findings are ready to be attached to your account. Sign in to your Growth OS to access your dedicated digital whiteboard, track historical channel benchmarks, and collaborate on your organic visibility roadmap with our team.
                   </p>
 
                   {/* Feature highlights without tiers */}
@@ -1106,7 +1106,7 @@ Prospect has seen Priority #3 to spark interest without giving away core infrast
                       className="bg-slate-800 hover:bg-slate-750 border border-slate-700 text-white font-display text-[10px] font-black uppercase tracking-widest px-5 py-3.5 rounded-xl transition-all cursor-pointer flex items-center gap-2"
                     >
                       <Calendar className="w-3.5 h-3.5 text-brand-cyan" />
-                      <span>Book Strategy Call with Eric</span>
+                      <span>Book Strategy Call with Us</span>
                     </button>
                     
                     <button
@@ -1192,7 +1192,7 @@ Prospect has seen Priority #3 to spark interest without giving away core infrast
                       Graphic Downloaded!
                     </h4>
                     <p className="text-xs text-slate-300 mt-1 leading-relaxed">
-                      Your high-resolution ET Digital audit card has been saved to your device. Ready to unlock all 3 areas with Eric?
+                      Your high-resolution ET Digital audit card has been saved to your device. Ready to unlock all 3 areas with us?
                     </p>
                   </div>
 

@@ -219,7 +219,7 @@ export default function ArticleModal({
                   }}
                   className="w-full sm:w-auto bg-brand-cyan hover:bg-cyan-400 text-slate-950 font-display text-xs font-black uppercase tracking-widest py-3 px-5 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-95"
                 >
-                  <span>Book Call</span>
+                  <span>Book Strategy Call</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               )}
@@ -230,7 +230,7 @@ export default function ArticleModal({
                 }}
                 className="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-white font-display text-xs font-bold uppercase tracking-wider py-3 px-5 rounded-xl transition-all border border-slate-700 flex items-center justify-center gap-2 cursor-pointer"
               >
-                <span>Let's Connect</span>
+                <span>Inquire About Systems</span>
                 <BookOpen className="w-3.5 h-3.5 text-brand-cyan" />
               </button>
             </div>

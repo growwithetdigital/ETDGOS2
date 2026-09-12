@@ -143,7 +143,7 @@ export default function Footer({
                 className="inline-flex items-center justify-center bg-slate-900 hover:bg-slate-800 text-white border border-slate-750 font-display text-xs font-extrabold uppercase tracking-widest px-7 py-4.5 rounded-xl transition-all active:scale-95 cursor-pointer"
                 id="footer-connect-btn"
               >
-                Let's Connect
+                Send an Inquiry
               </button>
 
               <button
@@ -153,7 +153,7 @@ export default function Footer({
                 id="footer-booking-btn"
               >
                 <span className="relative z-10 flex items-center gap-2">
-                  Work with Us
+                  Book Discovery Call
                   <ArrowUpRight className="w-4 h-4 text-slate-950 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                 </span>
               </button>
@@ -171,7 +171,7 @@ export default function Footer({
 
               <div className="space-y-2 text-xs pt-2">
                 <a 
-                  href="mailto:hello@growwithetdigital.com?subject=Re%3A%20Let's%20Connect" 
+                  href="mailto:hello@growwithetdigital.com?subject=Re%3A%20Website%20Inquiry" 
                   className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors"
                 >
                   <Mail className="w-4 h-4 text-brand-cyan/70" />
@@ -230,7 +230,7 @@ export default function Footer({
                 className="text-brand-cyan hover:text-cyan-300 font-bold transition-colors text-left cursor-pointer inline-flex items-center gap-1.5 pt-1"
                 id="footer-system-nav-connect-btn"
               >
-                <span>Let's Connect</span>
+                <span>Direct Inquiry</span>
                 <span className="font-mono text-[8px] uppercase bg-cyan-950/80 text-brand-cyan border border-brand-cyan/30 px-1.5 py-0.5 rounded">
                   Form
                 </span>

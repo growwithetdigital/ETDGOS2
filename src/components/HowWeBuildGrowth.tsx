@@ -29,7 +29,7 @@ export default function HowWeBuildGrowth({ onOpenBooking }: HowWeBuildGrowthProp
     {
       step: '04',
       title: 'Scale',
-      description: 'We measure, optimize, and compound performance metrics—continuously improving direct ROI and expanding market dominance.',
+      description: 'We measure, optimize, and compound performance metrics—continuously improving direct ROI and building lasting market leadership.',
       icon: TrendingUp,
     }
   ];
@@ -109,7 +109,7 @@ export default function HowWeBuildGrowth({ onOpenBooking }: HowWeBuildGrowthProp
           </div>
         </div>
 
-        {/* Let's Connect CTA callout */}
+        {/* Deploy Framework CTA callout */}
         {onOpenBooking && (
           <div className="mt-16 text-center flex flex-col sm:flex-row items-center justify-center gap-4 relative z-10">
             <span className="font-sans text-xs sm:text-sm text-slate-300">
@@ -121,7 +121,7 @@ export default function HowWeBuildGrowth({ onOpenBooking }: HowWeBuildGrowthProp
               className="group inline-flex items-center justify-center bg-brand-cyan hover:bg-cyan-400 text-slate-950 font-display text-xs font-black uppercase tracking-widest px-6 py-3 rounded-xl transition-all shadow-md active:scale-95 cursor-pointer"
               id="methodology-connect-btn"
             >
-              <span>Let's Connect</span>
+              <span>Deploy Growth Framework</span>
               <ArrowUpRight className="w-3.5 h-3.5 ml-1.5 text-slate-950 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             </button>
           </div>

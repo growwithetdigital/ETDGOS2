@@ -475,7 +475,7 @@ TARGET: ${gbpData.target_keyword}
               </span>
             </div>
             <p className="text-xs text-[var(--muted)] leading-relaxed font-sans">
-              Your free tier provides a complete, broadcast-ready asset kit calibrated from your authentic Brand DNA. To expand from 1 monthly piece into an omni-channel compounding authority machine with <strong>4 weekly tailored dispatches, custom syndication, and private 1-on-1 CMO strategy sessions with Eric Thomas</strong>, explore the VIP Monthly Retainer.
+              Your free tier provides a complete, broadcast-ready asset kit calibrated from your authentic Brand DNA. To expand from 1 monthly piece into an omni-channel compounding authority machine with <strong>4 weekly tailored dispatches, custom syndication, and private 1-on-1 CMO strategy sessions with our team</strong>, explore the VIP Monthly Retainer.
             </p>
             {onOpenBooking && (
               <div className="pt-1 flex flex-wrap items-center justify-between gap-3">

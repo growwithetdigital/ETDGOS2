@@ -93,7 +93,7 @@ export default function HeroSection({ onOpenBooking }: HeroSectionProps) {
               Helping businesses engage, convert, and grow with modern digital marketing systems. We build high-converting websites, execute targeted campaigns, and implement AI-powered strategies to scale your revenue.
             </p>
 
-            {/* Top Two CTA Buttons: Let's Connect & Explore Services */}
+            {/* Top Two CTA Buttons: Schedule Discovery Call & Explore Services */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2">
               <button
                 type="button"
@@ -102,7 +102,7 @@ export default function HeroSection({ onOpenBooking }: HeroSectionProps) {
                 id="hero-primary-cta"
               >
                 <span className="relative z-10 flex items-center gap-2">
-                  <span>Let's Connect</span>
+                  <span>Schedule Discovery Call</span>
                   <ArrowUpRight className="w-4 h-4 text-slate-950 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                 </span>
               </button>
@@ -128,7 +128,7 @@ export default function HeroSection({ onOpenBooking }: HeroSectionProps) {
               {/* Subtle Aura glow */}
               <div className="absolute -inset-2 bg-gradient-to-tr from-brand-cyan/20 via-transparent to-teal-500/15 rounded-3xl blur-2xl pointer-events-none" />
 
-              {/* Animated Logo Container (Restored as it was) */}
+              {/* Animated Logo Container with Poster & Cellular Optimization */}
               <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-black/80 border border-slate-800 bg-black aspect-square w-full flex items-center justify-center">
                 {!videoFailed ? (
                   <video
@@ -137,7 +137,9 @@ export default function HeroSection({ onOpenBooking }: HeroSectionProps) {
                     muted
                     loop
                     playsInline
-                    preload="auto"
+                    preload="metadata"
+                    poster="https://res.cloudinary.com/dnpvgq7gt/video/upload/so_0,f_auto,q_auto:eco,w_600/Here_is_my_logo._instructions_202606260400_woxxvs.jpg"
+                    disablePictureInPicture
                     onEnded={() => {
                       if (videoRef.current) {
                         videoRef.current.currentTime = 0;
@@ -148,6 +150,10 @@ export default function HeroSection({ onOpenBooking }: HeroSectionProps) {
                     className="w-full h-full object-cover select-none pointer-events-none"
                   >
                     <source
+                      src="https://res.cloudinary.com/dnpvgq7gt/video/upload/q_auto:good,vc_auto,w_600/Here_is_my_logo._instructions_202606260400_woxxvs.mp4"
+                      type="video/mp4"
+                    />
+                    <source
                       src="https://res.cloudinary.com/dnpvgq7gt/video/upload/q_auto,vc_auto/Here_is_my_logo._instructions_202606260400_woxxvs.mp4"
                       type="video/mp4"
                     />
@@ -155,16 +161,14 @@ export default function HeroSection({ onOpenBooking }: HeroSectionProps) {
                       src="https://res.cloudinary.com/dnpvgq7gt/video/upload/Here_is_my_logo._instructions_202606260400_woxxvs.mp4"
                       type="video/mp4"
                     />
-                    <source
-                      src="https://res.cloudinary.com/dnpvgq7gt/video/upload/Here_is_my_logo._instructions_202606260400_woxxvs.webm"
-                      type="video/webm"
-                    />
                   </video>
                 ) : (
                   <img
-                    src="https://res.cloudinary.com/dnpvgq7gt/image/upload/f_auto,q_auto/Here_is_my_logo._instructions_202606260400_woxxvs.gif"
+                    src="https://res.cloudinary.com/dnpvgq7gt/image/upload/f_auto,q_auto,w_600/Here_is_my_logo._instructions_202606260400_woxxvs.gif"
                     alt="ET Digital Brand Logo Animation"
                     className="w-full h-full object-cover select-none pointer-events-none"
+                    loading="lazy"
+                    decoding="async"
                     referrerPolicy="no-referrer"
                   />
                 )}

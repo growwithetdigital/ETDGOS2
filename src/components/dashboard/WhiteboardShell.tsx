@@ -410,7 +410,7 @@ export default function WhiteboardShell({
               className="inline-flex items-center gap-1.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 text-white font-display text-[11px] font-bold uppercase tracking-wider px-3.5 py-1.5 rounded-xl transition-all cursor-pointer shadow-sm min-h-[40px]"
             >
               <Crown className="w-3.5 h-3.5 text-amber-300" />
-              <span className="hidden sm:inline">Consult with Eric</span>
+              <span className="hidden sm:inline">Speak with Us</span>
               <span className="sm:hidden">Consult</span>
             </button>
 
@@ -907,7 +907,7 @@ export default function WhiteboardShell({
                       The 1 Strategic Priority
                     </span>
                     <p className="text-xs text-[var(--text)] leading-relaxed font-sans font-medium">
-                      Syndicate the core insights of <em>"{selectedItem?.blog_post.title || defaultSampleItem.blog_post.title}"</em> to key strategic partners in {clientLocation} and schedule your private 1-on-1 Growth Consultation with Eric Thomas to expand into a multi-channel acquisition flywheel.
+                      Syndicate the core insights of <em>"{selectedItem?.blog_post.title || defaultSampleItem.blog_post.title}"</em> to key strategic partners in {clientLocation} and schedule your private 1-on-1 Growth Consultation with our team to expand into a multi-channel acquisition flywheel.
                     </p>
                   </div>
                 </div>

@@ -154,7 +154,7 @@ export default function Navbar({
             className="font-sans text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-cyan-650 transition-colors cursor-pointer flex items-center gap-1"
             id="nav-connect-tab-btn"
           >
-            Let's Connect
+            Contact
           </button>
         </nav>
 
@@ -165,7 +165,7 @@ export default function Navbar({
               <button
                 type="button"
                 onClick={onOpenDashboard}
-                className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-brand-cyan border border-brand-cyan/40 font-display text-[10px] font-bold uppercase tracking-wider px-3.5 py-2.5 rounded-xl transition-all shadow-sm cursor-pointer"
+                className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-850 text-brand-cyan border border-brand-cyan/40 font-display text-[10px] font-bold uppercase tracking-wider px-3.5 py-2.5 rounded-xl transition-all shadow-sm cursor-pointer"
                 id="navbar-growth-os-btn"
               >
                 <Sparkles className="w-3.5 h-3.5 text-brand-cyan animate-pulse" />
@@ -203,7 +203,7 @@ export default function Navbar({
             id="navbar-booking-btn"
           >
             <span className="relative z-10 flex items-center gap-1.5">
-              Work with Us
+              Schedule a Call
               <ArrowUpRight className="w-3.5 h-3.5 text-slate-950 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             </span>
           </button>
@@ -281,7 +281,7 @@ export default function Navbar({
               className="text-left font-sans text-sm font-semibold py-2 border-b border-slate-100 text-slate-900 hover:text-cyan-600 cursor-pointer flex items-center justify-between"
               id="navbar-mobile-connect-tab-btn"
             >
-              <span className="font-bold text-cyan-700">Let's Connect</span>
+              <span className="font-bold text-cyan-700">Contact Us</span>
               <span className="font-mono text-[9px] font-extrabold uppercase bg-brand-cyan/20 text-cyan-800 px-2.5 py-1 rounded-md">
                 Inquiry Form
               </span>
@@ -339,7 +339,7 @@ export default function Navbar({
               className="flex items-center justify-center gap-2 w-full bg-brand-cyan hover:bg-cyan-400 text-slate-950 font-display text-xs font-extrabold uppercase tracking-widest py-3.5 rounded-xl cursor-pointer shadow-md transition-all"
               id="navbar-mobile-booking-btn"
             >
-              Work with Us
+              Schedule a Call
               <ArrowUpRight className="w-4 h-4 text-slate-950" />
             </button>
           </div>

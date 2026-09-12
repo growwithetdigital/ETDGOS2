@@ -116,7 +116,7 @@ export default function ContentArchivePanel({
               onClick={onOpenBooking}
               className="px-4 py-2.5 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 text-white font-mono text-xs uppercase tracking-wider flex items-center gap-2 cursor-pointer transition-all"
             >
-              <span>Consult with Eric</span>
+              <span>Speak with Us</span>
               <ArrowUpRight className="w-3.5 h-3.5 text-cyan-400" />
             </button>
           </div>

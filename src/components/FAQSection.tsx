@@ -142,7 +142,7 @@ export default function FAQSection({ onOpenBooking }: FAQSectionProps) {
           })}
         </div>
 
-        {/* Still have questions banner with Let's Connect */}
+        {/* Still have questions banner with tailored Ask a Question CTA */}
         {onOpenBooking && (
           <div className="mt-12 p-8 sm:p-10 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-900/90 to-cyan-950/40 border border-brand-cyan/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 text-left shadow-xl">
             <div className="space-y-1.5 max-w-xl">
@@ -163,7 +163,7 @@ export default function FAQSection({ onOpenBooking }: FAQSectionProps) {
               id="faq-connect-cta-btn"
             >
               <span className="flex items-center gap-2">
-                Let's Connect
+                Ask a Question
                 <ArrowUpRight className="w-4 h-4 text-slate-950 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
               </span>
             </button>

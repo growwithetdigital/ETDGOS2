@@ -165,7 +165,7 @@ export default function ComparisonSection({ onOpenBooking }: ComparisonSectionPr
             onClick={onOpenBooking}
             className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-brand-cyan hover:bg-cyan-400 text-slate-950 font-display text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-cyan-950/40 active:scale-95 cursor-pointer"
           >
-            <span>Retire The Agency Model // Connect With Eric</span>
+            <span>Retire The Agency Model // Connect With Us</span>
             <ArrowUpRight className="w-4 h-4 text-slate-950" />
           </button>
         </div>

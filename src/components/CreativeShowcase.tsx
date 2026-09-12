@@ -18,11 +18,11 @@ export default function CreativeShowcase() {
           </h2>
           
           <p className="font-sans text-base text-slate-600 leading-relaxed max-w-3xl">
-            We reject dry, technical data-dumping as much as we reject unstructured, flowery prose. Real authority is built at the perfect intersection of rigorous quantitative strategy and elite, narrative-driven design.
+            We believe memorable marketing balances quantitative strategy with clear, narrative-driven creative. Real authority is built where rigorous analytics and compelling design reinforce each other.
           </p>
 
           <p className="font-sans text-base text-slate-600 leading-relaxed max-w-3xl">
-            Every video, pillar asset, landing page structure, and design module we engineer is crafted to arrest attention, establish unquestionable market dominance, and drive ready-to-buy executive conversions.
+            Every video, pillar asset, landing page, and design asset we build is designed to earn focused attention, establish lasting category credibility, and drive qualified, high-intent client inquiries.
           </p>
 
           {/* Micro value tags centered */}

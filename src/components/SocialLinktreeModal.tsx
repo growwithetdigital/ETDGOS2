@@ -222,6 +222,8 @@ export default function SocialLinktreeModal({
                     src="https://res.cloudinary.com/dnpvgq7gt/image/upload/v1783013238/IMG_6170_pgtrij.png"
                     alt="ET Digital"
                     className="w-full h-full object-contain"
+                    loading="lazy"
+                    decoding="async"
                     referrerPolicy="no-referrer"
                   />
                 </div>
@@ -265,14 +267,14 @@ export default function SocialLinktreeModal({
                   <Calendar className="w-4.5 h-4.5" />
                 </div>
                 <div className="text-left">
-                  <span className="block font-extrabold text-slate-950 text-xs">Work with Us (Book Audit)</span>
+                  <span className="block font-extrabold text-slate-950 text-xs">Book Growth Audit Call</span>
                   <span className="block font-mono text-[9px] text-slate-900 font-bold">Direct Calendar Access</span>
                 </div>
               </div>
               <ExternalLink className="w-4 h-4 text-slate-950 group-hover:translate-x-0.5 transition-transform" />
             </button>
 
-            {/* Let's Connect Contact Form Button */}
+            {/* Direct Message / Contact Form Button */}
             <button
               onClick={() => {
                 onClose();
@@ -285,7 +287,7 @@ export default function SocialLinktreeModal({
                   <Sparkles className="w-4 h-4" />
                 </div>
                 <div className="text-left">
-                  <span className="block font-bold text-white text-xs">Let's Connect</span>
+                  <span className="block font-bold text-white text-xs">Send Direct Message</span>
                   <span className="block font-mono text-[9px] text-slate-400">Direct Contact Form</span>
                 </div>
               </div>

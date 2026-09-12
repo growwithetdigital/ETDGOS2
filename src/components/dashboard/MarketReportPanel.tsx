@@ -81,7 +81,7 @@ export default function MarketReportPanel({
               onClick={onOpenBooking}
               className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 text-slate-950 font-display text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-cyan-500/20 cursor-pointer transition-all"
             >
-              <span>Consult with Eric</span>
+              <span>Speak with Us</span>
               <ArrowUpRight className="w-4 h-4" />
             </button>
           </div>

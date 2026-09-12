@@ -16,11 +16,12 @@ interface MarketingShortsPanelProps {
 export interface MarketingShortItem {
   id: string;
   title: string;
-  creator: 'Neil Patel' | 'Gary Vee' | 'Tom Ferry' | 'Eric Thomas';
+  creator: string;
   creatorRole: string;
   creatorAvatar: string;
-  category: 'AEO & AI Search' | 'Attention & Social' | 'High-Ticket Sales' | '1-Asset Systems';
+  category: '2026 Strategy' | 'AEO & AI Search' | 'Google & Local SEO' | 'Conversion & Lead Gen';
   youtubeId: string; // YouTube video or shorts ID
+  start?: number; // Starting offset in seconds
   duration: string;
   keyTakeaway: string;
   actionStep: string;
@@ -30,99 +31,117 @@ export interface MarketingShortItem {
 
 export const MARKETING_SHORTS: MarketingShortItem[] = [
   {
-    id: 'neil-1',
-    title: 'How AI Search (ChatGPT, Gemini, Perplexity) Is Killing 10 Blue Links',
+    id: 'neil-2026-trends',
+    title: 'The 8 Trends I’m Betting My Entire Marketing Strategy On in 2026',
     creator: 'Neil Patel',
-    creatorRole: 'Co-Founder NP Digital · Global SEO Authority',
+    creatorRole: 'Co-Founder NP Digital · Global SEO & Growth Authority',
     creatorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
-    category: 'AEO & AI Search',
-    youtubeId: 'v4Q_G-aFw20',
-    duration: '0:58',
-    keyTakeaway: 'Answer engines do not send users to long 3,000-word fluff blogs. They synthesize direct answers from concise, highly structured 300-word entity posts.',
-    actionStep: 'Deploy your weekly 300-word direct-answer blog to get cited in generative AI answers.',
-    views: '184K Views',
+    category: '2026 Strategy',
+    youtubeId: 'hXPALnu3Y6I',
+    start: 39,
+    duration: '14:28',
+    keyTakeaway: 'Generative AI and AI answer engines are radically transforming search. Winning brands build structured first-party authority, entity citations, and omni-channel distribution instead of relying on legacy SEO tricks.',
+    actionStep: 'Deploy structured 1-Asset dispatches with entity signals and direct answers to capture citations across ChatGPT, Google AI Overviews, and Perplexity.',
+    views: 'NP Digital Featured',
     featured: true
   },
   {
-    id: 'gary-1',
-    title: 'The Number 1 Mistake Small Businesses Make on Social Media',
-    creator: 'Gary Vee',
-    creatorRole: 'CEO VaynerMedia · Bestselling Author',
-    creatorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80',
-    category: 'Attention & Social',
-    youtubeId: 'gY4m_oP87z0',
-    duration: '0:52',
-    keyTakeaway: 'Business owners spend 4 weeks perfecting a brochure that nobody sees. Attention is won by posting authentic founder perspectives every single week.',
-    actionStep: 'Take the 1080x1080 graphic with your business name and post it with your calibrated caption today.',
-    views: '420K Views',
+    id: 'neil-strategy-working',
+    title: 'The Only Marketing Strategy That Is Working In 2026',
+    creator: 'Neil Patel',
+    creatorRole: 'Co-Founder NP Digital',
+    creatorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
+    category: '2026 Strategy',
+    youtubeId: 'UlfniLzuwa0',
+    duration: '11:15',
+    keyTakeaway: 'Audience attention is fragmented across search, short-form video, and AI answer engines. The only sustainable strategy is turning one core piece of high-value expertise into multi-channel assets.',
+    actionStep: 'Repurpose your single weekly authority dispatch into 4 tailored social hooks, an email dispatch, and a Google business update.',
+    views: '185K Views',
     featured: true
   },
   {
-    id: 'tom-1',
-    title: 'How Top 1% Producers Win High-Ticket Clients Without Cold Calling',
-    creator: 'Tom Ferry',
-    creatorRole: '#1 Real Estate & High-Ticket Coach',
-    creatorAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80',
-    category: 'High-Ticket Sales',
-    youtubeId: 'Xj3oGvJ9XmQ',
-    duration: '0:59',
-    keyTakeaway: 'The fastest way to eliminate price sensitivity is to offer a structured diagnostic evaluation instead of saying "contact me for a free quote."',
-    actionStep: 'Attach a diagnostic grader or intake CTA at the bottom of your 1-Asset dispatches.',
-    views: '96K Views',
-    featured: false
-  },
-  {
-    id: 'eric-1',
-    title: 'The 1-Asset Growth Operating System™: The Antidote to Marketing Overwhelm',
-    creator: 'Eric Thomas',
-    creatorRole: 'Founder ET Digital · Architect of Growth OS™',
-    creatorAvatar: 'https://res.cloudinary.com/dnpvgq7gt/image/upload/v1783013238/IMG_6170_pgtrij.png',
-    category: '1-Asset Systems',
-    youtubeId: 'dQw4w9WgXcQ', // Clean player container
-    duration: '1:45',
-    keyTakeaway: 'You do not need a 10-person social agency or 20 posts a day. You need one sharp, brand-calibrated asset repurposed across blog, graphic, caption, email, and Google profile.',
-    actionStep: 'Generate and distribute your 1-Asset Growth Kit in under 5 minutes inside Content Studio.',
-    views: 'ET Digital Exclusive',
+    id: 'neil-google-double-leads',
+    title: 'The NEW Google Strategy to Double Your Leads (FAST)',
+    creator: 'Neil Patel',
+    creatorRole: 'Co-Founder NP Digital',
+    creatorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
+    category: 'Google & Local SEO',
+    youtubeId: 'CIGrrt_mVxM',
+    duration: '10:42',
+    keyTakeaway: 'Google algorithms now prioritize verified first-party experience (E-E-A-T) and high-intent localized solutions over generic keyword-stuffed articles.',
+    actionStep: 'Update your core services with structured schema and localized client proof to dominate high-intent category queries.',
+    views: '210K Views',
     featured: true
   },
   {
-    id: 'neil-2',
-    title: 'Why First-Party Brand Narrative Outranks Generic Keyword Stuffing',
+    id: 'neil-new-rules-google',
+    title: 'The New Rules of Google (Most Businesses Won\'t Survive)',
     creator: 'Neil Patel',
     creatorRole: 'Co-Founder NP Digital',
     creatorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
     category: 'AEO & AI Search',
-    youtubeId: '6zI5E1q2vJ8',
-    duration: '0:48',
-    keyTakeaway: 'Google and Perplexity now weigh "Information Gain". If your article repeats what 50 other sites say, you get zero rank. Founder stories get indexed immediately.',
-    actionStep: 'Ensure your Brand DNA Scanner is active so every dispatch reflects your unique founder voice.',
-    views: '128K Views'
+    youtubeId: 'KeT5oSgo-Ko',
+    duration: '12:18',
+    keyTakeaway: 'Websites publishing unedited generic AI content without original perspectives are suffering steep ranking drops. Genuine founder voice and proprietary data are critical.',
+    actionStep: 'Use the Brand DNA Scanner to ensure every piece of published content reflects your verified business voice.',
+    views: '165K Views',
+    featured: false
   },
   {
-    id: 'gary-2',
-    title: 'Stop Overthinking Your Photos: Authentic Over Engineered',
-    creator: 'Gary Vee',
-    creatorRole: 'CEO VaynerMedia',
-    creatorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80',
-    category: 'Attention & Social',
-    youtubeId: '9UvK97hW-K4',
-    duration: '0:55',
-    keyTakeaway: 'People scroll past cheesy 3D renders and stock handshakes. Real photography with clean text overlays stops thumbs every time.',
-    actionStep: 'Export your high-res 1:1 editorial graphic directly with your verified brand name overlay.',
-    views: '310K Views'
+    id: 'neil-20-years-marketing',
+    title: '20 Years of Marketing Knowledge in 10 Minutes',
+    creator: 'Neil Patel',
+    creatorRole: 'Co-Founder NP Digital',
+    creatorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
+    category: 'Conversion & Lead Gen',
+    youtubeId: 'mFiPAVYZE8s',
+    duration: '10:04',
+    keyTakeaway: 'Timeless conversion principles outlive algorithm shifts: clear positioning, friction elimination, addressing executive objections up front, and establishing credibility.',
+    actionStep: 'Replace passive "Contact Us" forms with high-value diagnostic audits and clear discovery call scheduling.',
+    views: '340K Views',
+    featured: false
   },
   {
-    id: 'tom-2',
-    title: 'The Modern Email Dispatch: 150 Words That Drive Consultation Calls',
-    creator: 'Tom Ferry',
-    creatorRole: '#1 High-Ticket Coach',
-    creatorAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80',
-    category: 'High-Ticket Sales',
-    youtubeId: 'sVpZ4-yKqKk',
-    duration: '1:02',
-    keyTakeaway: 'Long corporate newsletters are dead. High-ticket buyers read 150-word dispatches that present one problem, one solution, and one clear calendar link.',
-    actionStep: 'Send your calibrated 150-word eblast from Content Studio to your warm contacts this week.',
-    views: '74K Views'
+    id: 'neil-local-business-flywheel',
+    title: 'Build This Once, Sell It to Every Local Business ($1,000/Mo Clients)',
+    creator: 'Neil Patel',
+    creatorRole: 'Co-Founder NP Digital',
+    creatorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
+    category: 'Google & Local SEO',
+    youtubeId: 'YIGs1aRruQU',
+    duration: '13:30',
+    keyTakeaway: 'Business owners need compounding organic visibility systems rather than piecemeal one-off social posts that disappear in 24 hours.',
+    actionStep: 'Package your expertise into compounding digital assets that rank on Google and provide long-term evergreen value.',
+    views: '198K Views',
+    featured: false
+  },
+  {
+    id: 'neil-ai-watermarks-fix',
+    title: 'Google Watermarks Your AI Content. Here\'s the 20-Minute Fix',
+    creator: 'Neil Patel',
+    creatorRole: 'Co-Founder NP Digital',
+    creatorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
+    category: 'AEO & AI Search',
+    youtubeId: 'y3vnFozXouE',
+    duration: '11:50',
+    keyTakeaway: 'Search engines detect formulaic AI phrasing. Infusing authentic case studies, local context, and human-verified data guarantees indexation and high search rank.',
+    actionStep: 'Refine every generated dispatch with real customer scenarios before distributing across web and social channels.',
+    views: '142K Views',
+    featured: false
+  },
+  {
+    id: 'neil-is-seo-worth-it',
+    title: 'Is SEO Worth It Anymore? The Truth About Organic Traffic',
+    creator: 'Neil Patel',
+    creatorRole: 'Co-Founder NP Digital',
+    creatorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
+    category: 'AEO & AI Search',
+    youtubeId: 't7k8EOZtWYk',
+    duration: '9:45',
+    keyTakeaway: 'Traditional keyword volume metrics are misleading. What matters in 2026 is capturing searchers with immediate buying intent and readiness.',
+    actionStep: 'Target high-intent conversational queries in your content that AI answer engines pull into their direct recommendations.',
+    views: '175K Views',
+    featured: false
   }
 ];
 
@@ -131,15 +150,15 @@ export default function MarketingShortsPanel({
   onOpenBooking,
   onNavigateToContentStudio
 }: MarketingShortsPanelProps) {
-  const [selectedCreator, setSelectedCreator] = useState<string>('all');
+  const [selectedCategory, setSelectedCategory] = useState<string>('All Topics');
   const [activeVideo, setActiveVideo] = useState<MarketingShortItem>(MARKETING_SHORTS[0]);
   const [isCopiedAction, setIsCopiedAction] = useState(false);
 
-  const creators = ['all', 'Neil Patel', 'Gary Vee', 'Tom Ferry', 'Eric Thomas'];
+  const categories = ['All Topics', '2026 Strategy', 'AEO & AI Search', 'Google & Local SEO', 'Conversion & Lead Gen'];
 
-  const filteredVideos = selectedCreator === 'all'
+  const filteredVideos = selectedCategory === 'All Topics'
     ? MARKETING_SHORTS
-    : MARKETING_SHORTS.filter(v => v.creator === selectedCreator);
+    : MARKETING_SHORTS.filter(v => v.category === selectedCategory);
 
   const handleCopyAction = () => {
     navigator.clipboard.writeText(activeVideo.actionStep);
@@ -159,11 +178,11 @@ export default function MarketingShortsPanel({
             <div className="flex flex-wrap items-center gap-2">
               <span className="font-mono text-[10px] font-black uppercase tracking-widest text-cyan-400 bg-cyan-950/80 px-2.5 py-1 rounded-full border border-cyan-500/30 flex items-center gap-1.5">
                 <Tv className="w-3 h-3 text-cyan-400" />
-                Growth Video Updates & Shorts
+                Growth Video Updates & Masterclasses
               </span>
               <span className="font-mono text-[10px] uppercase tracking-wider text-emerald-400 bg-emerald-950/60 px-2.5 py-1 rounded-full border border-emerald-500/30 flex items-center gap-1">
                 <Flame className="w-3 h-3 text-emerald-400" />
-                Weekly Expert Briefings
+                2026 Strategy Intelligence
               </span>
             </div>
             
@@ -171,7 +190,7 @@ export default function MarketingShortsPanel({
               Tactical Marketing Intelligence
             </h2>
             <p className="text-xs sm:text-sm text-slate-200 max-w-2xl leading-relaxed">
-              Curated, high-impact marketing shorts from Neil Patel, Gary Vee, Tom Ferry, and Eric Thomas. Watch modern tactical insights to fuel your weekly 1-Asset Growth Kit.
+              Curated, high-impact marketing strategy masterclasses from Neil Patel and leading growth authorities. Watch modern tactical insights to fuel your weekly 1-Asset Growth Kit.
             </p>
           </div>
 
@@ -189,27 +208,27 @@ export default function MarketingShortsPanel({
               onClick={onOpenBooking}
               className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 text-slate-950 font-display text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-cyan-500/20 cursor-pointer transition-all"
             >
-              <span>Consult with Eric</span>
+              <span>Speak with Us</span>
               <ArrowUpRight className="w-4 h-4" />
             </button>
           </div>
         </div>
       </div>
 
-      {/* Creator Filter Chips */}
+      {/* Category Filter Chips */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-        {creators.map((c) => (
+        {categories.map((cat) => (
           <button
-            key={c}
+            key={cat}
             type="button"
-            onClick={() => setSelectedCreator(c)}
+            onClick={() => setSelectedCategory(cat)}
             className={`px-4 py-2 rounded-xl font-mono text-xs font-bold tracking-wider uppercase whitespace-nowrap transition-all cursor-pointer ${
-              selectedCreator === c
+              selectedCategory === cat
                 ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20'
                 : 'bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--text)] border border-[var(--border)]'
             }`}
           >
-            {c === 'all' ? 'All Curators' : c}
+            {cat}
           </button>
         ))}
       </div>
@@ -224,8 +243,8 @@ export default function MarketingShortsPanel({
             {/* Embedded YouTube Player Container */}
             <div className="relative aspect-video w-full bg-slate-950">
               <iframe
-                key={activeVideo.youtubeId}
-                src={`https://www.youtube-nocookie.com/embed/${activeVideo.youtubeId}?autoplay=1&rel=0&modestbranding=1`}
+                key={`${activeVideo.youtubeId}-${activeVideo.start || 0}`}
+                src={`https://www.youtube-nocookie.com/embed/${activeVideo.youtubeId}?${activeVideo.start ? `start=${activeVideo.start}&` : ''}autoplay=1&rel=0&modestbranding=1`}
                 title={activeVideo.title}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
@@ -290,23 +309,36 @@ export default function MarketingShortsPanel({
                     <span><strong>Action Mandate:</strong> {activeVideo.actionStep}</span>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={handleCopyAction}
-                    className="px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] font-mono text-[11px] font-semibold flex items-center gap-1 cursor-pointer hover:border-cyan-500/40 transition-all shrink-0"
-                  >
-                    {isCopiedAction ? (
-                      <>
-                        <Check className="w-3 h-3 text-emerald-500" />
-                        <span className="text-emerald-500">Copied</span>
-                      </>
-                    ) : (
-                      <>
-                        <Bookmark className="w-3 h-3 text-[var(--muted)]" />
-                        <span>Copy Action</span>
-                      </>
-                    )}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={`https://www.youtube.com/watch?v=${activeVideo.youtubeId}${activeVideo.start ? `&t=${activeVideo.start}s` : ''}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] hover:text-red-500 font-mono text-[11px] font-semibold flex items-center gap-1.5 cursor-pointer hover:border-red-500/40 transition-all shrink-0"
+                      title="Open on YouTube"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                      <span>YouTube</span>
+                    </a>
+
+                    <button
+                      type="button"
+                      onClick={handleCopyAction}
+                      className="px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] font-mono text-[11px] font-semibold flex items-center gap-1 cursor-pointer hover:border-cyan-500/40 transition-all shrink-0"
+                    >
+                      {isCopiedAction ? (
+                        <>
+                          <Check className="w-3 h-3 text-emerald-500" />
+                          <span className="text-emerald-500">Copied</span>
+                        </>
+                      ) : (
+                        <>
+                          <Bookmark className="w-3 h-3 text-[var(--muted)]" />
+                          <span>Copy Action</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -325,7 +357,7 @@ export default function MarketingShortsPanel({
                   onClick={onOpenBooking}
                   className="w-full sm:w-auto py-3 px-5 rounded-xl border border-[var(--border)] bg-[var(--surface2)] hover:bg-[var(--border)] text-[var(--text)] font-mono text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer"
                 >
-                  <span>Ask Eric About This</span>
+                  <span>Speak with Us</span>
                   <ArrowUpRight className="w-3.5 h-3.5 text-cyan-500" />
                 </button>
               </div>
@@ -340,13 +372,13 @@ export default function MarketingShortsPanel({
             <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
               <div>
                 <span className="font-mono text-[10px] uppercase tracking-widest text-cyan-500 font-bold block">
-                  Shorts Feed
+                  Masterclass Feed
                 </span>
                 <h3 className="font-display text-base font-bold text-[var(--text)]">
                   Tactical Playlist ({filteredVideos.length})
                 </h3>
               </div>
-              <span className="text-[10px] font-mono text-[var(--muted)]">Continuous Play</span>
+              <span className="text-[10px] font-mono text-[var(--muted)]">Curated Curriculum</span>
             </div>
 
             <div className="space-y-3 max-h-[640px] overflow-y-auto pr-1">
@@ -364,13 +396,12 @@ export default function MarketingShortsPanel({
                     }`}
                   >
                     {/* Thumbnail Play Indicator */}
-                    <div className="relative w-20 h-14 rounded-xl overflow-hidden bg-slate-950 shrink-0 border border-[var(--border)] group-hover:border-cyan-500/40 transition-all flex items-center justify-center">
+                    <div className="relative w-24 h-16 rounded-xl overflow-hidden bg-slate-950 shrink-0 border border-[var(--border)] group-hover:border-cyan-500/40 transition-all flex items-center justify-center">
                       <img
                         src={`https://img.youtube.com/vi/${video.youtubeId}/hqdefault.jpg`}
                         alt={video.title}
                         className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
                         onError={(e) => {
-                          // Fallback to creator avatar if YouTube thumbnail fails
                           (e.target as HTMLElement).style.display = 'none';
                         }}
                       />
@@ -410,12 +441,12 @@ export default function MarketingShortsPanel({
               })}
             </div>
 
-            {/* Note on Eric's upcoming series */}
+            {/* Note on upcoming series */}
             <div className="p-3.5 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-start gap-2.5">
               <Award className="w-4 h-4 text-cyan-500 shrink-0 mt-0.5" />
               <div className="text-[11px] text-[var(--text)] leading-relaxed">
                 <strong className="text-cyan-600 dark:text-cyan-400">Continuous Curriculum: </strong>
-                New shorts are added weekly. Have a specific industry challenge? Request a tailored breakdown from Eric Thomas.
+                New masterclasses are added weekly. Have a specific industry challenge? Request a tailored breakdown from our team.
               </div>
             </div>
           </div>

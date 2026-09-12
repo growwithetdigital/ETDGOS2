@@ -50,7 +50,7 @@ export default function FounderNotePanel({
             onClick={onOpenBooking}
             className="shrink-0 px-5 py-3 rounded-2xl bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 text-slate-950 font-display text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-amber-500/25 transition-all cursor-pointer active:scale-95"
           >
-            <span>Book 1-on-1 With Eric</span>
+            <span>Connect with Us</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
@@ -146,7 +146,7 @@ export default function FounderNotePanel({
               Ready to Tell More of Your Story?
             </h3>
             <p className="text-xs sm:text-sm text-slate-300 max-w-xl">
-              Upgrade to the Full Growth OS Executive Suite for monthly content plus tailored strategy calls with Eric Thomas to engineer your multi-touch growth engine.
+              Upgrade to the Full Growth OS Executive Suite for monthly content plus tailored strategy calls with our team to engineer your multi-touch growth engine.
             </p>
           </div>
 
@@ -196,7 +196,7 @@ export default function FounderNotePanel({
             <ul className="space-y-2 text-xs text-slate-200">
               <li className="flex items-center gap-2">
                 <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                <span className="font-medium text-white">1-on-1 Strategic Consulting & Implementation with Eric Thomas</span>
+                <span className="font-medium text-white">1-on-1 Strategic Consulting & Implementation with Our Team</span>
               </li>
               <li className="flex items-center gap-2">
                 <Sparkles className="w-3.5 h-3.5 text-cyan-400 shrink-0" />

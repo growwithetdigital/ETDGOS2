@@ -10,8 +10,8 @@ export default function FounderBio({ onOpenBooking }: FounderBioProps) {
   const [imageError, setImageError] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Cloudinary premium founder portrait link
-  const headshotUrl = "https://res.cloudinary.com/dnpvgq7gt/image/upload/v1782938581/IMG_6392_bppodq.png";
+  // Cloudinary premium founder portrait link (optimized with modern format & web compression)
+  const headshotUrl = "https://res.cloudinary.com/dnpvgq7gt/image/upload/f_auto,q_auto,w_800/v1782938581/IMG_6392_bppodq.png";
 
   return (
     <section id="about" className="py-24 bg-white border-b border-slate-100 relative overflow-hidden">
@@ -50,6 +50,8 @@ export default function FounderBio({ onOpenBooking }: FounderBioProps) {
                   alt="Eric Thomas Founder Headshot"
                   onError={() => setImageError(true)}
                   className="w-full h-full object-cover rounded-2xl transition-transform duration-500 hover:scale-105"
+                  loading="lazy"
+                  decoding="async"
                   referrerPolicy="no-referrer"
                 />
               ) : (
@@ -188,7 +190,7 @@ export default function FounderBio({ onOpenBooking }: FounderBioProps) {
                       id="founder-connect-cta-btn"
                     >
                       <span className="flex items-center gap-1.5">
-                        Let's Connect
+                        Speak with Us
                         <ArrowUpRight className="w-4 h-4 text-slate-950 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                       </span>
                     </button>
@@ -217,18 +219,18 @@ export default function FounderBio({ onOpenBooking }: FounderBioProps) {
                       id="founder-expanded-connect-btn"
                     >
                       <span className="flex items-center gap-1.5">
-                        Let's Connect
+                        Speak with Us
                         <ArrowUpRight className="w-4 h-4 text-slate-950 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                       </span>
                     </button>
                   )}
 
                   <a
-                    href="mailto:hello@growwithetdigital.com?subject=Re%3A%20Let's%20Connect"
+                    href="mailto:hello@growwithetdigital.com?subject=Re%3A%20Direct%20Inquiry%20to%20Our%20Team"
                     className="group inline-flex items-center justify-center bg-slate-900 hover:bg-slate-850 text-white font-display text-xs font-extrabold uppercase tracking-widest px-7 py-4 rounded-xl transition-all shadow-md active:scale-95 cursor-pointer"
                   >
                     <Mail className="w-4 h-4 mr-2 text-brand-cyan" />
-                    Email Eric Directly
+                    Email Us Directly
                   </a>
                 </>
               )}

@@ -508,7 +508,7 @@ export default function App() {
                 }}
                 className="bg-brand-cyan hover:bg-cyan-500 text-slate-950 font-display text-[9px] font-black uppercase tracking-widest px-4 py-2.5 rounded-xl transition-all cursor-pointer inline-flex items-center gap-1"
               >
-                Work with Us
+                Schedule Consultation
               </button>
               <button
                 onClick={() => setToast(null)}

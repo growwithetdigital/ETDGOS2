@@ -16,8 +16,8 @@ export default function ServiceCardsDeepDive({
     {
       title: 'SEO & Search Authority',
       valueFocus: 'SEO & AEO → Increase discoverability and attract qualified traffic.',
-      subtitle: 'Traditional & AI Search Dominance',
-      description: 'We position your brand at the absolute top of search queries and next-generation AI answer engines like ChatGPT, Gemini, and Perplexity. Our systems attract ready-to-buy prospects exactly when they search for solutions.',
+      subtitle: 'Traditional & AI Search Visibility',
+      description: 'We position your brand for high-intent search queries and next-generation AI answer engines like ChatGPT, Gemini, and Perplexity. Our systems attract qualified prospects actively searching for solutions.',
       icon: Search,
       badge: 'Discovery',
       bullets: [
@@ -55,7 +55,7 @@ export default function ServiceCardsDeepDive({
             Service Architecture
           </span>
           <h2 className="font-display text-4xl md:text-5xl font-black tracking-tight text-white mb-6">
-            Elite Service Execution
+            High-Impact Growth Services
           </h2>
           <p className="font-sans text-base text-slate-400 max-w-2xl mx-auto leading-relaxed">
             Every client footprint is built on our rigorous, conversion-first operational standards. Explore our core implementation pillars.
@@ -119,7 +119,7 @@ export default function ServiceCardsDeepDive({
                   className="w-full inline-flex items-center justify-center gap-2 bg-brand-cyan hover:bg-cyan-400 text-slate-950 font-mono text-[10px] font-black uppercase tracking-widest py-4 rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95 cursor-pointer"
                   id="service-booking-btn"
                 >
-                  Work with Us
+                  Schedule Strategy Call
                   <ArrowUpRight className="w-3.5 h-3.5 text-slate-950" />
                 </button>
               </motion.div>
@@ -127,7 +127,7 @@ export default function ServiceCardsDeepDive({
           })}
         </div>
 
-        {/* Custom scope / Inquiries callout with Let's Connect */}
+        {/* Custom scope / Inquiries callout with tailored CTA */}
         <div className="mt-14 p-6 sm:p-8 rounded-2xl bg-slate-900/30 border border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
           <div>
             <h4 className="font-display text-sm sm:text-base font-bold text-white">
@@ -143,7 +143,7 @@ export default function ServiceCardsDeepDive({
             className="shrink-0 inline-flex items-center justify-center bg-slate-900 hover:bg-slate-850 text-white border border-slate-700 hover:border-slate-600 font-display text-xs font-bold uppercase tracking-widest px-6 py-3.5 rounded-xl transition-all active:scale-95 cursor-pointer"
             id="services-connect-inquiry-btn"
           >
-            <span>Let's Connect</span>
+            <span>Request Custom Scope</span>
             <ArrowUpRight className="w-3.5 h-3.5 ml-1.5 text-brand-cyan" />
           </button>
         </div>
