@@ -28,17 +28,12 @@ import {
   SocialAnglePackage 
 } from '../../utils/contentEngineHelpers';
 import ContentStudio from './ContentStudio';
-import BusinessProfileForm from './BusinessProfileForm';
-import AuditorArchivePanel from './AuditorArchivePanel';
-import FeaturedInsightsPanel from './FeaturedInsightsPanel';
+import ProfileBusinessDnaPanel from './ProfileBusinessDnaPanel';
+import LearningFeedPanel from './LearningFeedPanel';
 import OwnerTelemetryModal from './OwnerTelemetryModal';
-import BusinessDnaPanel from './BusinessDnaPanel';
 import MarketReportPanel from './MarketReportPanel';
 import FounderNotePanel from './FounderNotePanel';
-import ContentArchivePanel from './ContentArchivePanel';
-import MarketingShortsPanel from './MarketingShortsPanel';
 import { isAuthorizedForTelemetry } from '../../utils/telemetryAuth';
-import { WORKING_MARKETING_TIPS } from '../../data/marketingTips';
 
 interface WhiteboardShellProps {
   user: any;
@@ -104,19 +99,11 @@ export function StatusPill({ status }: { status: string }) {
 }
 
 export type NavTabId = 
+  | 'profile_dna'
   | 'content_studio' 
-  | 'archive'
-  | 'marketing_shorts'
-  | 'business_dna' 
   | 'market_report' 
-  | 'auditor' 
-  | 'founder_note'
-  | 'overview' 
-  | 'foundation' 
-  | 'insights' 
-  | 'profile' 
-  | 'roadmap' 
-  | 'competitors';
+  | 'learning_feed'
+  | 'founder_note';
 
 export default function WhiteboardShell({
   user,
@@ -126,8 +113,8 @@ export default function WhiteboardShell({
   onOpenBooking,
   onSignOut,
 }: WhiteboardShellProps) {
-  // Default to Content Studio (1-Asset Operating System)
-  const [activeTab, setActiveTab] = useState<NavTabId>('content_studio');
+  // Default to Profile & Business DNA (Tab 1)
+  const [activeTab, setActiveTab] = useState<NavTabId>('profile_dna');
   const [dark, setDark] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('et_gos_theme');
@@ -241,36 +228,21 @@ export default function WhiteboardShell({
     loadContent();
   }, [user?.uid, defaultSampleItem]);
 
-  // Core Tier Tabs with 3 Pillars & Roadmap included
-  const coreNavItems = [
-    { id: 'content_studio', label: 'Content Studio', icon: Layers, badge: '1-Asset Kit' },
-    { id: 'archive', label: 'Dispatches Archive', icon: Archive, badge: 'History' },
-    { id: 'marketing_shorts', label: 'Marketing Shorts', icon: Tv, badge: 'Updates' },
-    { id: 'foundation', label: 'Engage · Convert · Grow', icon: Compass, badge: '3 Pillars' },
-    { id: 'business_dna', label: 'Brand DNA & Scanner', icon: Cpu, badge: 'Pomelli DNA' },
-    { id: 'market_report', label: 'Market Intel', icon: FileBarChart, badge: '1 Headline' },
-    { id: 'auditor', label: 'Site Diagnostic', icon: BarChart3, badge: 'Audit' },
-    { id: 'roadmap', label: 'Quarterly Trajectory', icon: Map, badge: '90-Day' },
-    { id: 'founder_note', label: 'Letter from Founder', icon: Heart, badge: 'Scale' },
+  // Exactly 5 Consolidated Dashboard Tabs
+  // 1. Profile & Business DNA (merge Profile + Business DNA + Growth Auditor)
+  // 2. Content Studio
+  // 3. Industry Market Report (curated news/trends trailing 30D-YTD + folded-in Marketing Shorts)
+  // 4. Learning Feed (7 channels, 1 video/channel, refreshable)
+  // 5. Founder's Note (closing tab, thank you, research rigor/sourcing, consultation CTA)
+  const dashboardTabs = [
+    { id: 'profile_dna', label: 'Profile & Business DNA', icon: Cpu, badge: 'DNA · Auditor' },
+    { id: 'content_studio', label: 'Content Studio', icon: Layers, badge: '1-Asset Suite' },
+    { id: 'market_report', label: 'Industry Market Report', icon: FileBarChart, badge: 'Trailing 30D–YTD' },
+    { id: 'learning_feed', label: 'Learning Feed', icon: Tv, badge: '7 Channels' },
+    { id: 'founder_note', label: "Founder's Note", icon: Heart, badge: 'Closing Note' },
   ];
 
-  // Extended Executive Modules for Consultation / Owner / Pro users
-  const proNavItems = [
-    { id: 'content_studio', label: 'Content Studio', icon: Layers },
-    { id: 'archive', label: 'Dispatches Archive', icon: Archive },
-    { id: 'marketing_shorts', label: 'Marketing Shorts', icon: Tv },
-    { id: 'overview', label: 'Command Center', icon: LayoutDashboard },
-    { id: 'business_dna', label: 'Business DNA', icon: Cpu },
-    { id: 'market_report', label: 'Market Report', icon: FileBarChart },
-    { id: 'auditor', label: 'Auditor & Diagnostics', icon: BarChart3 },
-    { id: 'foundation', label: '3 Foundation Pillars', icon: Compass },
-    { id: 'roadmap', label: 'Quarterly Roadmap', icon: Map },
-    { id: 'competitors', label: 'Competitor Insights', icon: Users },
-    { id: 'insights', label: 'Tactics Vault', icon: BookOpen },
-    { id: 'founder_note', label: 'Founder Letter & Scale', icon: Heart },
-  ];
-
-  const activeNavItems = (!isFreeTier || showAllModules || isOwner) ? proNavItems : coreNavItems;
+  const activeNavItems = dashboardTabs;
 
   const handleSignOutClick = async () => {
     if (onSignOut) {
@@ -318,7 +290,7 @@ export default function WhiteboardShell({
             </span>
             <span className="font-mono text-[9px] uppercase tracking-wider text-cyan-400 bg-cyan-950/60 px-2.5 py-1 rounded border border-cyan-500/30 flex items-center gap-1.5 font-bold">
               <Crown className="w-3 h-3 text-amber-400" />
-              {profile?.tier === 'monthly' ? 'VIP Monthly Retainer ($2,500/mo)' : 'Executive Starter Tier ($2,500/mo Architecture)'}
+              {profile?.tier === 'monthly' ? 'VIP Implementation Active' : 'Growth OS Active'}
             </span>
           </div>
         </div>
@@ -470,72 +442,23 @@ export default function WhiteboardShell({
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
         
         {/* ==================================================================== */}
-        {/* CORE TAB: BUSINESS & BRAND VOICE DNA */}
+        {/* TAB 1: PROFILE & BUSINESS DNA (Merged Profile + Brand DNA + Growth Auditor) */}
         {/* ==================================================================== */}
-        {activeTab === 'business_dna' && (
-          <BusinessDnaPanel
+        {activeTab === 'profile_dna' && (
+          <ProfileBusinessDnaPanel
+            user={user}
             profile={profile}
             onRefreshProfile={onRefreshProfile}
             onNavigateToContentStudio={() => setActiveTab('content_studio')}
-          />
-        )}
-
-        {/* ==================================================================== */}
-        {/* FREE TAB 2: MARKET REPORT FOR THEIR INDUSTRY */}
-        {/* ==================================================================== */}
-        {activeTab === 'market_report' && (
-          <MarketReportPanel
-            user={user}
-            profile={profile}
             onOpenBooking={onOpenBooking}
           />
         )}
 
         {/* ==================================================================== */}
-        {/* TAB: CONTENT ARCHIVE (Saved blog posts, graphics & captions) */}
-        {/* ==================================================================== */}
-        {activeTab === 'archive' && (
-          <ContentArchivePanel
-            user={user}
-            profile={profile}
-            items={contentList.length > 0 ? contentList : [defaultSampleItem]}
-            onSelectAndLoad={(item) => {
-              setSelectedItem(item);
-              setActiveTab('content_studio');
-            }}
-            onNavigateToContentStudio={() => setActiveTab('content_studio')}
-            onOpenBooking={onOpenBooking}
-          />
-        )}
-
-        {/* ==================================================================== */}
-        {/* TAB: MARKETING SHORTS (Curated video shorts from Neil Patel, Gary Vee, Tom Ferry, Eric) */}
-        {/* ==================================================================== */}
-        {activeTab === 'marketing_shorts' && (
-          <MarketingShortsPanel
-            profile={profile}
-            onOpenBooking={onOpenBooking}
-            onNavigateToContentStudio={() => setActiveTab('content_studio')}
-          />
-        )}
-
-        {/* ==================================================================== */}
-        {/* FREE TAB 3: FREE AUDITOR TOOL */}
-        {/* ==================================================================== */}
-        {activeTab === 'auditor' && (
-          <AuditorArchivePanel
-            user={user}
-            profile={profile}
-            onOpenBooking={onOpenBooking}
-          />
-        )}
-
-        {/* ==================================================================== */}
-        {/* FREE TAB 4: CONTENT STUDIO (1 Post + 4 Social Media Angles) */}
+        {/* TAB 2: CONTENT STUDIO (1 Post + 4 Social Media Promotion Angles) */}
         {/* ==================================================================== */}
         {activeTab === 'content_studio' && (
           <div className="space-y-6">
-            {/* Writing sample calibration callout if needed */}
             {!profile?.writing_sample && (
               <div className="rounded-2xl border border-cyan-500/30 bg-cyan-950/30 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-left">
                 <div className="flex items-center gap-3">
@@ -545,13 +468,13 @@ export default function WhiteboardShell({
                       Calibrate Your Authentic Writing Voice
                     </h4>
                     <p className="text-xs text-slate-300">
-                      Add a 2-4 sentence writing sample in Business DNA so your blog post and social copy sound unmistakably like you.
+                      Add a 2-4 sentence writing sample in Profile & Business DNA so your editorial post and social copy sound unmistakably like you.
                     </p>
                   </div>
                 </div>
                 <button
                   type="button"
-                  onClick={() => setActiveTab('business_dna')}
+                  onClick={() => setActiveTab('profile_dna')}
                   className="px-3.5 py-1.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-display text-xs font-bold uppercase tracking-wider shrink-0 cursor-pointer"
                 >
                   Calibrate Voice DNA →
@@ -563,393 +486,41 @@ export default function WhiteboardShell({
               item={selectedItem || defaultSampleItem}
               profile={profile}
               onOpenBooking={onOpenBooking}
-              onNavigateToBrandDna={() => setActiveTab('business_dna')}
+              onNavigateToBrandDna={() => setActiveTab('profile_dna')}
             />
           </div>
         )}
 
         {/* ==================================================================== */}
-        {/* FREE TAB 5: NOTE FROM FOUNDER & UPGRADE LEAD GEN */}
+        {/* TAB 3: INDUSTRY MARKET REPORT (Trailing 30D-YTD + Merged Marketing Shorts) */}
         {/* ==================================================================== */}
-        {activeTab === 'founder_note' && (
-          <FounderNotePanel
+        {activeTab === 'market_report' && (
+          <MarketReportPanel
+            user={user}
+            profile={profile}
+            onOpenBooking={onOpenBooking}
+            onNavigateToContentStudio={() => setActiveTab('content_studio')}
+          />
+        )}
+
+        {/* ==================================================================== */}
+        {/* TAB 4: LEARNING FEED (7 Curated Channels, 1 Video/Channel, Refreshable) */}
+        {/* ==================================================================== */}
+        {activeTab === 'learning_feed' && (
+          <LearningFeedPanel
             profile={profile}
             onOpenBooking={onOpenBooking}
           />
         )}
 
         {/* ==================================================================== */}
-        {/* PRO / ALL MODULES TAB: EXECUTIVE OVERVIEW */}
+        {/* TAB 5: FOUNDER'S NOTE (Closing Note, Research Rigor/Sourcing, Consultation CTA) */}
         {/* ==================================================================== */}
-        {activeTab === 'overview' && (
-          <div className="space-y-6">
-            <SectionHeader
-              eyebrow="Executive Command Center"
-              title={`${clientName} — Growth OS Command`}
-              desc="A real-time executive view of your category authority, foundation health, and quarterly execution priorities."
-            />
-
-            {/* Daily Growth Dispatch: Tested Marketing Tactic */}
-            {(() => {
-              const currentTip = WORKING_MARKETING_TIPS[dailyTipIndex % WORKING_MARKETING_TIPS.length];
-              return (
-                <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-7 shadow-sm relative overflow-hidden text-left">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[var(--border)] pb-4 mb-4">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-mono text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/30">
-                        Daily Growth Dispatch
-                      </span>
-                      <span className="font-mono text-[9px] font-bold text-amber-700 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
-                        {currentTip.category}
-                      </span>
-                      <span className="font-mono text-[9px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                        {currentTip.impactMetric}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setDailyTipIndex(prev => (prev + 1) % WORKING_MARKETING_TIPS.length)}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[var(--surface2)] hover:bg-[var(--border)] text-[var(--muted)] hover:text-[var(--text)] font-mono text-[10px] font-bold transition-all cursor-pointer border border-[var(--border)]"
-                      >
-                        <RefreshCw className="w-3 h-3 text-[var(--accent)]" />
-                        <span>Next Tactic ({((dailyTipIndex % WORKING_MARKETING_TIPS.length) + 1)}/{WORKING_MARKETING_TIPS.length})</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setActiveTab('insights')}
-                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-[var(--accent)]/10 hover:bg-[var(--accent)]/20 text-[var(--accent)] font-mono text-[10px] font-bold transition-all cursor-pointer border border-[var(--accent)]/30"
-                      >
-                        <span>Tactics Vault</span>
-                        <ArrowUpRight className="w-3 h-3" />
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h3 className="text-lg sm:text-xl font-bold text-[var(--text)] tracking-tight mb-2">
-                      {currentTip.title}
-                    </h3>
-                    <p className="text-xs sm:text-sm text-[var(--muted)] leading-relaxed mb-4">
-                      <strong className="text-[var(--text)]">Tested Tactic: </strong>
-                      {currentTip.tactic}
-                    </p>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 mb-4">
-                      <div className="p-3.5 rounded-2xl bg-[var(--surface2)] border border-[var(--border)]">
-                        <span className="font-mono text-[10px] uppercase tracking-wider text-amber-700 dark:text-amber-400 font-bold block mb-1">
-                          Research Proof & Mechanism
-                        </span>
-                        <p className="text-xs text-[var(--muted)] leading-relaxed">
-                          {currentTip.whyItWorks}
-                        </p>
-                      </div>
-
-                      <div className="p-3.5 rounded-2xl bg-[var(--surface2)] border border-[var(--border)]">
-                        <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--accent)] font-bold block mb-1">
-                          Action Blueprint Steps
-                        </span>
-                        <ul className="space-y-1 text-xs text-[var(--text)]">
-                          {currentTip.stepByStep.slice(0, 2).map((s, idx) => (
-                            <li key={idx} className="flex items-start gap-1.5">
-                              <span className="font-mono text-[10px] text-[var(--accent)] shrink-0 mt-0.5">0{idx + 1}.</span>
-                              <span className="line-clamp-2">{s}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
-          </div>
-        )}
-
-        {/* ==================================================================== */}
-        {/* TAB: 3 FOUNDATION PILLARS (Engage, Convert, Grow) */}
-        {/* ==================================================================== */}
-        {activeTab === 'foundation' && (
-          <div className="space-y-6 text-left" id="three-foundation-pillars">
-            <SectionHeader
-              eyebrow="Core Operating Architecture"
-              title="3 Foundation Pillars: Engage · Convert · Grow"
-              desc={`Custom tailored for ${clientName} based on your strategic footprint and latest evergreen blog release: "${selectedItem?.blog_post.title || defaultSampleItem.blog_post.title}".`}
-            />
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Pillar 1: ENGAGE */}
-              <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-7 shadow-sm space-y-4 relative overflow-hidden flex flex-col justify-between">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-[var(--accent)] font-mono font-black text-sm">
-                        01
-                      </div>
-                      <div>
-                        <span className="font-mono text-[10px] uppercase tracking-widest text-[var(--accent)] font-bold block">
-                          Pillar 01
-                        </span>
-                        <h3 className="font-display text-xl font-bold text-[var(--text)]">
-                          Engage
-                        </h3>
-                      </div>
-                    </div>
-                    <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-cyan-500/10 text-[var(--accent)] border border-cyan-500/30">
-                      Discovery Hook
-                    </span>
-                  </div>
-
-                  <div className="p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] space-y-2">
-                    <div className="flex items-center gap-1.5 text-[var(--accent)] font-mono text-[10px] font-bold uppercase tracking-wider">
-                      <Target className="w-3.5 h-3.5" />
-                      <span>The 1 Strategic Tip for {clientName}</span>
-                    </div>
-                    <p className="text-xs text-[var(--text)] leading-relaxed font-sans font-medium">
-                      Publish the conversational premise of <em>"{selectedItem?.blog_post.title || defaultSampleItem.blog_post.title}"</em> directly onto LinkedIn and regional industry networks. Open with the exact high-friction challenge facing {clientAudience} in {clientLocation}, immediately framing your brand voice as the definitive authority before commoditized competitors can react.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-[var(--border)] flex items-start gap-2 text-xs text-[var(--muted)]">
-                  <ArrowUpRight className="w-3.5 h-3.5 mt-0.5 text-[var(--accent)] shrink-0" />
-                  <span><strong>Execution:</strong> Deploy your 1 engaging social caption and 1:1 editorial thumbnail from Content Studio to fuel discovery.</span>
-                </div>
-              </div>
-
-              {/* Pillar 2: CONVERT */}
-              <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-7 shadow-sm space-y-4 relative overflow-hidden flex flex-col justify-between">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-400 font-mono font-black text-sm">
-                        02
-                      </div>
-                      <div>
-                        <span className="font-mono text-[10px] uppercase tracking-widest text-amber-600 dark:text-amber-400 font-bold block">
-                          Pillar 02
-                        </span>
-                        <h3 className="font-display text-xl font-bold text-[var(--text)]">
-                          Convert
-                        </h3>
-                      </div>
-                    </div>
-                    <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30">
-                      Zero-Friction Intake
-                    </span>
-                  </div>
-
-                  <div className="p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] space-y-2">
-                    <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400 font-mono text-[10px] font-bold uppercase tracking-wider">
-                      <Sparkles className="w-3.5 h-3.5" />
-                      <span>The 1 Strategic Tip for {clientName}</span>
-                    </div>
-                    <p className="text-xs text-[var(--text)] leading-relaxed font-sans font-medium">
-                      Place a direct diagnostic or consultation CTA at the bottom of your 300-word post. When {clientAudience} finish reading <em>"{selectedItem?.blog_post.title || defaultSampleItem.blog_post.title}"</em>, invite them into a direct intake evaluation that reinforces your mission: <em>"{clientMission}"</em>. Prospects convert 3.8x faster when moving from editorial authority directly to an intake evaluation.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-[var(--border)] flex items-start gap-2 text-xs text-[var(--muted)]">
-                  <ArrowUpRight className="w-3.5 h-3.5 mt-0.5 text-amber-600 dark:text-amber-400 shrink-0" />
-                  <span><strong>Execution:</strong> Send your 1 150-word eblast and publish the Google Business Profile post to convert active searchers.</span>
-                </div>
-              </div>
-
-              {/* Pillar 3: GROW */}
-              <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-7 shadow-sm space-y-4 relative overflow-hidden flex flex-col justify-between">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-mono font-black text-sm">
-                        03
-                      </div>
-                      <div>
-                        <span className="font-mono text-[10px] uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-bold block">
-                          Pillar 03
-                        </span>
-                        <h3 className="font-display text-xl font-bold text-[var(--text)]">
-                          Grow
-                        </h3>
-                      </div>
-                    </div>
-                    <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
-                      Compounding Authority
-                    </span>
-                  </div>
-
-                  <div className="p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] space-y-2">
-                    <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 font-mono text-[10px] font-bold uppercase tracking-wider">
-                      <TrendingUp className="w-3.5 h-3.5" />
-                      <span>The 1 Strategic Tip for {clientName}</span>
-                    </div>
-                    <p className="text-xs text-[var(--text)] leading-relaxed font-sans font-medium">
-                      Syndicate key takeaway quotes from <em>"{selectedItem?.blog_post.title || defaultSampleItem.blog_post.title}"</em> into recurring client email briefings and regional partnerships. Pair the downloadable 1:1 editorial thumbnail with strategic partner shoutouts across {clientLocation} to spark compounding referral loops that drive continuous inbound revenue.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-[var(--border)] flex items-start gap-2 text-xs text-[var(--muted)]">
-                  <ArrowUpRight className="w-3.5 h-3.5 mt-0.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                  <span><strong>Execution:</strong> Download your 1:1 editorial graphic (PNG) with your business name overlay from Content Studio and syndicate with key partners.</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ==================================================================== */}
-        {/* PRO TAB: TACTICS VAULT & INSIGHTS */}
-        {/* ==================================================================== */}
-        {activeTab === 'insights' && (
-          <FeaturedInsightsPanel onOpenBooking={onOpenBooking} />
-        )}
-
-        {/* ==================================================================== */}
-        {/* PRO TAB: PROFILE & VOICE FORM */}
-        {/* ==================================================================== */}
-        {activeTab === 'profile' && (
-          <BusinessProfileForm
-            user={user}
+        {activeTab === 'founder_note' && (
+          <FounderNotePanel
             profile={profile}
-            onProfileUpdated={onRefreshProfile}
-            onContinueToGeneration={() => setActiveTab('content_studio')}
+            onOpenBooking={onOpenBooking}
           />
-        )}
-
-        {/* ==================================================================== */}
-        {/* TAB: QUARTERLY ROADMAP (Engage, Convert, Grow) */}
-        {/* ==================================================================== */}
-        {activeTab === 'roadmap' && (
-          <div className="space-y-6 text-left" id="quarterly-roadmap-pillars">
-            <SectionHeader
-              eyebrow="Quarterly Execution Architecture"
-              title="Quarterly Roadmap: Engage · Convert · Grow"
-              desc={`A 90-day sequential trajectory structured around your 3 foundation pillars and anchored by: "${selectedItem?.blog_post.title || defaultSampleItem.blog_post.title}".`}
-            />
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Month 1: Engage */}
-              <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-7 shadow-sm space-y-4 flex flex-col justify-between">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
-                    <span className="font-mono text-[11px] uppercase tracking-wider text-[var(--accent)] font-bold">
-                      Month 1 (30 Days) · Engage
-                    </span>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/30 font-bold">
-                      Pillar 01
-                    </span>
-                  </div>
-                  <h4 className="font-display text-base font-bold text-[var(--text)]">
-                    Activate Voice & Publish Editorial
-                  </h4>
-                  <div className="p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] space-y-2">
-                    <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] font-bold block">
-                      The 1 Strategic Priority
-                    </span>
-                    <p className="text-xs text-[var(--text)] leading-relaxed font-sans font-medium">
-                      Publish <em>"{selectedItem?.blog_post.title || defaultSampleItem.blog_post.title}"</em> on {clientWebsite || 'your website'} and distribute the 4 social angles to {clientAudience}. Lock in your authentic Brand DNA so every public touchpoint sounds unmistakably like {clientName}.
-                    </p>
-                  </div>
-                </div>
-                <div className="pt-3 border-t border-[var(--border)] flex items-center gap-1.5 text-xs text-[var(--accent)] font-medium">
-                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                  <span>Milestone: Published post + 4 organic distribution waves</span>
-                </div>
-              </div>
-
-              {/* Month 2: Convert */}
-              <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-7 shadow-sm space-y-4 flex flex-col justify-between">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
-                    <span className="font-mono text-[11px] uppercase tracking-wider text-amber-700 dark:text-amber-400 font-bold">
-                      Month 2 (60 Days) · Convert
-                    </span>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30 font-bold">
-                      Pillar 02
-                    </span>
-                  </div>
-                  <h4 className="font-display text-base font-bold text-[var(--text)]">
-                    Zero-Friction Intake Diagnostic
-                  </h4>
-                  <div className="p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] space-y-2">
-                    <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] font-bold block">
-                      The 1 Strategic Priority
-                    </span>
-                    <p className="text-xs text-[var(--text)] leading-relaxed font-sans font-medium">
-                      Integrate an interactive diagnostic intake on the landing page of <em>"{selectedItem?.blog_post.title || defaultSampleItem.blog_post.title}"</em>. Transition readers from passive consumers into qualified consultations, eliminating cold intake friction in {clientLocation}.
-                    </p>
-                  </div>
-                </div>
-                <div className="pt-3 border-t border-[var(--border)] flex items-center gap-1.5 text-xs text-amber-700 dark:text-amber-400 font-medium">
-                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                  <span>Milestone: Frictionless diagnostic intake live</span>
-                </div>
-              </div>
-
-              {/* Month 3: Grow */}
-              <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-7 shadow-sm space-y-4 flex flex-col justify-between">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
-                    <span className="font-mono text-[11px] uppercase tracking-wider text-emerald-700 dark:text-emerald-400 font-bold">
-                      Month 3 (90 Days) · Grow
-                    </span>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 font-bold">
-                      Pillar 03
-                    </span>
-                  </div>
-                  <h4 className="font-display text-base font-bold text-[var(--text)]">
-                    Compounding Authority & Scaling
-                  </h4>
-                  <div className="p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] space-y-2">
-                    <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] font-bold block">
-                      The 1 Strategic Priority
-                    </span>
-                    <p className="text-xs text-[var(--text)] leading-relaxed font-sans font-medium">
-                      Syndicate the core insights of <em>"{selectedItem?.blog_post.title || defaultSampleItem.blog_post.title}"</em> to key strategic partners in {clientLocation} and schedule your private 1-on-1 Growth Consultation with our team to expand into a multi-channel acquisition flywheel.
-                    </p>
-                  </div>
-                </div>
-                <div className="pt-3 border-t border-[var(--border)] flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-400 font-medium">
-                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                  <span>Milestone: Compounding referral flywheel & 1-on-1 Scale Session</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ==================================================================== */}
-        {/* PRO TAB: COMPETITOR INSIGHTS */}
-        {/* ==================================================================== */}
-        {activeTab === 'competitors' && (
-          <div className="space-y-6 text-left">
-            <SectionHeader
-              eyebrow="Competitor Insights"
-              title="Where the Category Lane Is Open"
-              desc="Strategic observations on market positioning and differentiation."
-            />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Card>
-                <div className="mb-2 font-mono text-[11px] uppercase tracking-wide text-[var(--accent)] font-semibold">
-                  Content Opportunities
-                </div>
-                <p className="text-sm leading-relaxed text-[var(--text)]">
-                  Competitors produce generic, sporadic category posts without structured frameworks. By leading with your core mission and concrete local search intent, your brand captures the high-trust lane.
-                </p>
-              </Card>
-
-              <Card>
-                <div className="mb-2 font-mono text-[11px] uppercase tracking-wide text-[var(--accent)] font-semibold">
-                  Entity & Search Readiness (AEO)
-                </div>
-                <p className="text-sm leading-relaxed text-[var(--text)]">
-                  Most competitor sites lack verified schema markup, making them invisible in AI chat engines. Deploying intent-driven answers and verified entity data gives your brand an immediate early-mover advantage.
-                </p>
-              </Card>
-            </div>
-          </div>
         )}
 
       </main>

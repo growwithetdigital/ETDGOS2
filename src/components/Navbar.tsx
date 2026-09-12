@@ -89,8 +89,8 @@ export default function Navbar({
           </div>
         </div>
 
-        {/* Centered navigation links */}
-        <nav className="hidden lg:flex items-center gap-6 xl:gap-7">
+        {/* Centered navigation links with responsive spacing and margin */}
+        <nav className="hidden lg:flex items-center gap-3.5 xl:gap-5 2xl:gap-6 mr-3 xl:mr-6 shrink-0">
           <button
             onClick={() => handleNavClick('home')}
             className={`font-sans text-xs font-bold uppercase tracking-wider transition-colors hover:text-cyan-650 cursor-pointer ${
@@ -158,14 +158,14 @@ export default function Navbar({
           </button>
         </nav>
 
-        {/* Right aligned call to action */}
-        <div className="hidden lg:flex items-center gap-2.5">
+        {/* Right aligned call to action with dedicated left margin and padding */}
+        <div className="hidden lg:flex items-center gap-2 xl:gap-3 shrink-0 pl-3 xl:pl-5 border-l border-slate-200">
           {user ? (
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={onOpenDashboard}
-                className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-850 text-brand-cyan border border-brand-cyan/40 font-display text-[10px] font-bold uppercase tracking-wider px-3.5 py-2.5 rounded-xl transition-all shadow-sm cursor-pointer"
+                className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-850 text-brand-cyan border border-brand-cyan/40 font-display text-[10px] font-bold uppercase tracking-wider px-3.5 py-2.5 rounded-xl transition-all shadow-sm cursor-pointer shrink-0"
                 id="navbar-growth-os-btn"
               >
                 <Sparkles className="w-3.5 h-3.5 text-brand-cyan animate-pulse" />
@@ -176,7 +176,7 @@ export default function Navbar({
               <button
                 type="button"
                 onClick={onSignOut}
-                className="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 border border-slate-200 hover:border-rose-200 font-display text-[10px] font-bold uppercase tracking-wider px-3 py-2.5 rounded-xl transition-all cursor-pointer shadow-sm"
+                className="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 border border-slate-200 hover:border-rose-200 font-display text-[10px] font-bold uppercase tracking-wider px-3 py-2.5 rounded-xl transition-all cursor-pointer shadow-sm shrink-0"
                 title="Sign Out of Growth OS"
                 id="navbar-signout-btn"
               >
@@ -188,18 +188,18 @@ export default function Navbar({
             <button
               type="button"
               onClick={onOpenAuthModal}
-              className="inline-flex items-center gap-2 bg-slate-900/90 hover:bg-slate-850 text-brand-cyan hover:text-white border border-brand-cyan/30 font-display text-[10px] font-bold uppercase tracking-wider px-3.5 py-2.5 rounded-xl transition-all shadow-sm cursor-pointer"
+              className="inline-flex items-center gap-1.5 bg-slate-900/90 hover:bg-slate-850 text-brand-cyan hover:text-white border border-brand-cyan/30 font-display text-[10px] font-bold uppercase tracking-wider px-3 py-2.5 xl:px-3.5 rounded-xl transition-all shadow-sm cursor-pointer shrink-0"
               id="navbar-auth-growth-os-btn"
             >
               <Sparkles className="w-3.5 h-3.5 text-brand-cyan" />
-              <span>Sign In to Growth OS</span>
+              <span>Sign In<span className="hidden xl:inline"> to Growth OS</span></span>
             </button>
           )}
 
           <button
             type="button"
             onClick={onOpenCalendar || onOpenBooking}
-            className="group relative inline-flex items-center justify-center bg-brand-cyan hover:bg-cyan-400 text-slate-950 font-display text-[10px] font-extrabold uppercase tracking-widest px-5 py-2.5 rounded-xl overflow-hidden transition-all shadow-md active:scale-95 cursor-pointer"
+            className="group relative inline-flex items-center justify-center bg-brand-cyan hover:bg-cyan-400 text-slate-950 font-display text-[10px] font-extrabold uppercase tracking-widest px-4 xl:px-5 py-2.5 rounded-xl overflow-hidden transition-all shadow-md active:scale-95 cursor-pointer shrink-0"
             id="navbar-booking-btn"
           >
             <span className="relative z-10 flex items-center gap-1.5">

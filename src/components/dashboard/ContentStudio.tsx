@@ -461,13 +461,13 @@ TARGET: ${gbpData.target_keyword}
             </div>
           </div>
 
-          {/* Executive Value Tier & VIP Retainer Bridge */}
+          {/* Executive Implementation Bridge */}
           <div className="rounded-3xl border border-cyan-500/30 bg-gradient-to-br from-[var(--surface)] via-[var(--surface2)] to-cyan-950/20 p-6 space-y-3 text-left shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                 <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--text)] font-bold">
-                  Executive Starter Dispatch Active · $2,500/Mo Architecture
+                  Executive Dispatch Active · Category Authority Architecture
                 </span>
               </div>
               <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold border border-cyan-500/30">
@@ -475,7 +475,7 @@ TARGET: ${gbpData.target_keyword}
               </span>
             </div>
             <p className="text-xs text-[var(--muted)] leading-relaxed font-sans">
-              Your free tier provides a complete, broadcast-ready asset kit calibrated from your authentic Brand DNA. To expand from 1 monthly piece into an omni-channel compounding authority machine with <strong>4 weekly tailored dispatches, custom syndication, and private 1-on-1 CMO strategy sessions with our team</strong>, explore the VIP Monthly Retainer.
+              Your Growth OS provides a complete, broadcast-ready asset kit calibrated from your authentic Brand DNA. To expand from 1 quarterly piece into an omni-channel compounding authority machine with <strong>weekly tailored dispatches, custom syndication, and private 1-on-1 strategy sessions with ET Digital</strong>, explore our tailored implementation partnerships.
             </p>
             {onOpenBooking && (
               <div className="pt-1 flex flex-wrap items-center justify-between gap-3">
@@ -485,11 +485,11 @@ TARGET: ${gbpData.target_keyword}
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 text-white font-display text-xs font-bold uppercase tracking-wider transition-all shadow-sm cursor-pointer"
                 >
                   <Crown className="w-3.5 h-3.5 text-amber-300" />
-                  <span>Explore VIP Retainer ($2,500/mo)</span>
+                  <span>Work with ET Digital</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
                 <span className="text-[11px] font-mono text-[var(--muted)] hidden sm:inline">
-                  Done-For-You Execution · Direct with Founder
+                  Done-For-You Execution · ET Digital Growth Systems
                 </span>
               </div>
             )}
