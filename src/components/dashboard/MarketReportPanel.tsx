@@ -233,38 +233,38 @@ export default function MarketReportPanel({
                 <div className="p-5 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="font-mono text-[10px] uppercase font-bold text-cyan-600 dark:text-cyan-400">
-                      Gartner & HBR Synthesis
+                      Search Engine Land & Industry Tracking
                     </span>
                     <span className="text-[10px] font-mono text-[var(--muted)]">Trailing 30 Days</span>
                   </div>
                   <h5 className="font-display text-sm font-bold text-[var(--text)]">
-                    AI Answer Engine Consolidation in B2B & Advisory Services
+                    How Modern Clients Actually Research You Before Calling
                   </h5>
                   <p className="text-xs text-[var(--muted)] leading-relaxed">
-                    Over 58% of executive buyers now test strategic partners by querying ChatGPT Search or Perplexity before booking a discovery call. Brands without structured entity schemas are invisibly filtered out.
+                    Most people don't just click an ad and buy anymore. They look you up, skim your articles, and check if you genuinely understand their day-to-day challenges. Having clear, thoughtful content on your website does the heavy lifting before you ever speak.
                   </p>
                   <div className="pt-2 border-t border-[var(--border)] text-[11px] font-mono text-emerald-500 flex items-center gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>Action: Deploy entity-rich 1-Asset dispatches to secure recommendation placement.</span>
+                    <span>Simple Action: Focus on answering the top 3 questions real clients ask you every week.</span>
                   </div>
                 </div>
 
                 <div className="p-5 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="font-mono text-[10px] uppercase font-bold text-cyan-600 dark:text-cyan-400">
-                      eMarketer & Digiday Trendline
+                      HubSpot Research & Editorial Trendline
                     </span>
-                    <span className="text-[10px] font-mono text-[var(--muted)]">YTD Trajectory</span>
+                    <span className="text-[10px] font-mono text-[var(--muted)]">Current Trend</span>
                   </div>
                   <h5 className="font-display text-sm font-bold text-[var(--text)]">
-                    The Death of Commodity Social Posts & Rise of Deep Editorial
+                    Why Generic Social Posts Get Ignored While Real Stories Win
                   </h5>
                   <p className="text-xs text-[var(--muted)] leading-relaxed">
-                    Engagement on generic "tip of the day" posts dropped 41% YTD. Conversely, deep narrative case studies and contrarian POV articles generated 3.4x higher pipeline inquiries.
+                    Generic tips and recycled quotes are getting scrolled right past. What stops people in their tracks is real talk: honest lessons from your work, client transformations, and taking a clear stance on what actually gets results in your field.
                   </p>
                   <div className="pt-2 border-t border-[var(--border)] text-[11px] font-mono text-emerald-500 flex items-center gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>Action: Ground every social angle in authentic lived founder experience.</span>
+                    <span>Simple Action: Share one real takeaway from a recent client win instead of generic advice.</span>
                   </div>
                 </div>
               </div>

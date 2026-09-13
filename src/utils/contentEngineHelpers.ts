@@ -583,25 +583,25 @@ export function getIndustryMarketIntel(profile: UserProfile | null): IndustryMar
 
   if (combined.includes('tech') || combined.includes('software') || combined.includes('saas') || combined.includes('ai')) {
     return {
-      leading_headline: 'B2B Software Buyers Evaluate Technical Authority and Lived Proof Over Traditional Sales Collateral',
-      article_title: 'How Generative AI Is Changing Search and B2B Software Procurement',
-      article_source: 'Harvard Business Review',
-      article_url: 'https://hbr.org/2024/09/how-generative-ai-is-changing-search-and-marketing',
-      executive_takeaway: 'Decision-makers conduct up to 80% of technical evaluation asynchronously through founder writings and published systems before requesting a product demo.',
-      market_shift_stat: '81% of enterprise tech procurement teams prioritize verified domain expertise over vendor ads.',
+      leading_headline: 'Modern Buyers Evaluate Real Domain Proof Long Before Speaking with a Sales Rep',
+      article_title: 'How Generative AI Is Changing Search Engine Optimization and Discovery',
+      article_source: 'Search Engine Land',
+      article_url: 'https://searchengineland.com/seo/generative-ai',
+      executive_takeaway: 'People do not want to be sold to—they want to see how you solve real problems. Prospective clients read articles, check your website, and evaluate your thinking quietly before they ever fill out a form or book a call.',
+      market_shift_stat: '78% of B2B decision-makers evaluate founder insights before reaching out.',
       detected_niche: 'Technology & Enterprise Solutions'
     };
   }
 
   // Default / Consulting & Business Services
   return {
-    leading_headline: 'AI Overviews & Answer Engines Shift 58% of High-Intent B2B Inquiries to Authoritative Entity Sources',
-    article_title: 'How Generative AI Is Changing Search and Marketing',
-    article_source: 'Harvard Business Review',
-    article_url: 'https://hbr.org/2024/09/how-generative-ai-is-changing-search-and-marketing',
-    executive_takeaway: 'Modern buyers consult AI search engines (Perplexity, ChatGPT, Google SGE) before contacting vendors. Businesses with authentic founder narratives and structured proof capture the highest-margin contracts.',
-    market_shift_stat: '58% of qualified client discovery shifts from keyword PPC to verified authority citations.',
-    detected_niche: 'Executive Advisory & High-Ticket Services'
+    leading_headline: 'Why Clear Answers and Authentic Proof Beat Marketing Jargon Every Single Time',
+    article_title: 'The State of Modern Marketing and Consumer Search Behavior',
+    article_source: 'HubSpot Marketing Insights',
+    article_url: 'https://blog.hubspot.com/marketing/state-of-marketing',
+    executive_takeaway: 'Digital marketing can feel overwhelming with constant algorithm changes and buzzwords. But at the end of the day, winning clients comes down to simple fundamentals: clear positioning, real customer proof, and making it effortless for people to take the next step.',
+    market_shift_stat: '62% of high-intent clients choose the brand that provides the clearest, most straightforward answer.',
+    detected_niche: 'Executive Advisory & Professional Services'
   };
 }
 

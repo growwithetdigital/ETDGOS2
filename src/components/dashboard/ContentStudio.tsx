@@ -415,17 +415,60 @@ TARGET: ${gbpData.target_keyword}
             </div>
 
             <div className="space-y-2.5">
-              <div className="p-3 rounded-xl bg-[var(--surface2)] border border-[var(--border)] text-xs">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] font-semibold block mb-0.5">
-                  Subject Line
-                </span>
-                <span className="font-display font-bold text-[var(--text)]">
-                  {eblastData.subject}
-                </span>
+              {/* Subject Line with Dedicated Copy Button */}
+              <div className="p-3.5 rounded-xl bg-[var(--surface2)] border border-[var(--border)] text-xs flex items-center justify-between gap-3">
+                <div className="space-y-0.5 overflow-hidden">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] font-semibold block">
+                    Subject Line
+                  </span>
+                  <span className="font-display font-bold text-[var(--text)] truncate block">
+                    {eblastData.subject}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => copyToClipboard(eblastData.subject, 'eblast_subject')}
+                  className="px-2.5 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--border)] text-xs font-mono text-purple-600 dark:text-purple-400 font-semibold flex items-center gap-1.5 shrink-0 transition-colors cursor-pointer shadow-2xs active:scale-95"
+                  title="Copy email subject line only"
+                >
+                  {copiedKey === 'eblast_subject' ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-500" />
+                      <span className="text-emerald-500">Copied</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>Copy Subject</span>
+                    </>
+                  )}
+                </button>
               </div>
 
-              <div className="p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] text-xs text-[var(--text)] leading-relaxed whitespace-pre-line font-sans">
-                {eblastData.body}
+              {/* Email Body with Dedicated Copy Button */}
+              <div className="relative rounded-2xl bg-[var(--surface2)] border border-[var(--border)] p-4 text-xs text-[var(--text)] leading-relaxed whitespace-pre-line font-sans space-y-3">
+                <div className="flex items-center justify-between pb-2 border-b border-[var(--border)]/60 text-[10px] font-mono text-[var(--muted)]">
+                  <span className="uppercase font-semibold tracking-wider">Email Body Content</span>
+                  <button
+                    type="button"
+                    onClick={() => copyToClipboard(eblastData.body, 'eblast_body')}
+                    className="px-2.5 py-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--border)] text-xs font-mono text-purple-600 dark:text-purple-400 font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs active:scale-95"
+                    title="Copy email body only"
+                  >
+                    {copiedKey === 'eblast_body' ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-emerald-500" />
+                        <span className="text-emerald-500">Copied</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>Copy Body</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+                <div>{eblastData.body}</div>
               </div>
             </div>
           </div>

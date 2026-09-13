@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { 
   Download, Image as ImageIcon, Check, 
-  RefreshCw, ArrowUpRight, Copy, Share2, Linkedin,
-  Facebook, Instagram, FileText, Layers, Mail, Monitor, Smartphone, Globe
+  RefreshCw, Copy, Share2, Linkedin,
+  Facebook, Instagram, FileText, Layers, Mail, Smartphone, Globe
 } from 'lucide-react';
 import XIcon from '../icons/XIcon';
 import { 
@@ -20,7 +20,7 @@ export interface ImageFormatOption {
   dimensions: string;
   width: number;
   height: number;
-  icon: React.ElementType;
+  renderIcons: () => React.ReactNode;
   aspectClass: string;
   fileSuffix: string;
   description: string;
@@ -28,56 +28,61 @@ export interface ImageFormatOption {
 
 export const IMAGE_FORMAT_OPTIONS: ImageFormatOption[] = [
   {
+    id: 'linkedin_fb_landscape',
+    name: 'LinkedIn & Facebook',
+    platform: 'LinkedIn & Facebook',
+    ratioLabel: '1.91:1 Landscape',
+    dimensions: '1200 x 628',
+    width: 1200,
+    height: 628,
+    renderIcons: () => (
+      <div className="flex items-center -space-x-1">
+        <Linkedin className="w-4 h-4 text-[#0A66C2]" />
+        <Facebook className="w-4 h-4 text-[#1877F2]" />
+      </div>
+    ),
+    aspectClass: 'aspect-[1200/628]',
+    fileSuffix: 'linkedin-facebook-1200x628',
+    description: 'Paired standard landscape format for LinkedIn and Facebook feeds'
+  },
+  {
     id: 'instagram_square',
-    name: 'Square Feed Post',
-    platform: 'Instagram / LinkedIn Feed',
+    name: 'Instagram',
+    platform: 'Instagram Feed',
     ratioLabel: '1:1 Square',
     dimensions: '1080 x 1080',
     width: 1080,
     height: 1080,
-    icon: Instagram,
+    renderIcons: () => <Instagram className="w-4 h-4 text-[#E4405F]" />,
     aspectClass: 'aspect-square',
-    fileSuffix: 'square-1080x1080',
-    description: 'Optimal for Instagram, LinkedIn posts, and Facebook feed cards'
-  },
-  {
-    id: 'linkedin_landscape',
-    name: 'Landscape Feed Banner',
-    platform: 'LinkedIn / Facebook Landscape',
-    ratioLabel: '1.91:1 Feed',
-    dimensions: '1200 x 628',
-    width: 1200,
-    height: 628,
-    icon: Linkedin,
-    aspectClass: 'aspect-[1200/628]',
-    fileSuffix: 'landscape-1200x628',
-    description: 'High-converting landscape ratio for LinkedIn articles & Facebook links'
+    fileSuffix: 'instagram-square-1080x1080',
+    description: 'Standard 1:1 square post for Instagram feed grid'
   },
   {
     id: 'x_post',
-    name: 'X / Twitter Post',
-    platform: 'X (Twitter) Feed',
+    name: 'X (Twitter)',
+    platform: 'X Timeline',
     ratioLabel: '16:9 Landscape',
     dimensions: '1200 x 675',
     width: 1200,
     height: 675,
-    icon: XIcon,
+    renderIcons: () => <XIcon className="w-3.5 h-3.5 text-[var(--text)]" />,
     aspectClass: 'aspect-[16/9]',
     fileSuffix: 'x-post-1200x675',
-    description: 'Widescreen in-feed format designed to maximize X timeline engagement'
+    description: 'High-engagement 16:9 widescreen post for X feed'
   },
   {
     id: 'email_header',
-    name: 'Email Header Banner',
+    name: 'Email Header',
     platform: 'Email Newsletters & Eblasts',
-    ratioLabel: '3:1 Horizontal',
+    ratioLabel: '3:1 Banner',
     dimensions: '1200 x 400',
     width: 1200,
     height: 400,
-    icon: Mail,
+    renderIcons: () => <Mail className="w-4 h-4 text-purple-500" />,
     aspectClass: 'aspect-[3/1]',
     fileSuffix: 'email-header-1200x400',
-    description: 'Wide horizontal header with email client dimensions for newsletters & digests'
+    description: 'Horizontal banner sized for email campaigns and client newsletters'
   },
   {
     id: 'gbp_update',
@@ -87,21 +92,21 @@ export const IMAGE_FORMAT_OPTIONS: ImageFormatOption[] = [
     dimensions: '1200 x 900',
     width: 1200,
     height: 900,
-    icon: Globe,
+    renderIcons: () => <Globe className="w-4 h-4 text-amber-500" />,
     aspectClass: 'aspect-[4/3]',
     fileSuffix: 'gbp-update-1200x900',
-    description: 'Optimal 4:3 scale recommended by Google for Business Profile posts & updates'
+    description: 'Optimal 4:3 scale for Google Business Profile local search posts'
   },
   {
     id: 'story_vertical',
-    name: 'Vertical Stories & Reels',
-    platform: 'Instagram Stories / Reels / TikTok',
+    name: 'Stories & Reels',
+    platform: 'Stories & Reels',
     ratioLabel: '9:16 Vertical',
     dimensions: '1080 x 1920',
     width: 1080,
     height: 1920,
-    icon: Smartphone,
-    aspectClass: 'aspect-[9/16] max-h-[540px] mx-auto',
+    renderIcons: () => <Smartphone className="w-4 h-4 text-cyan-500" />,
+    aspectClass: 'aspect-[9/16] max-h-[520px] mx-auto',
     fileSuffix: 'story-1080x1920',
     description: 'Full-screen mobile story format for Instagram, Facebook, and TikTok'
   }
@@ -130,12 +135,12 @@ export default function EditorialThumbnailCard({
   socialCaptionToShare,
   caption,
 }: EditorialThumbnailCardProps) {
-  // Automatically select photo tailored to business niche
   const defaultNichePhoto = getNichePhotoForBusiness(profile?.industry, profile?.website_url);
   const [selectedPhoto, setSelectedPhoto] = useState<string>(
     photoUrl || defaultNichePhoto.url
   );
-  const [selectedFormatId, setSelectedFormatId] = useState<string>('instagram_square');
+  // Default to paired LinkedIn & Facebook format
+  const [selectedFormatId, setSelectedFormatId] = useState<string>('linkedin_fb_landscape');
   const [showPhotoPicker, setShowPhotoPicker] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadSuccessFormat, setDownloadSuccessFormat] = useState<string | null>(null);
@@ -148,7 +153,6 @@ export default function EditorialThumbnailCard({
   const businessName = profile?.business_name || profile?.displayName || 'My Brand';
   const location = profile?.location || 'Local & National';
   
-  // Clean client-specific website (prevent defaulting to Eric's domain)
   const clientOwnWebsite = profile?.website_url && !profile.website_url.includes('growwithetdigital.com')
     ? profile.website_url.trim()
     : '';
@@ -158,8 +162,8 @@ export default function EditorialThumbnailCard({
 
   const captionToDisplay = caption || socialCaptionToShare || (
     previewQuote
-      ? `"${previewQuote}" — ${title}. Published by ${businessName} (${location}). Read the full strategic insight on our website.`
-      : `${title} — Strategic editorial from ${businessName} in ${location}. Check out our latest authority framework.`
+      ? `"${previewQuote}" — ${title}. Published by ${businessName} (${location}). Read the full insight on our website.`
+      : `${title} — Strategic insight from ${businessName} in ${location}. Check out our latest authority framework.`
   );
 
   const handleCopyCaption = () => {
@@ -184,7 +188,7 @@ export default function EditorialThumbnailCard({
   };
 
   /**
-   * Universal Canvas Renderer for Any Platform Ratio
+   * Universal Canvas Renderer for Format Ratios
    */
   const renderAssetCanvas = (format: ImageFormatOption, img: HTMLImageElement | null): HTMLCanvasElement => {
     const canvas = document.createElement('canvas');
@@ -196,7 +200,7 @@ export default function EditorialThumbnailCard({
     const w = format.width;
     const h = format.height;
 
-    // 1. Draw background image with center-crop cover
+    // 1. Background image with cover crop
     if (img && img.complete && img.naturalWidth > 0) {
       const imgAspect = img.naturalWidth / img.naturalHeight;
       const targetAspect = w / h;
@@ -218,7 +222,7 @@ export default function EditorialThumbnailCard({
       ctx.fillRect(0, 0, w, h);
     }
 
-    // 2. High-contrast cinematic dark scrim
+    // 2. High-contrast vignette overlay
     const gradient = ctx.createLinearGradient(0, 0, 0, h);
     gradient.addColorStop(0, 'rgba(11, 17, 32, 0.75)');
     gradient.addColorStop(0.35, 'rgba(15, 23, 42, 0.55)');
@@ -227,7 +231,7 @@ export default function EditorialThumbnailCard({
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, w, h);
 
-    // 3. Subtle accent border
+    // 3. Border accent
     const borderPadding = Math.round(Math.min(w, h) * 0.035);
     ctx.strokeStyle = 'rgba(6, 182, 212, 0.40)';
     ctx.lineWidth = Math.max(4, Math.round(Math.min(w, h) * 0.012));
@@ -237,9 +241,9 @@ export default function EditorialThumbnailCard({
 
     // 4. Adapt composition based on aspect ratio
     if (format.id === 'email_header') {
-      // Horizontal 3:1 Email Header Banner (1200 x 400)
+      // Horizontal Email Header Banner (1200 x 400)
       ctx.fillStyle = '#06B6D4';
-      ctx.font = 'bold 20px ui-monospace, Menlo, Monaco, Consolas, monospace';
+      ctx.font = 'bold 20px ui-monospace, monospace';
       ctx.fillText(`${category.toUpperCase()} · EMAIL INSIGHT`, marginX, 85);
 
       ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
@@ -276,7 +280,7 @@ export default function EditorialThumbnailCard({
       }
       ctx.restore();
 
-      // Bottom Bar (Horizontal layout)
+      // Bottom bar
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
@@ -299,10 +303,10 @@ export default function EditorialThumbnailCard({
       ctx.textAlign = 'left';
 
     } else if (format.id === 'story_vertical') {
-      // 9:16 Vertical Story / Reel / Status (1080 x 1920)
+      // 9:16 Vertical Story / Reel (1080 x 1920)
       ctx.fillStyle = '#06B6D4';
       ctx.font = 'bold 26px ui-monospace, monospace';
-      ctx.fillText(`${category.toUpperCase()} · EDITORIAL BRIEFING`, marginX, 220);
+      ctx.fillText(`${category.toUpperCase()} · BRIEFING`, marginX, 220);
 
       ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
       ctx.font = 'bold 24px ui-monospace, monospace';
@@ -374,10 +378,10 @@ export default function EditorialThumbnailCard({
       ctx.textAlign = 'left';
 
     } else {
-      // 1:1 Square, 4:3 GBP, or 16:9 / 1.91:1 Landscape
+      // LinkedIn & FB Landscape, Instagram Square, X, or GBP (4:3)
       const topDeckY = Math.round(h * 0.12);
       ctx.fillStyle = '#06B6D4';
-      ctx.font = `bold ${Math.round(w * 0.02)}px ui-monospace, Menlo, Monaco, Consolas, monospace`;
+      ctx.font = `bold ${Math.round(w * 0.02)}px ui-monospace, monospace`;
       ctx.fillText(`${category.toUpperCase()} · VERIFIED AUTHORITY`, marginX, topDeckY);
 
       ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
@@ -475,9 +479,6 @@ export default function EditorialThumbnailCard({
     return canvas;
   };
 
-  /**
-   * Downloads a single format by ID
-   */
   const handleDownloadSingleFormat = async (format: ImageFormatOption) => {
     setIsDownloading(true);
     try {
@@ -516,9 +517,6 @@ export default function EditorialThumbnailCard({
     }
   };
 
-  /**
-   * Batch Download All 6 Formats
-   */
   const handleDownloadAllFormats = async () => {
     setIsDownloading(true);
     try {
@@ -568,20 +566,15 @@ export default function EditorialThumbnailCard({
     }
   };
 
-  /**
-   * Unified Social Share
-   */
   const handleSharePlatform = async (platform: 'x' | 'instagram' | 'facebook' | 'linkedin') => {
     const captionToCopy = socialCaptionToShare || `${title}\n\nBy ${businessName}`;
 
-    // 1. Copy caption
     try {
       await navigator.clipboard.writeText(captionToCopy);
     } catch (e) {
       console.warn('Clipboard write failed:', e);
     }
 
-    // 2. Download the active format graphic
     handleDownloadSingleFormat(activeFormat);
 
     const platformLabels = {
@@ -597,7 +590,6 @@ export default function EditorialThumbnailCard({
     });
     setTimeout(() => setShareToast(null), 5500);
 
-    // 3. Open platform
     if (platform === 'x') {
       const text = `${title}\n\n${captionToCopy.slice(0, 180)}...`;
       const xUrl = clientOwnWebsite
@@ -633,31 +625,29 @@ export default function EditorialThumbnailCard({
           <div>
             <div className="flex items-center gap-2">
               <span className="font-mono text-[11px] uppercase tracking-wider text-[var(--text)] font-bold">
-                Multi-Platform Featured Image Suite
+                Featured Content Graphic
               </span>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-500 font-semibold border border-cyan-500/30">
                 {activeFormat.dimensions}
               </span>
             </div>
             <p className="text-[11px] text-[var(--muted)]">
-              Scaled and rendered for social feeds, email header banners, and Google Business Profile.
+              Select your platform ratio below to preview and export branded graphics.
             </p>
           </div>
         </div>
 
         {/* Switch Photo Button */}
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setShowPhotoPicker(!showPhotoPicker)}
-            className="px-3.5 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface2)] hover:bg-[var(--border)] text-[var(--text)] transition-colors cursor-pointer text-xs flex items-center gap-2 font-mono font-bold shadow-xs active:scale-95"
-            id="btn-switch-choose-photo"
-            title="Switch or choose background photo"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 text-cyan-500 ${showPhotoPicker ? 'rotate-180' : ''} transition-transform`} />
-            <span>{showPhotoPicker ? 'Close Photos' : 'Switch Photo'}</span>
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => setShowPhotoPicker(!showPhotoPicker)}
+          className="px-3 py-1.5 rounded-xl border border-[var(--border)] bg-[var(--surface2)] hover:bg-[var(--border)] text-[var(--text)] transition-colors cursor-pointer text-xs flex items-center gap-1.5 font-mono font-bold shadow-xs active:scale-95"
+          id="btn-switch-choose-photo"
+          title="Switch background photo"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 text-cyan-500 ${showPhotoPicker ? 'rotate-180' : ''} transition-transform`} />
+          <span>{showPhotoPicker ? 'Close Photos' : 'Switch Photo'}</span>
+        </button>
       </div>
 
       {/* Photo Picker Drawer */}
@@ -697,43 +687,40 @@ export default function EditorialThumbnailCard({
       )}
 
       {/* ==================================================================== */}
-      {/* PLATFORM & ASPECT RATIO SELECTOR TABS */}
+      {/* STREAMLINED PLATFORM SELECTOR: Icons for appropriate platforms + Paired LinkedIn & FB */}
       {/* ==================================================================== */}
       <div className="p-3 sm:p-4 bg-[var(--surface2)] border-b border-[var(--border)]">
         <div className="flex items-center justify-between mb-2">
           <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] font-semibold flex items-center gap-1.5">
             <Layers className="w-3.5 h-3.5 text-cyan-500" />
-            Select Size / Social Platform Ratio:
+            Social Platform Ratio:
           </span>
           <span className="text-[10px] font-mono text-cyan-600 dark:text-cyan-400 font-bold">
-            {activeFormat.platform} ({activeFormat.ratioLabel})
+            {activeFormat.platform} · {activeFormat.ratioLabel}
           </span>
         </div>
 
+        {/* Clean icons-first platform selector */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
           {IMAGE_FORMAT_OPTIONS.map((fmt) => {
             const isSelected = selectedFormatId === fmt.id;
-            const Icon = fmt.icon;
             return (
               <button
                 key={fmt.id}
                 type="button"
                 onClick={() => setSelectedFormatId(fmt.id)}
-                className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between min-h-[64px] ${
+                className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between min-h-[58px] ${
                   isSelected
                     ? 'bg-cyan-500/15 border-cyan-500 text-cyan-600 dark:text-cyan-300 ring-1 ring-cyan-500 shadow-xs'
                     : 'bg-[var(--surface)] border-[var(--border)] text-[var(--muted)] hover:text-[var(--text)] hover:border-slate-500'
                 }`}
               >
                 <div className="flex items-center justify-between w-full">
-                  <span className="font-display text-[11px] font-bold truncate">
-                    {fmt.name}
-                  </span>
-                  <Icon className="w-3.5 h-3.5 shrink-0 ml-1 text-cyan-500" />
+                  <div className="shrink-0">{fmt.renderIcons()}</div>
+                  <span className="text-[10px] font-mono font-bold ml-1 opacity-90">{fmt.dimensions}</span>
                 </div>
-                <div className="mt-1 flex items-center justify-between text-[10px] font-mono">
-                  <span className="opacity-80">{fmt.ratioLabel.split(' ')[0]}</span>
-                  <span className="font-bold">{fmt.dimensions}</span>
+                <div className="mt-1.5 font-display text-[11px] font-bold truncate">
+                  {fmt.name}
                 </div>
               </button>
             );
@@ -746,7 +733,7 @@ export default function EditorialThumbnailCard({
       {/* ==================================================================== */}
       <div className="p-4 sm:p-6 bg-slate-950/90 flex items-center justify-center overflow-hidden">
         <div 
-          className={`relative w-full ${activeFormat.aspectClass} overflow-hidden bg-slate-950 flex flex-col justify-between p-6 sm:p-8 select-none rounded-2xl border border-cyan-500/30 shadow-2xl transition-all`}
+          className={`relative w-full ${activeFormat.aspectClass} overflow-hidden bg-slate-950 flex flex-col justify-between p-5 sm:p-8 select-none rounded-2xl border border-cyan-500/30 shadow-2xl transition-all`}
         >
           {/* Background Image */}
           <img
@@ -815,7 +802,7 @@ export default function EditorialThumbnailCard({
           <div className="flex items-center gap-2">
             <FileText className="w-4 h-4 text-cyan-500" />
             <span className="font-mono text-[11px] uppercase tracking-wider text-cyan-600 dark:text-cyan-400 font-bold">
-              Post Caption & Promo Copy ({activeFormat.platform})
+              Caption & Promo Copy ({activeFormat.name})
             </span>
           </div>
           <button
@@ -896,7 +883,7 @@ export default function EditorialThumbnailCard({
             <button
               type="button"
               onClick={handleCopyAllText}
-              className="px-3.5 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--border)] text-[var(--text)] font-mono text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
+              className="px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--border)] text-[var(--text)] font-mono text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
               title="Copy the entire kit: Blog Post, Caption, Eblast, and GBP"
             >
               {copiedAll ? (
@@ -918,18 +905,18 @@ export default function EditorialThumbnailCard({
             type="button"
             onClick={handleDownloadAllFormats}
             disabled={isDownloading}
-            className="px-3.5 py-2.5 rounded-xl border border-cyan-500/40 bg-[var(--surface)] hover:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-mono text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
-            title="Download all 6 platform formats at once"
+            className="px-3 py-2 rounded-xl border border-cyan-500/40 bg-[var(--surface)] hover:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-mono text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+            title="Download all formats at once"
           >
             {downloadSuccessFormat === 'all' ? (
               <>
                 <Check className="w-3.5 h-3.5 text-emerald-500" />
-                <span className="text-emerald-500">All 6 Formats Saved!</span>
+                <span className="text-emerald-500">All Formats Saved!</span>
               </>
             ) : (
               <>
                 <Layers className="w-3.5 h-3.5 text-cyan-500" />
-                <span>Download All 6 Ratios</span>
+                <span>Download All</span>
               </>
             )}
           </button>
@@ -939,18 +926,18 @@ export default function EditorialThumbnailCard({
             type="button"
             onClick={() => handleDownloadSingleFormat(activeFormat)}
             disabled={isDownloading}
-            className="px-4 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-display text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md shadow-cyan-500/20 active:scale-95 disabled:opacity-50"
+            className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-display text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-md shadow-cyan-500/20 active:scale-95 disabled:opacity-50"
             title={`Export ${activeFormat.name} (${activeFormat.dimensions})`}
           >
             {downloadSuccessFormat === activeFormat.id ? (
               <>
                 <Check className="w-4 h-4 text-slate-950" />
-                <span>Downloaded {activeFormat.dimensions}!</span>
+                <span>Saved {activeFormat.dimensions}!</span>
               </>
             ) : (
               <>
                 <Download className={`w-4 h-4 ${isDownloading ? 'animate-bounce' : ''}`} />
-                <span>Download {activeFormat.name} ({activeFormat.ratioLabel.split(' ')[0]})</span>
+                <span>Download {activeFormat.name}</span>
               </>
             )}
           </button>
@@ -968,7 +955,7 @@ export default function EditorialThumbnailCard({
           <button
             type="button"
             onClick={() => setShareToast(null)}
-            className="text-[var(--muted)] hover:text-[var(--text)] ml-2"
+            className="text-[var(--muted)] hover:text-[var(--text)] ml-2 cursor-pointer"
           >
             ✕
           </button>
