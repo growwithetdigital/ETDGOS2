@@ -73,6 +73,10 @@ export interface UserProfile {
     extracted_at?: string;
   };
   writing_sample?: string;
+  is_profile_locked?: boolean;
+  profile_locked_at?: string;
+  selected_tone?: string;
+  selected_category?: string;
   login_count?: number;
   last_sign_in_at?: string;
   last_active_at?: string;

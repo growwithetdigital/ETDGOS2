@@ -76,16 +76,20 @@ export default function Navbar({
     >
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
         
-        {/* Left aligned logo */}
+        {/* Left aligned logo & Engage · Convert · Grow pillars */}
         <div onClick={() => handleNavClick('home')} className="cursor-pointer flex items-center gap-3 group">
           <Logo />
-          <div className="hidden lg:flex flex-col border-l border-slate-200 pl-3 py-0.5 text-left transition-colors duration-300">
-            <span className="font-display text-[9px] font-black uppercase tracking-wider text-slate-900 leading-none">
+          <div className="hidden sm:flex flex-col border-l border-slate-200 pl-3 py-0.5 text-left transition-colors duration-300">
+            <span className="font-display text-[10px] font-black uppercase tracking-wider text-slate-900 leading-none">
               ET Digital
             </span>
-            <span className="font-mono text-[7px] font-bold uppercase tracking-widest text-slate-400 leading-none mt-1">
-              Growth Operating Systems™
-            </span>
+            <div className="flex items-center gap-1 font-mono text-[8px] font-bold uppercase tracking-wider text-slate-500 leading-none mt-1">
+              <span className="text-cyan-700">Engage</span>
+              <span className="text-slate-300">·</span>
+              <span className="text-slate-700">Convert</span>
+              <span className="text-slate-300">·</span>
+              <span className="text-emerald-700">Grow</span>
+            </div>
           </div>
         </div>
 

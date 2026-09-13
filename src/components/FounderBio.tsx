@@ -177,7 +177,7 @@ export default function FounderBio({ onOpenBooking }: FounderBioProps) {
                 <>
                   <button
                     onClick={() => setIsExpanded(true)}
-                    className="inline-flex items-center justify-center bg-slate-900 hover:bg-slate-850 text-white font-display text-xs font-extrabold uppercase tracking-widest px-7 py-4 rounded-xl transition-all shadow-md active:scale-95 cursor-pointer"
+                    className="inline-flex items-center justify-center bg-slate-900 hover:bg-slate-850 text-white font-display text-xs font-extrabold uppercase tracking-widest px-6 py-3.5 rounded-xl transition-all shadow-md active:scale-95 cursor-pointer"
                   >
                     Learn More
                   </button>
@@ -186,7 +186,7 @@ export default function FounderBio({ onOpenBooking }: FounderBioProps) {
                     <button
                       type="button"
                       onClick={onOpenBooking}
-                      className="group inline-flex items-center justify-center bg-brand-cyan hover:bg-cyan-400 text-slate-950 font-display text-xs font-extrabold uppercase tracking-widest px-7 py-4 rounded-xl transition-all shadow-md active:scale-95 cursor-pointer"
+                      className="group inline-flex items-center justify-center bg-brand-cyan hover:bg-cyan-400 text-slate-950 font-display text-xs font-extrabold uppercase tracking-widest px-6 py-3.5 rounded-xl transition-all shadow-md active:scale-95 cursor-pointer"
                       id="founder-connect-cta-btn"
                     >
                       <span className="flex items-center gap-1.5">
@@ -195,6 +195,15 @@ export default function FounderBio({ onOpenBooking }: FounderBioProps) {
                       </span>
                     </button>
                   )}
+
+                  <a
+                    href="mailto:eric@growwithetdigital.com?subject=Direct%20Inquiry%20for%20Eric%20Thomas%20%E2%80%94%20ET%20Digital"
+                    className="group inline-flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-900 border border-slate-200 font-display text-xs font-bold uppercase tracking-wider px-5 py-3.5 rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer"
+                    id="founder-email-eric-direct-btn"
+                  >
+                    <Mail className="w-3.5 h-3.5 mr-2 text-brand-cyan" />
+                    <span>Email Eric directly</span>
+                  </a>
                 </>
               ) : (
                 <>
@@ -206,7 +215,7 @@ export default function FounderBio({ onOpenBooking }: FounderBioProps) {
                         element.scrollIntoView({ behavior: 'smooth' });
                       }
                     }}
-                    className="inline-flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-display text-xs font-extrabold uppercase tracking-widest px-6 py-4 rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer"
+                    className="inline-flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-display text-xs font-extrabold uppercase tracking-widest px-6 py-3.5 rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer"
                   >
                     Show Less
                   </button>
@@ -215,7 +224,7 @@ export default function FounderBio({ onOpenBooking }: FounderBioProps) {
                     <button
                       type="button"
                       onClick={onOpenBooking}
-                      className="group inline-flex items-center justify-center bg-brand-cyan hover:bg-cyan-400 text-slate-950 font-display text-xs font-extrabold uppercase tracking-widest px-7 py-4 rounded-xl transition-all shadow-md active:scale-95 cursor-pointer"
+                      className="group inline-flex items-center justify-center bg-brand-cyan hover:bg-cyan-400 text-slate-950 font-display text-xs font-extrabold uppercase tracking-widest px-6 py-3.5 rounded-xl transition-all shadow-md active:scale-95 cursor-pointer"
                       id="founder-expanded-connect-btn"
                     >
                       <span className="flex items-center gap-1.5">
@@ -226,11 +235,12 @@ export default function FounderBio({ onOpenBooking }: FounderBioProps) {
                   )}
 
                   <a
-                    href="mailto:hello@growwithetdigital.com?subject=Re%3A%20Direct%20Inquiry%20to%20Our%20Team"
-                    className="group inline-flex items-center justify-center bg-slate-900 hover:bg-slate-850 text-white font-display text-xs font-extrabold uppercase tracking-widest px-7 py-4 rounded-xl transition-all shadow-md active:scale-95 cursor-pointer"
+                    href="mailto:eric@growwithetdigital.com?subject=Direct%20Inquiry%20for%20Eric%20Thomas%20%E2%80%94%20ET%20Digital"
+                    className="group inline-flex items-center justify-center bg-slate-900 hover:bg-slate-850 text-white font-display text-xs font-extrabold uppercase tracking-widest px-6 py-3.5 rounded-xl transition-all shadow-md active:scale-95 cursor-pointer"
+                    id="founder-expanded-email-eric-direct-btn"
                   >
                     <Mail className="w-4 h-4 mr-2 text-brand-cyan" />
-                    Email Us Directly
+                    <span>Email Eric directly</span>
                   </a>
                 </>
               )}

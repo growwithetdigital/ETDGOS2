@@ -189,19 +189,9 @@ export default function AuthModal({
 
         {/* Error Alert */}
         {error && (
-          <div className="mb-4 p-3.5 rounded-xl bg-rose-950/50 border border-rose-800/60 text-xs text-rose-300 flex flex-col gap-2.5 animate-in fade-in duration-150">
-            <div className="flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-              <span className="leading-relaxed">{error}</span>
-            </div>
-            <button
-              type="button"
-              onClick={handleOwnerInstantAccess}
-              className="mt-1 w-full py-2 px-3 rounded-lg bg-cyan-950/80 hover:bg-cyan-900 border border-brand-cyan/40 text-brand-cyan font-display text-xs font-bold transition-all text-center cursor-pointer flex items-center justify-center gap-2"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-brand-cyan" />
-              <span>Enter as Eric Thomas (Instant Access)</span>
-            </button>
+          <div className="mb-4 p-3.5 rounded-xl bg-rose-950/50 border border-rose-800/60 text-xs text-rose-300 flex items-start gap-2 animate-in fade-in duration-150">
+            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+            <span className="leading-relaxed">{error}</span>
           </div>
         )}
 
@@ -245,18 +235,6 @@ export default function AuthModal({
               </svg>
             )}
             <span>{isGoogleLoading ? 'Connecting to Google...' : 'Continue with Google'}</span>
-          </button>
-
-          {/* Quick Founder / Owner Instant Access Button */}
-          <button
-            type="button"
-            onClick={handleOwnerInstantAccess}
-            disabled={isGoogleLoading || isLoading}
-            className="w-full py-3 px-4 rounded-2xl bg-cyan-950/70 hover:bg-cyan-900 border border-brand-cyan/40 text-brand-cyan hover:text-white font-display text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md disabled:opacity-50"
-            id="auth-direct-instant-access-btn"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-brand-cyan" />
-            <span>Instant Access as Eric Thomas</span>
           </button>
 
           <p className="text-[11px] text-center text-slate-400">

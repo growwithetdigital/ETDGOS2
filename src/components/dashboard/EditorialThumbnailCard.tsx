@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   Download, Image as ImageIcon, Check, 
   RefreshCw, ArrowUpRight, Copy, Share2, Linkedin,
-  Facebook, Instagram
+  Facebook, Instagram, FileText
 } from 'lucide-react';
 import XIcon from '../icons/XIcon';
 import { 
@@ -21,6 +21,7 @@ interface EditorialThumbnailCardProps {
   onPhotoChange?: (url: string) => void;
   allTextToCopy?: string;
   socialCaptionToShare?: string;
+  caption?: string;
 }
 
 export default function EditorialThumbnailCard({
@@ -32,6 +33,7 @@ export default function EditorialThumbnailCard({
   onPhotoChange,
   allTextToCopy,
   socialCaptionToShare,
+  caption,
 }: EditorialThumbnailCardProps) {
   // Automatically select photo tailored to business niche
   const defaultNichePhoto = getNichePhotoForBusiness(profile?.industry, profile?.website_url);
@@ -42,6 +44,7 @@ export default function EditorialThumbnailCard({
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
   const [copiedAll, setCopiedAll] = useState(false);
+  const [copiedCaption, setCopiedCaption] = useState(false);
   const [shareToast, setShareToast] = useState<{ platform: string; message: string } | null>(null);
 
   const businessName = profile?.business_name || profile?.displayName || 'My Brand';
@@ -55,22 +58,24 @@ export default function EditorialThumbnailCard({
     ? clientOwnWebsite.replace(/^https?:\/\//, '').replace(/\/$/, '')
     : `${businessName.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`;
 
+  const captionToDisplay = caption || socialCaptionToShare || (
+    previewQuote
+      ? `"${previewQuote}" — ${title}. Published by ${businessName} (${location}). Read the full strategic insight on our website.`
+      : `${title} — Strategic editorial from ${businessName} in ${location}. Check out our latest authority framework.`
+  );
+
+  const handleCopyCaption = () => {
+    navigator.clipboard.writeText(captionToDisplay);
+    setCopiedCaption(true);
+    setTimeout(() => setCopiedCaption(false), 2500);
+  };
+
   const handleSelectPhoto = (photo: NaturalPhotoAsset) => {
     setSelectedPhoto(photo.url);
     if (onPhotoChange) {
       onPhotoChange(photo.url);
     }
     setShowPhotoPicker(false);
-  };
-
-  const handleCyclePhoto = () => {
-    const currentIndex = CURATED_NATURAL_PHOTOS.findIndex(p => p.url === selectedPhoto);
-    const nextIndex = (currentIndex + 1) % CURATED_NATURAL_PHOTOS.length;
-    const nextPhoto = CURATED_NATURAL_PHOTOS[nextIndex];
-    setSelectedPhoto(nextPhoto.url);
-    if (onPhotoChange) {
-      onPhotoChange(nextPhoto.url);
-    }
   };
 
   const handleCopyAllText = () => {
@@ -343,7 +348,7 @@ export default function EditorialThumbnailCard({
           <div>
             <div className="flex items-center gap-2">
               <span className="font-mono text-[11px] uppercase tracking-wider text-[var(--text)] font-bold">
-                1:1 Branded Editorial Graphic
+                Article Featured Image Options
               </span>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-500 font-semibold border border-cyan-500/30">
                 1080x1080
@@ -355,24 +360,17 @@ export default function EditorialThumbnailCard({
           </div>
         </div>
 
+        {/* Single button to switch / choose photo */}
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={handleCyclePhoto}
-            className="px-2.5 py-1.5 rounded-xl border border-[var(--border)] bg-[var(--surface2)] hover:bg-[var(--border)] text-[var(--muted)] hover:text-[var(--text)] transition-colors cursor-pointer text-xs flex items-center gap-1.5 font-mono"
-            title="Cycle background photo"
-          >
-            <RefreshCw className="w-3.5 h-3.5 text-cyan-500" />
-            <span className="text-[10px] font-medium">Switch Photo</span>
-          </button>
-
-          <button
-            type="button"
             onClick={() => setShowPhotoPicker(!showPhotoPicker)}
-            className="text-xs font-mono text-cyan-600 dark:text-cyan-400 hover:underline cursor-pointer flex items-center gap-1"
+            className="px-3.5 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface2)] hover:bg-[var(--border)] text-[var(--text)] transition-colors cursor-pointer text-xs flex items-center gap-2 font-mono font-bold shadow-xs active:scale-95"
+            id="btn-switch-choose-photo"
+            title="Switch or choose featured photo"
           >
-            <span>{showPhotoPicker ? 'Close' : 'Choose Photo'}</span>
-            <ArrowUpRight className="w-3.5 h-3.5" />
+            <RefreshCw className={`w-3.5 h-3.5 text-cyan-500 ${showPhotoPicker ? 'rotate-180' : ''} transition-transform`} />
+            <span>{showPhotoPicker ? 'Close Photo Options' : 'Switch / Choose Photo'}</span>
           </button>
         </div>
       </div>
@@ -470,6 +468,40 @@ export default function EditorialThumbnailCard({
               1.5 Min Read
             </span>
           </div>
+        </div>
+      </div>
+
+      {/* Visible Caption Section (Article Featured Image Caption) */}
+      <div className="p-4 sm:p-5 border-t border-[var(--border)] bg-[var(--surface)] space-y-2.5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <FileText className="w-4 h-4 text-cyan-500" />
+            <span className="font-mono text-[11px] uppercase tracking-wider text-cyan-600 dark:text-cyan-400 font-bold">
+              Article Featured Image Caption & Promo Copy
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={handleCopyCaption}
+            className="text-xs font-mono text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1.5 cursor-pointer font-semibold"
+            id="copy-image-caption-btn"
+            title="Copy image caption to clipboard"
+          >
+            {copiedCaption ? (
+              <>
+                <Check className="w-3.5 h-3.5 text-emerald-500" />
+                <span className="text-emerald-500">Caption Copied!</span>
+              </>
+            ) : (
+              <>
+                <Copy className="w-3.5 h-3.5" />
+                <span>Copy Caption</span>
+              </>
+            )}
+          </button>
+        </div>
+        <div className="p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] text-xs sm:text-sm font-sans text-[var(--text)] leading-relaxed select-text shadow-xs">
+          {captionToDisplay}
         </div>
       </div>
 
