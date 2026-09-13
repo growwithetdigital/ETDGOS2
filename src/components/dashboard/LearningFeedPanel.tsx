@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { 
-  Play, CheckCircle2, RotateCw, Sparkles, ExternalLink, 
-  Tv, Award, Check, ArrowUpRight, Clock, Video
+  Play, CheckCircle2, RotateCcw, Sparkles, ExternalLink, 
+  Tv, Award, Check, ArrowUpRight, Clock, Video, BookOpen, Layers
 } from 'lucide-react';
 import { UserProfile } from '../../types';
 
@@ -19,17 +19,12 @@ export interface CuratedVideoItem {
   channelUrl: string;
   title: string;
   youtubeId: string;
-  duration?: string;
+  duration: string;
+  focus: string;
   start?: number;
 }
 
-export interface PlaylistBatch {
-  batchId: number;
-  batchTitle: string;
-  videos: CuratedVideoItem[];
-}
-
-// 7 Curated Channels:
+// Exactly one verified video from each of the 7 user-provided channels:
 // 1. Neil Patel (https://www.youtube.com/@neilpatel)
 // 2. Myron Golden (https://www.youtube.com/@MyronGolden)
 // 3. GaryVee (https://www.youtube.com/@garyvee)
@@ -38,214 +33,76 @@ export interface PlaylistBatch {
 // 6. HubSpot Marketing (https://www.youtube.com/@HubSpotMarketing)
 // 7. CNBC Make It (https://www.youtube.com/@CNBCMakeIt)
 
-export const CURATED_BATCHES: PlaylistBatch[] = [
+export const CURATED_LEARNING_VIDEOS: CuratedVideoItem[] = [
   {
-    batchId: 1,
-    batchTitle: 'Batch 1: 2026 Strategic Foundations & Growth Engine',
-    videos: [
-      {
-        id: 'np-b1',
-        channelName: 'Neil Patel',
-        channelHandle: '@neilpatel',
-        channelUrl: 'https://www.youtube.com/@neilpatel',
-        title: 'The 8 Trends I’m Betting My Entire Marketing Strategy On in 2026',
-        youtubeId: 'hXPALnu3Y6I',
-        start: 39,
-        duration: '14:28'
-      },
-      {
-        id: 'mg-b1',
-        channelName: 'Myron Golden',
-        channelHandle: '@MyronGolden',
-        channelUrl: 'https://www.youtube.com/@MyronGolden',
-        title: 'The 4 Stages of Wealth & Business Growth (How To Scale Without Burnout)',
-        youtubeId: 'q8Xm3JdK0L0',
-        duration: '18:45'
-      },
-      {
-        id: 'gv-b1',
-        channelName: 'GaryVee',
-        channelHandle: '@garyvee',
-        channelUrl: 'https://www.youtube.com/@garyvee',
-        title: 'How to Build Brand Relevance and Capture Organic Attention in 2026',
-        youtubeId: '2GjBvF0Y26k',
-        duration: '15:10'
-      },
-      {
-        id: 'hscrm-b1',
-        channelName: 'HubSpot CRM',
-        channelHandle: '@HubSpot-CRM',
-        channelUrl: 'https://www.youtube.com/@HubSpot-CRM',
-        title: 'How to Build an Automated Sales Pipeline to Close High-Intent Deals Faster',
-        youtubeId: '5O_8S8N0pkw',
-        duration: '12:35'
-      },
-      {
-        id: 'ted-b1',
-        channelName: 'TED',
-        channelHandle: '@TED',
-        channelUrl: 'https://www.youtube.com/@TED',
-        title: 'How Great Leaders Inspire Action — The Golden Circle Framework',
-        youtubeId: 'qp0HIF3SfI4',
-        duration: '18:04'
-      },
-      {
-        id: 'hsmkt-b1',
-        channelName: 'HubSpot Marketing',
-        channelHandle: '@HubSpotMarketing',
-        channelUrl: 'https://www.youtube.com/@HubSpotMarketing',
-        title: 'The Complete Modern Inbound Marketing Strategy Guide for 2026',
-        youtubeId: 'lU-446t2u58',
-        duration: '16:50'
-      },
-      {
-        id: 'cnbc-b1',
-        channelName: 'CNBC Make It',
-        channelHandle: '@CNBCMakeIt',
-        channelUrl: 'https://www.youtube.com/@CNBCMakeIt',
-        title: 'How Founders Build Disciplined Systems That Generate Sustainable Revenue',
-        youtubeId: 'B_51Z-tM00E',
-        duration: '11:42'
-      }
-    ]
+    id: 'np-video',
+    channelName: 'Neil Patel',
+    channelHandle: '@neilpatel',
+    channelUrl: 'https://www.youtube.com/@neilpatel',
+    title: 'The 8 Trends I’m Betting My Entire Marketing Strategy On in 2026',
+    youtubeId: 'hXPALnu3Y6I',
+    duration: '14:28',
+    focus: 'Organic search shifts, AI-assisted research, and omnichannel authority'
   },
   {
-    batchId: 2,
-    batchTitle: 'Batch 2: AI Search, Offer Architecture & Pipeline Velocity',
-    videos: [
-      {
-        id: 'np-b2',
-        channelName: 'Neil Patel',
-        channelHandle: '@neilpatel',
-        channelUrl: 'https://www.youtube.com/@neilpatel',
-        title: 'The Only Marketing Strategy That Is Working In 2026',
-        youtubeId: 'UlfniLzuwa0',
-        duration: '11:15'
-      },
-      {
-        id: 'mg-b2',
-        channelName: 'Myron Golden',
-        channelHandle: '@MyronGolden',
-        channelUrl: 'https://www.youtube.com/@MyronGolden',
-        title: 'Offer Creation Masterclass: How to Structure Irresistible Premium Value',
-        youtubeId: 'tG3X5bKkYtE',
-        duration: '22:15'
-      },
-      {
-        id: 'gv-b2',
-        channelName: 'GaryVee',
-        channelHandle: '@garyvee',
-        channelUrl: 'https://www.youtube.com/@garyvee',
-        title: 'The Shift in Modern Distribution: Turning 1 Asset into Omnichannel Reach',
-        youtubeId: 'C9W1tU3yQ_w',
-        duration: '13:50'
-      },
-      {
-        id: 'hscrm-b2',
-        channelName: 'HubSpot CRM',
-        channelHandle: '@HubSpot-CRM',
-        channelUrl: 'https://www.youtube.com/@HubSpot-CRM',
-        title: 'Lead Nurturing & CRM Lifecycle Automation for Service Businesses',
-        youtubeId: 'Q0Zf4pL1K8E',
-        duration: '14:20'
-      },
-      {
-        id: 'ted-b2',
-        channelName: 'TED',
-        channelHandle: '@TED',
-        channelUrl: 'https://www.youtube.com/@TED',
-        title: 'The Power of Vulnerability & Trust in Executive Leadership',
-        youtubeId: 'iCvmsMzlF7o',
-        duration: '20:19'
-      },
-      {
-        id: 'hsmkt-b2',
-        channelName: 'HubSpot Marketing',
-        channelHandle: '@HubSpotMarketing',
-        channelUrl: 'https://www.youtube.com/@HubSpotMarketing',
-        title: 'How to Rank in AI Search (ChatGPT, Gemini, Perplexity) & Google AI Overviews',
-        youtubeId: 'N0w3Y-7V1qQ',
-        duration: '15:40'
-      },
-      {
-        id: 'cnbc-b2',
-        channelName: 'CNBC Make It',
-        channelHandle: '@CNBCMakeIt',
-        channelUrl: 'https://www.youtube.com/@CNBCMakeIt',
-        title: 'Inside the Operating Systems of Resilient, High-Margin Entrepreneurs',
-        youtubeId: 'X_1gP9m8Q2E',
-        duration: '13:05'
-      }
-    ]
+    id: 'mg-video',
+    channelName: 'Myron Golden',
+    channelHandle: '@MyronGolden',
+    channelUrl: 'https://www.youtube.com/@MyronGolden',
+    title: 'How To Keep AI From Stealing Your Job Or Destroying Your Business',
+    youtubeId: '65TerNSqi6A',
+    duration: '18:22',
+    focus: 'Structuring high-ticket offer architecture and positioning for category wealth'
   },
   {
-    batchId: 3,
-    batchTitle: 'Batch 3: High-Ticket Conversion, AEO & Brand Equity',
-    videos: [
-      {
-        id: 'np-b3',
-        channelName: 'Neil Patel',
-        channelHandle: '@neilpatel',
-        channelUrl: 'https://www.youtube.com/@neilpatel',
-        title: 'The NEW Google Strategy to Double Your Leads (FAST)',
-        youtubeId: 'CIGrrt_mVxM',
-        duration: '10:42'
-      },
-      {
-        id: 'mg-b3',
-        channelName: 'Myron Golden',
-        channelHandle: '@MyronGolden',
-        channelUrl: 'https://www.youtube.com/@MyronGolden',
-        title: 'The Science of Sales Psychology & Overcoming High-Ticket Objections',
-        youtubeId: 'V8m2K-0qW9w',
-        duration: '19:30'
-      },
-      {
-        id: 'gv-b3',
-        channelName: 'GaryVee',
-        channelHandle: '@garyvee',
-        channelUrl: 'https://www.youtube.com/@garyvee',
-        title: 'Stop Overthinking Your Content Strategy: Context Over Fluff',
-        youtubeId: 'D7f1T-4eL8s',
-        duration: '12:18'
-      },
-      {
-        id: 'hscrm-b3',
-        channelName: 'HubSpot CRM',
-        channelHandle: '@HubSpot-CRM',
-        channelUrl: 'https://www.youtube.com/@HubSpot-CRM',
-        title: 'CRM Best Practices to Turn Inbound Leads Into Closed Client Accounts',
-        youtubeId: 'K3b9P-2rN5v',
-        duration: '11:55'
-      },
-      {
-        id: 'ted-b3',
-        channelName: 'TED',
-        channelHandle: '@TED',
-        channelUrl: 'https://www.youtube.com/@TED',
-        title: 'How to Speak So That People Want to Listen',
-        youtubeId: 'Y6bbMQXQ14c',
-        duration: '09:58'
-      },
-      {
-        id: 'hsmkt-b3',
-        channelName: 'HubSpot Marketing',
-        channelHandle: '@HubSpotMarketing',
-        channelUrl: 'https://www.youtube.com/@HubSpotMarketing',
-        title: 'Customer Acquisition Flywheels vs Traditional Marketing Funnels',
-        youtubeId: 'R4m7W-1sY6x',
-        duration: '14:15'
-      },
-      {
-        id: 'cnbc-b3',
-        channelName: 'CNBC Make It',
-        channelHandle: '@CNBCMakeIt',
-        channelUrl: 'https://www.youtube.com/@CNBCMakeIt',
-        title: 'How Scalable Service Businesses Maintain High Profit Margins',
-        youtubeId: 'F9v2L-8qZ4m',
-        duration: '12:20'
-      }
-    ]
+    id: 'gv-video',
+    channelName: 'GaryVee',
+    channelHandle: '@garyvee',
+    channelUrl: 'https://www.youtube.com/@garyvee',
+    title: 'Everything You Know About Social Media Is Changing',
+    youtubeId: '83r8orCLOyg',
+    duration: '22:15',
+    focus: 'Capturing modern organic attention and building compounding brand resonance'
+  },
+  {
+    id: 'hscrm-video',
+    channelName: 'HubSpot CRM',
+    channelHandle: '@HubSpot-CRM',
+    channelUrl: 'https://www.youtube.com/@HubSpot-CRM',
+    title: 'Introducing Revenue Hub | Connected CPQ, Billing and Payments',
+    youtubeId: '87kZ4IA-1bs',
+    duration: '06:40',
+    focus: 'Automated sales pipelines, billing velocity, and deal closing infrastructure'
+  },
+  {
+    id: 'ted-video',
+    channelName: 'TED',
+    channelHandle: '@TED',
+    channelUrl: 'https://www.youtube.com/@TED',
+    title: 'How Great Leaders Inspire Action | Simon Sinek',
+    youtubeId: 'qp0HIF3SfI4',
+    duration: '18:04',
+    focus: 'The Golden Circle framework: Why starting with purpose converts loyal clients'
+  },
+  {
+    id: 'hsmkt-video',
+    channelName: 'HubSpot Marketing',
+    channelHandle: '@HubSpotMarketing',
+    channelUrl: 'https://www.youtube.com/@HubSpotMarketing',
+    title: 'I Built a Buyer Persona From Real Data in Under 5 Minutes',
+    youtubeId: '0wXN8O4oSLE',
+    duration: '07:35',
+    focus: 'Data-driven buyer persona modeling, pain-point mapping, and inbound hooks'
+  },
+  {
+    id: 'cnbc-video',
+    channelName: 'CNBC Make It',
+    channelHandle: '@CNBCMakeIt',
+    channelUrl: 'https://www.youtube.com/@CNBCMakeIt',
+    title: "NYC's 'Baklava Guy' Brings In $20K A Month Selling Turkish Pastries",
+    youtubeId: 'FO54xDlImCU',
+    duration: '09:48',
+    focus: 'Bootstrapping, high-margin unit economics, and client-obsessed growth'
   }
 ];
 
@@ -254,57 +111,32 @@ export default function LearningFeedPanel({
   onOpenBooking,
   onOpenCalendar
 }: LearningFeedPanelProps) {
-  // Saved batch index
-  const [currentBatchIndex, setCurrentBatchIndex] = useState<number>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('et_learning_feed_batch_idx');
-      if (saved) {
-        const parsed = parseInt(saved, 10);
-        if (!isNaN(parsed) && parsed >= 0 && parsed < CURATED_BATCHES.length) {
-          return parsed;
-        }
-      }
-    }
-    return 0;
-  });
-
-  // Track watched video IDs for the active batch
+  // Track watched video IDs
   const [watchedVideoIds, setWatchedVideoIds] = useState<string[]>(() => {
     if (typeof window !== 'undefined') {
       try {
-        const saved = localStorage.getItem('et_learning_feed_watched_ids');
+        const saved = localStorage.getItem('et_curated_learning_watched_v2');
         if (saved) return JSON.parse(saved);
       } catch (e) {}
     }
     return [];
   });
 
-  const currentBatch = CURATED_BATCHES[currentBatchIndex];
-  const [activeVideo, setActiveVideo] = useState<CuratedVideoItem>(currentBatch.videos[0]);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  // Sync active video if batch changes
-  useEffect(() => {
-    setActiveVideo(currentBatch.videos[0]);
-  }, [currentBatchIndex]);
+  const [activeVideo, setActiveVideo] = useState<CuratedVideoItem>(CURATED_LEARNING_VIDEOS[0]);
 
   // Save to localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('et_learning_feed_batch_idx', currentBatchIndex.toString());
-      localStorage.setItem('et_learning_feed_watched_ids', JSON.stringify(watchedVideoIds));
+      localStorage.setItem('et_curated_learning_watched_v2', JSON.stringify(watchedVideoIds));
     }
-  }, [currentBatchIndex, watchedVideoIds]);
+  }, [watchedVideoIds]);
 
-  const watchedCountInBatch = useMemo(() => {
-    return currentBatch.videos.filter(v => watchedVideoIds.includes(v.id)).length;
-  }, [currentBatch, watchedVideoIds]);
-
-  const allWatchedInBatch = watchedCountInBatch === currentBatch.videos.length;
+  const watchedCount = useMemo(() => {
+    return CURATED_LEARNING_VIDEOS.filter(v => watchedVideoIds.includes(v.id)).length;
+  }, [watchedVideoIds]);
 
   const handleSelectVideo = (video: CuratedVideoItem) => {
     setActiveVideo(video);
-    // Mark as watched upon interaction
     if (!watchedVideoIds.includes(video.id)) {
       setWatchedVideoIds(prev => [...prev, video.id]);
     }
@@ -319,14 +151,8 @@ export default function LearningFeedPanel({
     }
   };
 
-  const handleRefreshBatch = () => {
-    if (!allWatchedInBatch) return;
-    setIsRefreshing(true);
-    setTimeout(() => {
-      const nextIdx = (currentBatchIndex + 1) % CURATED_BATCHES.length;
-      setCurrentBatchIndex(nextIdx);
-      setIsRefreshing(false);
-    }, 600);
+  const handleResetProgress = () => {
+    setWatchedVideoIds([]);
   };
 
   return (
@@ -341,10 +167,10 @@ export default function LearningFeedPanel({
             <div className="flex flex-wrap items-center gap-2">
               <span className="font-mono text-[10px] font-black uppercase tracking-widest text-cyan-400 bg-cyan-950/80 px-2.5 py-1 rounded-full border border-cyan-500/30 flex items-center gap-1.5">
                 <Tv className="w-3 h-3 text-cyan-400" />
-                Curated Learning Feed
+                Curated Executive Video Feed
               </span>
               <span className="font-mono text-[10px] uppercase tracking-wider text-emerald-400 bg-emerald-950/60 px-2.5 py-1 rounded-full border border-emerald-500/30">
-                7 Authoritative Channels · 1 Video Per Channel
+                1 Video Per Source Channel · 7 Total
               </span>
             </div>
             
@@ -352,15 +178,15 @@ export default function LearningFeedPanel({
               Strategic Video Masterclasses
             </h2>
             <p className="text-xs sm:text-sm text-slate-200 max-w-2xl leading-relaxed">
-              Curated rotation of high-impact strategic briefings from seven leading industry channels. Displaying one video per creator per batch.
+              One authoritative video from each of our 7 curated sources. High-signal frameworks on offer design, modern buyer attention, and revenue pipeline velocity.
             </p>
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
             <div className="px-3.5 py-2 rounded-xl bg-slate-950/70 border border-slate-700/80 text-right">
-              <span className="block font-mono text-[9px] uppercase tracking-widest text-slate-400">Batch Progress</span>
+              <span className="block font-mono text-[9px] uppercase tracking-widest text-slate-400">Curriculum Progress</span>
               <span className="font-mono text-sm font-bold text-cyan-300">
-                {watchedCountInBatch} of 7 Watched
+                {watchedCount} of {CURATED_LEARNING_VIDEOS.length} Completed
               </span>
             </div>
 
@@ -375,36 +201,50 @@ export default function LearningFeedPanel({
           </div>
         </div>
 
-        {/* Batch Progress Bar */}
+        {/* Progress Bar */}
         <div className="relative z-10 mt-6 pt-4 border-t border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="w-full sm:max-w-md">
             <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
               <motion.div 
                 className="h-full bg-gradient-to-r from-cyan-400 to-emerald-400 rounded-full"
                 initial={{ width: 0 }}
-                animate={{ width: `${(watchedCountInBatch / 7) * 100}%` }}
+                animate={{ width: `${(watchedCount / CURATED_LEARNING_VIDEOS.length) * 100}%` }}
                 transition={{ duration: 0.3 }}
               />
             </div>
           </div>
-          <div className="flex items-center gap-2 text-[11px] font-mono text-slate-300">
-            <Clock className="w-3.5 h-3.5 text-cyan-400" />
-            <span>{currentBatch.batchTitle}</span>
+          <div className="flex items-center gap-3 text-[11px] font-mono text-slate-300">
+            <span className="flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-cyan-400" />
+              <span>{Math.round((watchedCount / CURATED_LEARNING_VIDEOS.length) * 100)}% Mastered</span>
+            </span>
+            {watchedCount > 0 && (
+              <button
+                type="button"
+                onClick={handleResetProgress}
+                className="text-[10px] text-slate-400 hover:text-rose-400 flex items-center gap-1 transition-colors cursor-pointer"
+                title="Reset watch history"
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span>Reset</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Main Grid: Active Video Player + 7-Channel Playlist */}
+      {/* Main Grid: Active Video Cinema Player + 7-Channel Playlist */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        {/* Left: Interactive Video Player */}
+        {/* Left: Active Video Player */}
         <div className="lg:col-span-7 space-y-4">
           <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5 shadow-sm space-y-4">
             
-            {/* Embedded Responsive YouTube Player */}
+            {/* Responsive YouTube Player with nocookie embed */}
             <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-black border border-slate-800 shadow-xl">
               <iframe
-                src={`https://www.youtube-nocookie.com/embed/${activeVideo.youtubeId}?autoplay=1&rel=0${activeVideo.start ? `&start=${activeVideo.start}` : ''}`}
+                key={activeVideo.youtubeId}
+                src={`https://www.youtube-nocookie.com/embed/${activeVideo.youtubeId}?autoplay=1&rel=0&modestbranding=1`}
                 title={activeVideo.title}
                 className="absolute inset-0 w-full h-full border-0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -412,14 +252,20 @@ export default function LearningFeedPanel({
               />
             </div>
 
-            {/* Video Meta Info: Channel Name + Title ONLY (No Avatars) */}
+            {/* Video Metadata: Channel Name & Title */}
             <div className="p-2 space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[var(--border)]">
                 <div>
-                  <span className="font-mono text-xs font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-400 block">
+                  <a
+                    href={activeVideo.channelUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-mono text-xs font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-400 hover:underline inline-flex items-center gap-1"
+                  >
                     {activeVideo.channelName}
-                  </span>
-                  <span className="text-[11px] font-mono text-[var(--muted)]">
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                  <span className="text-[11px] font-mono text-[var(--muted)] block">
                     {activeVideo.channelHandle}
                   </span>
                 </div>
@@ -439,7 +285,7 @@ export default function LearningFeedPanel({
                   </button>
 
                   <a
-                    href={`https://www.youtube.com/watch?v=${activeVideo.youtubeId}${activeVideo.start ? `&t=${activeVideo.start}s` : ''}`}
+                    href={`https://www.youtube.com/watch?v=${activeVideo.youtubeId}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="p-2 rounded-xl bg-[var(--surface2)] hover:bg-[var(--surface)] text-[var(--muted)] hover:text-cyan-600 border border-[var(--border)] transition-all"
@@ -454,14 +300,21 @@ export default function LearningFeedPanel({
                 {activeVideo.title}
               </h3>
 
+              <div className="p-3.5 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] space-y-1">
+                <span className="font-mono text-[10px] uppercase font-bold text-cyan-600 dark:text-cyan-400 block">
+                  Strategic Focus:
+                </span>
+                <p className="text-xs text-[var(--text)] leading-relaxed">
+                  {activeVideo.focus}
+                </p>
+              </div>
+
               <div className="flex items-center gap-4 text-xs font-mono text-[var(--muted)] pt-1">
-                {activeVideo.duration && (
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5 text-cyan-500" />
-                    {activeVideo.duration}
-                  </span>
-                )}
-                <span>1 Video per Curated Source</span>
+                <span className="flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5 text-cyan-500" />
+                  {activeVideo.duration}
+                </span>
+                <span>One Video per Channel</span>
               </div>
             </div>
 
@@ -476,32 +329,32 @@ export default function LearningFeedPanel({
               </span>
             </div>
             <p className="text-xs sm:text-sm text-[var(--muted)] leading-relaxed">
-              Every masterclass in this curriculum connects directly to your Growth OS dispatches. Use these strategic paradigms to sharpen your Brand DNA, strengthen client acquisition flywheels, and eliminate commodity pricing pressure.
+              Every video in this curated lineup addresses a foundational pillar of modern scale: offer architecture, organic attention, automated pipeline velocity, and clarity of purpose. Combine these paradigms with your Brand DNA dispatches.
             </p>
           </div>
         </div>
 
-        {/* Right: The 7-Channel Playlist & Refresh Control */}
+        {/* Right: The 7-Channel Playlist */}
         <div className="lg:col-span-5 space-y-4">
           <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-6 shadow-sm space-y-4">
             
             <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
               <div>
                 <h4 className="font-display text-sm font-bold uppercase tracking-wider text-[var(--text)]">
-                  Curated Channel Playlist
+                  7 Curated Channels
                 </h4>
                 <p className="text-[11px] font-mono text-[var(--muted)]">
-                  7 Channels · Name & Title Only
+                  One Selected Masterclass per Creator
                 </p>
               </div>
               <span className="font-mono text-xs font-bold text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 px-2.5 py-1 rounded-lg border border-cyan-500/20">
-                {watchedCountInBatch}/7 Complete
+                {watchedCount}/7 Watched
               </span>
             </div>
 
-            {/* List of exactly 7 items (One video per channel, Name + Title only, NO Avatars) */}
+            {/* List of exactly 7 items */}
             <div className="space-y-2.5">
-              {currentBatch.videos.map((video, idx) => {
+              {CURATED_LEARNING_VIDEOS.map((video, idx) => {
                 const isCurrent = activeVideo.id === video.id;
                 const isWatched = watchedVideoIds.includes(video.id);
 
@@ -516,7 +369,7 @@ export default function LearningFeedPanel({
                     }`}
                   >
                     <div className="flex items-start gap-3">
-                      {/* Step Number indicator */}
+                      {/* Number badge */}
                       <span className={`w-6 h-6 rounded-lg font-mono text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5 ${
                         isCurrent
                           ? 'bg-cyan-500 text-slate-950 font-black'
@@ -528,21 +381,19 @@ export default function LearningFeedPanel({
                       </span>
 
                       <div className="flex-1 min-w-0 space-y-1">
-                        {/* Channel Name ONLY (No Avatar) */}
+                        {/* Channel Name */}
                         <div className="flex items-center justify-between gap-2">
                           <span className={`font-mono text-[11px] font-bold uppercase tracking-wider ${
                             isCurrent ? 'text-cyan-650 dark:text-cyan-300' : 'text-slate-600 dark:text-slate-300'
                           }`}>
                             {video.channelName}
                           </span>
-                          {video.duration && (
-                            <span className="font-mono text-[10px] text-[var(--muted)]">
-                              {video.duration}
-                            </span>
-                          )}
+                          <span className="font-mono text-[10px] text-[var(--muted)]">
+                            {video.duration}
+                          </span>
                         </div>
 
-                        {/* Video Title ONLY */}
+                        {/* Video Title */}
                         <h5 className={`text-xs font-medium leading-snug line-clamp-2 ${
                           isCurrent ? 'text-[var(--text)] font-bold' : 'text-[var(--muted)] group-hover:text-[var(--text)]'
                         }`}>
@@ -569,50 +420,18 @@ export default function LearningFeedPanel({
               })}
             </div>
 
-            {/* Refresh Control: Surfaced ONLY once all 7 videos are watched */}
-            <AnimatePresence>
-              {allWatchedInBatch ? (
-                <motion.div
-                  initial={{ opacity: 0, y: 10, scale: 0.98 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 10, scale: 0.98 }}
-                  className="mt-5 p-5 rounded-2xl border-2 border-emerald-500/50 bg-gradient-to-br from-emerald-950/40 via-slate-900 to-cyan-950/40 text-center space-y-3 shadow-lg"
-                >
-                  <div className="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center mx-auto">
-                    <Award className="w-5 h-5" />
-                  </div>
-                  <div className="space-y-1">
-                    <h5 className="font-display text-sm font-bold text-white uppercase tracking-wider">
-                      Batch Completed!
-                    </h5>
-                    <p className="text-xs text-slate-300">
-                      You have watched all 7 videos across our curated channels in this batch.
-                    </p>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={handleRefreshBatch}
-                    disabled={isRefreshing}
-                    className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-400 to-cyan-400 hover:from-emerald-300 hover:to-cyan-300 text-slate-950 font-display text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-md cursor-pointer transition-all active:scale-95"
-                    id="refresh-learning-feed-batch-btn"
-                  >
-                    <RotateCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                    <span>{isRefreshing ? 'Loading Next Batch...' : 'Refresh Playlist (Pull Next Batch)'}</span>
-                  </button>
-                </motion.div>
-              ) : (
-                <div className="mt-4 p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] text-center space-y-2">
-                  <div className="flex items-center justify-center gap-2 text-xs font-mono text-[var(--muted)]">
-                    <Clock className="w-3.5 h-3.5 text-cyan-500" />
-                    <span>Watch {7 - watchedCountInBatch} more {7 - watchedCountInBatch === 1 ? 'video' : 'videos'} to unlock the next playlist batch</span>
-                  </div>
-                  <div className="text-[10px] text-slate-400">
-                    The Refresh control automatically unlocks once all 7 channel dispatches are watched.
-                  </div>
+            {/* Achievement / Completion status */}
+            {watchedCount === CURATED_LEARNING_VIDEOS.length && (
+              <div className="mt-4 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-center space-y-1">
+                <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-emerald-500">
+                  <Award className="w-4 h-4" />
+                  <span>Curriculum Complete</span>
                 </div>
-              )}
-            </AnimatePresence>
+                <p className="text-[11px] text-[var(--muted)]">
+                  You've reviewed all 7 strategic masterclasses from our curated author channels.
+                </p>
+              </div>
+            )}
 
           </div>
         </div>

@@ -89,11 +89,11 @@ export default function Navbar({
           </div>
         </div>
 
-        {/* Centered navigation links with responsive spacing and margin */}
-        <nav className="hidden lg:flex items-center gap-3.5 xl:gap-5 2xl:gap-6 mr-3 xl:mr-6 shrink-0">
+        {/* Centered navigation links with generous responsive spacing and margin */}
+        <nav className="hidden lg:flex items-center gap-2.5 xl:gap-4 2xl:gap-5 mr-4 xl:mr-8 shrink-0">
           <button
             onClick={() => handleNavClick('home')}
-            className={`font-sans text-xs font-bold uppercase tracking-wider transition-colors hover:text-cyan-650 cursor-pointer ${
+            className={`font-sans text-xs font-bold uppercase tracking-wider transition-colors hover:text-cyan-650 cursor-pointer whitespace-nowrap px-1 py-1 ${
               activeSection === 'hero' ? 'text-cyan-650 font-extrabold' : 'text-slate-500'
             }`}
           >
@@ -101,7 +101,7 @@ export default function Navbar({
           </button>
           <button
             onClick={() => handleNavClick('growth-grader')}
-            className={`font-sans text-xs font-bold uppercase tracking-wider transition-colors hover:text-cyan-650 cursor-pointer flex items-center gap-1.5 ${
+            className={`font-sans text-xs font-bold uppercase tracking-wider transition-colors hover:text-cyan-650 cursor-pointer flex items-center gap-1.5 whitespace-nowrap px-1 py-1 ${
               activeSection === 'growth-grader' ? 'text-cyan-650 font-extrabold' : 'text-slate-500'
             }`}
           >
@@ -110,7 +110,7 @@ export default function Navbar({
           </button>
           <button
             onClick={() => handleNavClick('about')}
-            className={`font-sans text-xs font-bold uppercase tracking-wider transition-colors hover:text-cyan-650 cursor-pointer ${
+            className={`font-sans text-xs font-bold uppercase tracking-wider transition-colors hover:text-cyan-650 cursor-pointer whitespace-nowrap px-1 py-1 ${
               activeSection === 'about' ? 'text-cyan-650 font-extrabold' : 'text-slate-500'
             }`}
           >
@@ -118,7 +118,7 @@ export default function Navbar({
           </button>
           <button
             onClick={() => handleNavClick('services')}
-            className={`font-sans text-xs font-bold uppercase tracking-wider transition-colors hover:text-cyan-650 cursor-pointer ${
+            className={`font-sans text-xs font-bold uppercase tracking-wider transition-colors hover:text-cyan-650 cursor-pointer whitespace-nowrap px-1 py-1 ${
               activeSection === 'services' ? 'text-cyan-650 font-extrabold' : 'text-slate-500'
             }`}
           >
@@ -126,7 +126,7 @@ export default function Navbar({
           </button>
           <button
             onClick={() => handleNavClick('instagram-feed')}
-            className={`font-sans text-xs font-bold uppercase tracking-wider transition-colors hover:text-cyan-650 cursor-pointer ${
+            className={`font-sans text-xs font-bold uppercase tracking-wider transition-colors hover:text-cyan-650 cursor-pointer whitespace-nowrap px-1 py-1 ${
               activeSection === 'instagram-feed' ? 'text-cyan-650 font-extrabold' : 'text-slate-500'
             }`}
           >
@@ -134,7 +134,7 @@ export default function Navbar({
           </button>
           <button
             onClick={() => handleNavClick('faq')}
-            className={`font-sans text-xs font-bold uppercase tracking-wider transition-colors hover:text-cyan-650 cursor-pointer ${
+            className={`font-sans text-xs font-bold uppercase tracking-wider transition-colors hover:text-cyan-650 cursor-pointer whitespace-nowrap px-1 py-1 hidden xl:inline-block ${
               activeSection === 'faq' ? 'text-cyan-650 font-extrabold' : 'text-slate-500'
             }`}
           >
@@ -144,14 +144,14 @@ export default function Navbar({
             href={beehiivUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="font-sans text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-cyan-650 inline-flex items-center gap-1 transition-colors"
+            className="font-sans text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-cyan-650 hidden xl:inline-flex items-center gap-1 transition-colors whitespace-nowrap px-1 py-1"
           >
             Newsletter
             <ArrowUpRight className="w-3 h-3 text-slate-400" />
           </a>
           <button
             onClick={onOpenBooking}
-            className="font-sans text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-cyan-650 transition-colors cursor-pointer flex items-center gap-1"
+            className="font-sans text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-cyan-650 transition-colors cursor-pointer flex items-center gap-1 whitespace-nowrap px-1 py-1 mr-1"
             id="nav-connect-tab-btn"
           >
             Contact
@@ -159,13 +159,13 @@ export default function Navbar({
         </nav>
 
         {/* Right aligned call to action with dedicated left margin and padding */}
-        <div className="hidden lg:flex items-center gap-2 xl:gap-3 shrink-0 pl-3 xl:pl-5 border-l border-slate-200">
+        <div className="hidden lg:flex items-center gap-2.5 xl:gap-3 shrink-0 pl-5 xl:pl-8 ml-2 xl:ml-4 border-l border-slate-200/90">
           {user ? (
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={onOpenDashboard}
-                className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-850 text-brand-cyan border border-brand-cyan/40 font-display text-[10px] font-bold uppercase tracking-wider px-3.5 py-2.5 rounded-xl transition-all shadow-sm cursor-pointer shrink-0"
+                className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-850 text-brand-cyan border border-brand-cyan/40 font-display text-[10px] font-bold uppercase tracking-wider px-3.5 py-2.5 rounded-xl transition-all shadow-sm cursor-pointer shrink-0 whitespace-nowrap"
                 id="navbar-growth-os-btn"
               >
                 <Sparkles className="w-3.5 h-3.5 text-brand-cyan animate-pulse" />
@@ -176,7 +176,7 @@ export default function Navbar({
               <button
                 type="button"
                 onClick={onSignOut}
-                className="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 border border-slate-200 hover:border-rose-200 font-display text-[10px] font-bold uppercase tracking-wider px-3 py-2.5 rounded-xl transition-all cursor-pointer shadow-sm shrink-0"
+                className="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 border border-slate-200 hover:border-rose-200 font-display text-[10px] font-bold uppercase tracking-wider px-3 py-2.5 rounded-xl transition-all cursor-pointer shadow-sm shrink-0 whitespace-nowrap"
                 title="Sign Out of Growth OS"
                 id="navbar-signout-btn"
               >
@@ -188,7 +188,7 @@ export default function Navbar({
             <button
               type="button"
               onClick={onOpenAuthModal}
-              className="inline-flex items-center gap-1.5 bg-slate-900/90 hover:bg-slate-850 text-brand-cyan hover:text-white border border-brand-cyan/30 font-display text-[10px] font-bold uppercase tracking-wider px-3 py-2.5 xl:px-3.5 rounded-xl transition-all shadow-sm cursor-pointer shrink-0"
+              className="inline-flex items-center gap-1.5 bg-slate-900/90 hover:bg-slate-850 text-brand-cyan hover:text-white border border-brand-cyan/30 font-display text-[10px] font-bold uppercase tracking-wider px-3.5 py-2.5 xl:px-4 rounded-xl transition-all shadow-sm cursor-pointer shrink-0 whitespace-nowrap"
               id="navbar-auth-growth-os-btn"
             >
               <Sparkles className="w-3.5 h-3.5 text-brand-cyan" />
@@ -199,7 +199,7 @@ export default function Navbar({
           <button
             type="button"
             onClick={onOpenCalendar || onOpenBooking}
-            className="group relative inline-flex items-center justify-center bg-brand-cyan hover:bg-cyan-400 text-slate-950 font-display text-[10px] font-extrabold uppercase tracking-widest px-4 xl:px-5 py-2.5 rounded-xl overflow-hidden transition-all shadow-md active:scale-95 cursor-pointer shrink-0"
+            className="group relative inline-flex items-center justify-center bg-brand-cyan hover:bg-cyan-400 text-slate-950 font-display text-[10px] font-extrabold uppercase tracking-widest px-4 xl:px-5 py-2.5 rounded-xl overflow-hidden transition-all shadow-md active:scale-95 cursor-pointer shrink-0 whitespace-nowrap"
             id="navbar-booking-btn"
           >
             <span className="relative z-10 flex items-center gap-1.5">

@@ -1,17 +1,16 @@
 import React, { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { 
   FileBarChart, TrendingUp, Cpu, Users, Target, 
   ArrowUpRight, AlertTriangle, ShieldCheck, Sparkles, 
   Download, RefreshCw, Layers, Compass, CheckCircle2,
   ExternalLink, BarChart3, Zap, BookOpen, Newspaper, Lock,
-  Clock, Play, Tv, Bookmark, Check, Calendar, Activity
+  Clock, Activity, Calendar
 } from 'lucide-react';
 import { UserProfile } from '../../types';
 import { User } from 'firebase/auth';
 import { getIndustryMarketIntel } from '../../utils/contentEngineHelpers';
 import { isAuthorizedForTelemetry } from '../../utils/telemetryAuth';
-import { MARKETING_SHORTS, MarketingShortItem } from './MarketingShortsPanel';
 
 interface MarketReportPanelProps {
   user?: User | null;
@@ -20,8 +19,6 @@ interface MarketReportPanelProps {
   onOpenCalendar?: () => void;
   onNavigateToContentStudio?: () => void;
 }
-
-export type MarketReportSubView = 'ytd_intel' | 'video_shorts';
 
 export default function MarketReportPanel({
   user,
@@ -33,10 +30,7 @@ export default function MarketReportPanel({
   const industry = profile?.industry || 'Executive Coaching & Digital Business';
   const location = profile?.location || 'Los Angeles & National';
 
-  const [activeSubView, setActiveSubView] = useState<MarketReportSubView>('ytd_intel');
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [selectedVideo, setSelectedVideo] = useState<MarketingShortItem>(MARKETING_SHORTS[0]);
-  const [copiedActionId, setCopiedActionId] = useState<string | null>(null);
 
   // Check if current session belongs to authorized admin
   const canViewTelemetry = isAuthorizedForTelemetry(user?.email, profile?.email);
@@ -49,12 +43,6 @@ export default function MarketReportPanel({
   const handleRefresh = () => {
     setIsRefreshing(true);
     setTimeout(() => setIsRefreshing(false), 800);
-  };
-
-  const handleCopyAction = (id: string, text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedActionId(id);
-    setTimeout(() => setCopiedActionId(null), 2000);
   };
 
   return (
@@ -80,7 +68,7 @@ export default function MarketReportPanel({
               {industry} Market Dynamics
             </h2>
             <p className="text-xs sm:text-sm text-slate-200 max-w-2xl leading-relaxed">
-              Curated market intelligence, verified research dispatches, and video strategy briefings for {industry} across trailing 30 days through Year-to-Date (YTD).
+              Curated market intelligence, verified research dispatches, and sector attribution for {industry} across trailing 30 days through Year-to-Date (YTD).
             </p>
           </div>
 
@@ -103,48 +91,16 @@ export default function MarketReportPanel({
             </button>
           </div>
         </div>
-
-        {/* View Switcher: Industry Intel vs. Integrated Video Shorts */}
-        <div className="relative z-10 mt-6 pt-5 border-t border-slate-800 flex items-center gap-2 overflow-x-auto no-scrollbar">
-          <button
-            type="button"
-            onClick={() => setActiveSubView('ytd_intel')}
-            className={`px-4 py-2 rounded-xl font-display text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer shrink-0 ${
-              activeSubView === 'ytd_intel'
-                ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20 font-black'
-                : 'bg-slate-800/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700'
-            }`}
-          >
-            <Activity className="w-3.5 h-3.5" />
-            <span>Trailing 30 Days – YTD Intel & News</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveSubView('video_shorts')}
-            className={`px-4 py-2 rounded-xl font-display text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer shrink-0 ${
-              activeSubView === 'video_shorts'
-                ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20 font-black'
-                : 'bg-slate-800/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700'
-            }`}
-          >
-            <Tv className="w-3.5 h-3.5" />
-            <span>Executive Video Shorts ({MARKETING_SHORTS.length})</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          </button>
-        </div>
       </div>
 
-      <AnimatePresence mode="wait">
-        {activeSubView === 'ytd_intel' ? (
-          <motion.div
-            key="ytd_intel_view"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-            className="space-y-6"
-          >
+      {/* Trailing 30 Days – YTD Market Intel Content */}
+      <motion.div
+        key="ytd_intel_view"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+        className="space-y-6"
+      >
             {/* SECTION 1: TRAILING 30 DAYS VS YEAR-TO-DATE (YTD) MACRO METRICS */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 space-y-2 relative overflow-hidden group hover:border-cyan-500/40 transition-all shadow-sm">
@@ -350,120 +306,7 @@ export default function MarketReportPanel({
               </div>
             </div>
 
-          </motion.div>
-        ) : (
-          /* ================================================================ */
-          /* MERGED EXECUTIVE MARKETING VIDEO SHORTS MODULE */
-          /* ================================================================ */
-          <motion.div
-            key="video_shorts_view"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-            className="space-y-6"
-          >
-            {/* Featured Active Video Player */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              <div className="lg:col-span-8 space-y-4">
-                <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm space-y-4">
-                  <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-black border border-slate-800 shadow-xl">
-                    <iframe
-                      src={`https://www.youtube-nocookie.com/embed/${selectedVideo.youtubeId}?autoplay=1&rel=0${selectedVideo.start ? `&start=${selectedVideo.start}` : ''}`}
-                      title={selectedVideo.title}
-                      className="absolute inset-0 w-full h-full border-0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                      allowFullScreen
-                    />
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold uppercase bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
-                        {selectedVideo.category}
-                      </span>
-                      <span className="text-xs font-mono text-[var(--muted)]">
-                        {selectedVideo.duration} · {selectedVideo.creator}
-                      </span>
-                    </div>
-
-                    <h3 className="text-lg sm:text-xl font-display font-bold text-[var(--text)]">
-                      {selectedVideo.title}
-                    </h3>
-
-                    {/* Key Takeaway & Action Step */}
-                    <div className="p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] space-y-3">
-                      <div>
-                        <span className="font-mono text-[10px] uppercase font-bold text-cyan-600 dark:text-cyan-400 block mb-1">
-                          Strategic Takeaway:
-                        </span>
-                        <p className="text-xs text-[var(--text)] leading-relaxed">
-                          {selectedVideo.keyTakeaway}
-                        </p>
-                      </div>
-
-                      <div className="pt-2 border-t border-[var(--border)] flex items-center justify-between gap-3">
-                        <div className="text-xs text-[var(--muted)]">
-                          <strong className="text-[var(--text)]">Action Mandate: </strong>
-                          {selectedVideo.actionStep}
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleCopyAction(selectedVideo.id, selectedVideo.actionStep)}
-                          className="px-3 py-1.5 rounded-lg bg-[var(--surface)] text-[var(--text)] border border-[var(--border)] font-mono text-[11px] font-bold hover:bg-cyan-500 hover:text-slate-950 transition-all shrink-0 cursor-pointer"
-                        >
-                          {copiedActionId === selectedVideo.id ? 'Copied' : 'Copy Action'}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Video Shorts List */}
-              <div className="lg:col-span-4 space-y-3">
-                <div className="p-4 rounded-2xl bg-[var(--surface)] border border-[var(--border)] space-y-3">
-                  <div className="flex items-center justify-between pb-2 border-b border-[var(--border)]">
-                    <span className="font-display text-xs font-bold uppercase tracking-wider text-[var(--text)]">
-                      Curated Video Library
-                    </span>
-                    <span className="text-[10px] font-mono text-[var(--muted)]">
-                      {MARKETING_SHORTS.length} Briefings
-                    </span>
-                  </div>
-
-                  <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
-                    {MARKETING_SHORTS.map((item) => {
-                      const isSelected = selectedVideo.id === item.id;
-                      return (
-                        <div
-                          key={item.id}
-                          onClick={() => setSelectedVideo(item)}
-                          className={`p-3 rounded-xl border transition-all cursor-pointer text-left space-y-1 ${
-                            isSelected
-                              ? 'border-cyan-500 bg-cyan-500/10 shadow-xs'
-                              : 'border-[var(--border)] bg-[var(--surface2)] hover:border-cyan-500/40'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between text-[10px] font-mono">
-                            <span className="text-cyan-600 dark:text-cyan-400 font-bold">{item.creator}</span>
-                            <span className="text-[var(--muted)]">{item.duration}</span>
-                          </div>
-                          <h5 className={`text-xs font-medium leading-snug line-clamp-2 ${
-                            isSelected ? 'text-[var(--text)] font-bold' : 'text-[var(--muted)]'
-                          }`}>
-                            {item.title}
-                          </h5>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      </motion.div>
 
     </div>
   );

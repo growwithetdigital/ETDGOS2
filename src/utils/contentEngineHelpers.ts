@@ -42,119 +42,116 @@ export interface NaturalPhotoAsset {
 
 export const CURATED_NATURAL_PHOTOS: NaturalPhotoAsset[] = [
   {
-    id: 'photo-coaching-dialogue',
-    title: 'Executive Business Coaching & Storytelling',
-    category: 'Leadership & Advisory',
-    url: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=1600&q=80',
-    author: 'Christina @ wocintechchat',
-    location: 'Los Angeles, CA'
-  },
-  {
     id: 'photo-strategic-planning',
-    title: 'High-Velocity Growth Architecture Workshop',
+    title: 'Strategic Workspace & Growth Architecture',
     category: 'Strategic Planning',
-    url: 'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&w=1600&q=80',
-    author: 'Campaign Creators',
+    url: 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=1600&q=80',
+    author: 'Alesia Kazantceva',
     location: 'Modern Studio'
   },
   {
-    id: 'photo-inspirational-keynote',
-    title: 'Inspiring Storytelling & Keynote Presentation',
-    category: 'Keynote & Media',
-    url: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1600&q=80',
-    author: 'Headway',
-    location: 'Executive Summit'
-  },
-  {
-    id: 'photo-collaborative-table',
-    title: 'Collaborative Strategy & Client Conversion',
-    category: 'Client Advisory',
-    url: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=1600&q=80',
-    author: 'Austin Distel',
-    location: 'Corporate Suite'
-  },
-  {
-    id: 'photo-executive-portrait',
-    title: 'Executive Leadership & Brand Authority',
-    category: 'Founder Presence',
-    url: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=1600&q=80',
-    author: 'Hunters Race',
-    location: 'Executive Office'
-  },
-  {
-    id: 'photo-digital-whiteboard',
-    title: 'High-Impact Brand Narrative & Frameworks',
-    category: 'Systems & Frameworks',
-    url: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=1600&q=80',
-    author: 'Leon',
-    location: 'Innovation Lab'
-  },
-  {
-    id: 'photo-la-architecture',
+    id: 'photo-metropolitan-growth',
     title: 'Metropolitan Commercial Growth & Entity Presence',
     category: 'Regional Authority',
-    url: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1600&q=80',
+    url: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1600&q=80',
     author: 'Nastuh Abootalebi',
     location: 'Financial District'
   },
   {
-    id: 'photo-one-on-one-session',
-    title: 'Personalized Strategic Mentorship Session',
-    category: 'Consultation',
-    url: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=1600&q=80',
-    author: 'Amy Hirschi',
-    location: 'Consulting Suite'
+    id: 'photo-systems-analytics',
+    title: 'Data-Driven Growth Analytics & Performance Metrics',
+    category: 'Systems & Frameworks',
+    url: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1600&q=80',
+    author: 'Carlos Muza',
+    location: 'Executive Lab'
   },
   {
-    id: 'photo-technology-datacenter',
-    title: 'Modern Technology & Digital Infrastructure',
+    id: 'photo-executive-boardroom',
+    title: 'Executive Governance & Strategic Leadership Suite',
+    category: 'Advisory & Governance',
+    url: 'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1600&q=80',
+    author: 'Nastuh Abootalebi',
+    location: 'Executive Suite'
+  },
+  {
+    id: 'photo-creative-narrative',
+    title: 'Brand Storytelling, Editorial & Strategic Planning',
+    category: 'Editorial Strategy',
+    url: 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&w=1600&q=80',
+    author: 'Ian Schneider',
+    location: 'Creative Suite'
+  },
+  {
+    id: 'photo-digital-infrastructure',
+    title: 'Modern Cloud Technology & Global Digital Architecture',
     category: 'Technology & SaaS',
     url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1600&q=80',
     author: 'NASA',
-    location: 'Global Grid'
+    location: 'Global Cloud Grid'
+  },
+  {
+    id: 'photo-hardware-tech',
+    title: 'Advanced Computing & High-Performance Engineering',
+    category: 'Hardware & Systems',
+    url: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1600&q=80',
+    author: 'Alexandre Debiève',
+    location: 'Tech Hub'
   },
   {
     id: 'photo-healthcare-clinic',
-    title: 'Clinical Excellence & Patient Care Consultation',
+    title: 'Clinical Diagnostics & Healthcare Operations',
     category: 'Healthcare & Wellness',
-    url: 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=1600&q=80',
+    url: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1600&q=80',
     author: 'Online Marketing',
-    location: 'Modern Practice'
+    location: 'Clinical Practice'
   },
   {
     id: 'photo-legal-architecture',
-    title: 'Legal Advisory & Corporate Governance',
+    title: 'Legal Governance, Jurisprudence & Corporate Advisory',
     category: 'Legal & Professional Services',
-    url: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1600&q=80',
+    url: 'https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=1600&q=80',
     author: 'Giammarco Boscaro',
     location: 'Judicial Chamber'
   },
   {
     id: 'photo-modern-real-estate',
-    title: 'Architectural Prestige & Commercial Properties',
+    title: 'Architectural Prestige & Commercial Real Estate',
     category: 'Real Estate & Construction',
     url: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1600&q=80',
     author: 'R ARCHITECTURE',
     location: 'Metropolitan Estate'
+  },
+  {
+    id: 'photo-urban-skyline',
+    title: 'Regional Market Footprint & Commercial Expansion',
+    category: 'Market Footprint',
+    url: 'https://images.unsplash.com/photo-1477959858617-67f30bc75b82?auto=format&fit=crop&w=1600&q=80',
+    author: 'Sawyer Bengtson',
+    location: 'Metropolitan Horizon'
   }
 ];
 
 /**
  * Returns photography tailored to the detected business niche or industry.
+ * Curated exclusively with neutral, face-free, industry-specific architectural,
+ * clinical, technological, or workspace environments to maintain demographic inclusivity.
  */
 export function getNichePhotoForBusiness(industry?: string, websiteUrl?: string): NaturalPhotoAsset {
   const combined = `${industry || ''} ${websiteUrl || ''}`.toLowerCase();
-  if (combined.includes('health') || combined.includes('clinic') || combined.includes('dent') || combined.includes('med')) {
+  if (combined.includes('health') || combined.includes('clinic') || combined.includes('dent') || combined.includes('med') || combined.includes('doctor') || combined.includes('care')) {
     return CURATED_NATURAL_PHOTOS.find(p => p.id === 'photo-healthcare-clinic') || CURATED_NATURAL_PHOTOS[0];
   }
-  if (combined.includes('law') || combined.includes('legal') || combined.includes('attorney')) {
+  if (combined.includes('law') || combined.includes('legal') || combined.includes('attorney') || combined.includes('counsel') || combined.includes('justice')) {
     return CURATED_NATURAL_PHOTOS.find(p => p.id === 'photo-legal-architecture') || CURATED_NATURAL_PHOTOS[0];
   }
-  if (combined.includes('real estate') || combined.includes('property') || combined.includes('home') || combined.includes('architect')) {
+  if (combined.includes('real estate') || combined.includes('property') || combined.includes('home') || combined.includes('architect') || combined.includes('develop')) {
     return CURATED_NATURAL_PHOTOS.find(p => p.id === 'photo-modern-real-estate') || CURATED_NATURAL_PHOTOS[0];
   }
-  if (combined.includes('tech') || combined.includes('software') || combined.includes('saas') || combined.includes('ai') || combined.includes('app')) {
-    return CURATED_NATURAL_PHOTOS.find(p => p.id === 'photo-technology-datacenter') || CURATED_NATURAL_PHOTOS[1];
+  if (combined.includes('tech') || combined.includes('software') || combined.includes('saas') || combined.includes('ai') || combined.includes('app') || combined.includes('cloud')) {
+    return CURATED_NATURAL_PHOTOS.find(p => p.id === 'photo-digital-infrastructure') || CURATED_NATURAL_PHOTOS[0];
+  }
+  if (combined.includes('consult') || combined.includes('coach') || combined.includes('advisory') || combined.includes('agency')) {
+    return CURATED_NATURAL_PHOTOS.find(p => p.id === 'photo-strategic-planning') || CURATED_NATURAL_PHOTOS[0];
   }
   return CURATED_NATURAL_PHOTOS[0];
 }
@@ -223,11 +220,19 @@ Explore the full article and conversion framework here: ${website}`,
       instagram_threads: `Consistency beats sporadic effort every single time. In our latest piece, "${articleTitle}", we break down how ${business} helps ${audience} in ${location} cut through the marketing noise with purpose-driven storytelling. Link in bio to read the full guide.`,
       email_subject: `${business}: The High-Velocity Growth Blueprint for ${location}`,
       email_preview: `How market leaders in ${location} turn online discovery into qualified conversations...`,
-      email_body: `Hi there,
+      email_body: (() => {
+        const cleanContact = (contact || '').trim();
+        const cleanBusiness = (business || '').trim();
+        const isDuplicate = !cleanContact || !cleanBusiness || 
+          cleanContact.toLowerCase() === cleanBusiness.toLowerCase() ||
+          cleanBusiness.toLowerCase().includes(cleanContact.toLowerCase());
+        const signoff = isDuplicate ? (cleanContact || cleanBusiness || 'The Leadership Team') : `${cleanContact}\n${cleanBusiness}`;
 
-In today's fast-evolving market, high-intent buyers in ${location} don't have time to wade through generic marketing noise. They want definitive solutions from trusted authorities who understand their specific challenges.
+        return `Hi there,
 
-At ${business}, our core mission is clear: "${mission}".
+In today's market, high-intent buyers in ${location} don't have time to wade through generic marketing noise. They want definitive solutions from trusted authorities who understand their specific challenges.
+
+At ${business}, our mission is clear: "${mission}".
 
 In our latest executive guide, we've broken down:
 • Why competitors relying on sporadic tactics are losing ground
@@ -237,8 +242,9 @@ In our latest executive guide, we've broken down:
 Read the full blueprint online here: ${website}
 
 Best regards,
-${contact}
-${business}`,
+
+${signoff}`;
+      })(),
       lead_magnet_hook: `Complimentary Diagnostic: Request your 1-Page Growth Blueprint & Search Assessment for ${location} at ${website}`
     },
     {
@@ -274,7 +280,15 @@ See how ${business} is resetting the standard: ${website}`,
       instagram_threads: `Stop competing on generic marketing noise. If you want high-intent buyers in ${location} to choose you, give them direct answers and frictionless access. Read our latest strategic release at ${website}.`,
       email_subject: `Why conventional marketing in ${location} is broken (and what works now)`,
       email_preview: `The difference between sporadic tactics and compounding category authority...`,
-      email_body: `Hi there,
+      email_body: (() => {
+        const cleanContact = (contact || '').trim();
+        const cleanBusiness = (business || '').trim();
+        const isDuplicate = !cleanContact || !cleanBusiness || 
+          cleanContact.toLowerCase() === cleanBusiness.toLowerCase() ||
+          cleanBusiness.toLowerCase().includes(cleanContact.toLowerCase());
+        const signoff = isDuplicate ? (cleanContact || cleanBusiness || 'The Leadership Team') : `${cleanContact}\n${cleanBusiness}`;
+
+        return `Hi there,
 
 Most organizations spend thousands on marketing campaigns without addressing the core leak: converting discovery into predictable, qualified conversations.
 
@@ -285,8 +299,9 @@ In our new release, we address the uncomfortable reality of modern search in ${l
 Read the full perspective here: ${website}
 
 To your compounding growth,
-${contact}
-${business}`,
+
+${signoff}`;
+      })(),
       lead_magnet_hook: `Free Audit Checklist: The 5 Questions Every High-Value Buyer in ${location} Asks Before Booking`
     },
     {
@@ -677,6 +692,8 @@ What is the biggest friction point in your customer acquisition right now? Let's
 
 /**
  * Generates 1 150-word Eblast promoting the blog post to an email list or warm audience.
+ * Strictly calibrated to the client's Brand DNA voice archetype, core value prop, and tone,
+ * with a clean salutation and non-repetitive closing signoff.
  */
 export function generate150WordEblast(profile: UserProfile | null, blogTitle: string): {
   subject: string;
@@ -684,39 +701,61 @@ export function generate150WordEblast(profile: UserProfile | null, blogTitle: st
   body: string;
   word_count: number;
 } {
-  const business = profile?.business_name || 'ET Digital';
-  const location = profile?.location || 'Los Angeles';
-  const contact = profile?.contact || profile?.displayName || 'Eric Thomas';
-  const audience = profile?.target_audience || 'business leaders';
+  const business = (profile?.business_name || profile?.displayName || 'ET Digital').trim();
+  const location = (profile?.location || 'Los Angeles, CA').trim();
+  const contact = (profile?.contact || profile?.displayName || '').trim();
+  const audience = profile?.target_audience || 'founders and business leaders';
   const website = profile?.website_url || 'https://growwithetdigital.com';
 
-  const subject = `Why modern buyers in ${location} choose proof over noise`;
+  // Brand DNA intelligence injection
+  const brandDna = profile?.brand_dna;
+  const voiceArchetype = brandDna?.voice_archetype || profile?.brand_voice || 'Authoritative Strategist';
+  const coreValueProp = brandDna?.core_value_prop || profile?.mission_statement || 'transforming operations into predictable category leadership';
+  const differentiator = brandDna?.differentiator || 'frictionless conversion paths and high-intent authority';
+
+  // Distinct sender signoff (never repeat sender name twice)
+  const isDuplicateName = !contact || !business ||
+    contact.toLowerCase() === business.toLowerCase() ||
+    business.toLowerCase().includes(contact.toLowerCase());
+  const signoffName = isDuplicateName ? (contact || business) : `${contact}\n${business}`;
+
+  const isDirectTone = voiceArchetype.toLowerCase().includes('direct') || voiceArchetype.toLowerCase().includes('pragmatic');
+
+  const subject = isDirectTone
+    ? `The reality of modern growth in ${location}`
+    : `Why leading ${audience} in ${location} choose proof over noise`;
+
   const preview = `A 90-second executive breakdown on converting discovery into high-value clients...`;
 
-  // Exactly ~148 words
+  const openingLine = isDirectTone
+    ? `Operating on sporadic tactics wastes time and capital. Building an evergreen operating system produces compounding authority.`
+    : `Operating with disconnected tactics yields inconsistent outcomes. Compounding revenue requires intentional brand architecture.`;
+
+  // Tailored ~145-155 words
   const body = `Hi there,
 
-Operating with random tactics yields sporadic results. Operating with structured systems produces compounding revenue.
+${openingLine}
 
-If you've noticed that traditional marketing yields diminishing returns, you aren't alone. High-intent ${audience} in ${location} are ignoring corporate brochures and turning to verified, direct answers.
+High-intent ${audience} across ${location} no longer have patience for vague promotional hype. They evaluate partners through verified proof, direct answers, and clear execution.
 
-We just released our latest briefing:
+At ${business}, our commitment is centered on ${coreValueProp}.
+
+We just released our latest executive briefing:
 "${blogTitle}"
 
-In this 90-second read, we break down:
-• The 3 questions high-value buyers research before booking
-• Why frictionless client onboarding converts 3.8x faster
-• How to turn your website into an evergreen authority engine
+Inside this 90-second read, we break down:
+• Why conventional sales funnels are leaking high-value prospects
+• How ${differentiator} creates an unfair advantage
+• The 3 structural shifts needed to turn your digital presence into an authority engine
 
-Read the full briefing here:
+Read the complete briefing here:
 ${website}
 
-If you'd like to explore how these systems apply to your business, reply directly to this email or book a strategy conversation on our calendar.
+If you would like to review how these insights apply to your current roadmap, reply directly to this note or reserve a private working session.
 
 Warmly,
 
-${contact}
-${business}`;
+${signoffName}`;
 
   return {
     subject,

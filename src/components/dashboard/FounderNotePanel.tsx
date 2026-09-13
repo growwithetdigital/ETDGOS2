@@ -76,12 +76,10 @@ export default function FounderNotePanel({
           <div className="relative">
             <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-cyan-500/60 shadow-lg shadow-cyan-500/10 bg-slate-900">
               <img
-                src="https://growwithetdigital.com/wp-content/uploads/2024/04/IMG_3962-scaled.jpg"
+                src="https://res.cloudinary.com/dnpvgq7gt/image/upload/v1789270422/pomelli_photoshoot-3_t8k6b3.png"
                 alt="Eric Thomas"
+                referrerPolicy="no-referrer"
                 className="w-full h-full object-cover object-top"
-                onError={(e) => {
-                  (e.target as HTMLElement).style.display = 'none';
-                }}
               />
             </div>
             <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-[var(--surface)] flex items-center justify-center">

@@ -342,7 +342,14 @@ export default function App() {
     } as User;
 
     return (
-      <div className="min-h-screen selection:bg-brand-cyan/30">
+      <motion.div 
+        key="dashboard-view"
+        initial={{ opacity: 0, scale: 0.995, filter: 'blur(3px)' }}
+        animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+        exit={{ opacity: 0, scale: 0.995, filter: 'blur(3px)' }}
+        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+        className="min-h-screen selection:bg-brand-cyan/30"
+      >
         <WhiteboardShell
           user={activeSessionUser}
           profile={userProfile}
@@ -363,7 +370,7 @@ export default function App() {
 
         <BookingModal isOpen={isBookingOpen} onClose={() => setIsBookingOpen(false)} />
         <CalendarModal isOpen={isCalendarOpen} onClose={() => setIsCalendarOpen(false)} />
-      </div>
+      </motion.div>
     );
   }
 

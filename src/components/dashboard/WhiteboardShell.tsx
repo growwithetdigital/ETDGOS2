@@ -34,6 +34,7 @@ import OwnerTelemetryModal from './OwnerTelemetryModal';
 import MarketReportPanel from './MarketReportPanel';
 import FounderNotePanel from './FounderNotePanel';
 import { isAuthorizedForTelemetry } from '../../utils/telemetryAuth';
+import Logo from '../Logo';
 
 interface WhiteboardShellProps {
   user: any;
@@ -42,6 +43,30 @@ interface WhiteboardShellProps {
   onCloseDashboard: () => void;
   onOpenBooking: () => void;
   onSignOut?: () => void;
+}
+
+// Animated Growth OS Core Matrix Emblem (Homepage animated logo counterpart)
+function AnimatedGrowthOSBadge() {
+  return (
+    <div className="hidden sm:flex items-center gap-2.5 px-2.5 py-1 rounded-xl bg-slate-950/80 border border-cyan-500/30 text-cyan-400 select-none shadow-xs">
+      <div className="relative w-5 h-5 flex items-center justify-center shrink-0">
+        {/* Animated concentric orbital rings from homepage */}
+        <svg className="absolute inset-0 w-full h-full animate-[spin_8s_linear_infinite] text-brand-cyan opacity-90" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="44" stroke="currentColor" strokeWidth="7" strokeDasharray="14 18" fill="none" />
+          <circle cx="50" cy="50" r="28" stroke="currentColor" strokeWidth="7" strokeDasharray="24 36" fill="none" />
+        </svg>
+        <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(6,182,212,0.9)]" />
+      </div>
+      <div className="flex flex-col text-left leading-none">
+        <span className="font-display font-black text-[8px] tracking-wider text-white uppercase">
+          Growth OS™
+        </span>
+        <span className="font-mono text-[7px] text-cyan-400 tracking-widest uppercase mt-0.5">
+          Matrix Online
+        </span>
+      </div>
+    </div>
+  );
 }
 
 // Brand Palette (ET Digital Design System)
@@ -302,26 +327,39 @@ export default function WhiteboardShell({
       <header className="sticky top-0 z-40 bg-[var(--surface)]/95 backdrop-blur-xl border-b border-[var(--border)] px-4 sm:px-8 py-3.5 shadow-sm">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           
-          {/* Left: Brand Identity & Return to Site */}
-          <div className="flex items-center gap-3 text-left">
+          {/* Left: Brand Identity & Return to Site with ET Digital Branding */}
+          <div className="flex items-center gap-3 sm:gap-4 text-left">
             <button
               onClick={onCloseDashboard}
-              className="p-2.5 rounded-xl bg-[var(--surface2)] hover:bg-[var(--border)] text-[var(--muted)] hover:text-[var(--text)] transition-colors cursor-pointer min-h-[40px] flex items-center justify-center"
+              className="p-2.5 rounded-xl bg-[var(--surface2)] hover:bg-[var(--border)] text-[var(--muted)] hover:text-[var(--text)] transition-colors cursor-pointer min-h-[40px] flex items-center justify-center shrink-0"
               title="Return to Public Overview"
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
             
-            <div>
+            {/* ET Digital Official Brand Logo */}
+            <div 
+              onClick={onCloseDashboard}
+              className="cursor-pointer flex items-center gap-2 border-r border-[var(--border)] pr-3 sm:pr-4 shrink-0 group"
+              title="ET Digital - Return to Homepage"
+            >
+              <Logo className="h-9 sm:h-10 transition-transform duration-200 group-hover:scale-[1.03]" />
+            </div>
+
+            {/* Animated OS Matrix Badge */}
+            <AnimatedGrowthOSBadge />
+
+            {/* Client Context & Growth OS Marker */}
+            <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-sm sm:text-base font-bold text-[var(--text)] tracking-tight font-display">
+                <span className="text-sm sm:text-base font-bold text-[var(--text)] tracking-tight font-display truncate">
                   {clientName}
                 </span>
-                <span className="font-mono text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded border bg-cyan-500/10 text-cyan-600 border-cyan-500/30">
+                <span className="hidden md:inline-block font-mono text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded border bg-cyan-500/10 text-cyan-600 border-cyan-500/30 shrink-0">
                   Growth OS
                 </span>
               </div>
-              <p className="text-[11px] text-[var(--muted)] font-mono truncate max-w-[200px] sm:max-w-xs">
+              <p className="text-[11px] text-[var(--muted)] font-mono truncate max-w-[140px] sm:max-w-xs">
                 {clientLocation} · {clientMission}
               </p>
             </div>
@@ -411,10 +449,13 @@ export default function WhiteboardShell({
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
             return (
-              <button
+              <motion.button
                 key={tab.id}
                 type="button"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
                 onClick={() => setActiveTab(tab.id as NavTabId)}
+                id={`dashboard-tab-${tab.id}`}
                 className={`relative px-4 py-2 rounded-xl font-display text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer shrink-0 ${
                   isActive
                     ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-slate-950 shadow-md shadow-cyan-500/25 font-black scale-100'
@@ -430,99 +471,108 @@ export default function WhiteboardShell({
                     {tab.badge}
                   </span>
                 )}
-              </button>
+              </motion.button>
             );
           })}
         </div>
       </div>
 
       {/* ==================================================================== */}
-      {/* 4. MAIN WORKSPACE BODY */}
+      {/* 4. MAIN WORKSPACE BODY (With Operating System motion transitions) */}
       {/* ==================================================================== */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-        
-        {/* ==================================================================== */}
-        {/* TAB 1: PROFILE & BUSINESS DNA (Merged Profile + Brand DNA + Growth Auditor) */}
-        {/* ==================================================================== */}
-        {activeTab === 'profile_dna' && (
-          <ProfileBusinessDnaPanel
-            user={user}
-            profile={profile}
-            onRefreshProfile={onRefreshProfile}
-            onNavigateToContentStudio={() => setActiveTab('content_studio')}
-            onOpenBooking={onOpenBooking}
-          />
-        )}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 10, filter: 'blur(2px)' }}
+            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            exit={{ opacity: 0, y: -8, filter: 'blur(2px)' }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            className="w-full"
+          >
+            {/* ==================================================================== */}
+            {/* TAB 1: PROFILE & BUSINESS DNA (Merged Profile + Brand DNA + Growth Auditor) */}
+            {/* ==================================================================== */}
+            {activeTab === 'profile_dna' && (
+              <ProfileBusinessDnaPanel
+                user={user}
+                profile={profile}
+                onRefreshProfile={onRefreshProfile}
+                onNavigateToContentStudio={() => setActiveTab('content_studio')}
+                onOpenBooking={onOpenBooking}
+              />
+            )}
 
-        {/* ==================================================================== */}
-        {/* TAB 2: CONTENT STUDIO (1 Post + 4 Social Media Promotion Angles) */}
-        {/* ==================================================================== */}
-        {activeTab === 'content_studio' && (
-          <div className="space-y-6">
-            {!profile?.writing_sample && (
-              <div className="rounded-2xl border border-cyan-500/30 bg-cyan-950/30 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-left">
-                <div className="flex items-center gap-3">
-                  <Cpu className="w-5 h-5 text-cyan-400 shrink-0" />
-                  <div>
-                    <h4 className="text-sm font-bold text-white font-display">
-                      Calibrate Your Authentic Writing Voice
-                    </h4>
-                    <p className="text-xs text-slate-300">
-                      Add a 2-4 sentence writing sample in Profile & Business DNA so your editorial post and social copy sound unmistakably like you.
-                    </p>
+            {/* ==================================================================== */}
+            {/* TAB 2: CONTENT STUDIO (1 Post + 4 Social Media Promotion Angles) */}
+            {/* ==================================================================== */}
+            {activeTab === 'content_studio' && (
+              <div className="space-y-6">
+                {!profile?.writing_sample && (
+                  <div className="rounded-2xl border border-cyan-500/30 bg-cyan-950/30 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-left">
+                    <div className="flex items-center gap-3">
+                      <Cpu className="w-5 h-5 text-cyan-400 shrink-0" />
+                      <div>
+                        <h4 className="text-sm font-bold text-white font-display">
+                          Calibrate Your Authentic Writing Voice
+                        </h4>
+                        <p className="text-xs text-slate-300">
+                          Add a 2-4 sentence writing sample in Profile & Business DNA so your editorial post and social copy sound unmistakably like you.
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('profile_dna')}
+                      className="px-3.5 py-1.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-display text-xs font-bold uppercase tracking-wider shrink-0 cursor-pointer"
+                    >
+                      Calibrate Voice DNA →
+                    </button>
                   </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('profile_dna')}
-                  className="px-3.5 py-1.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-display text-xs font-bold uppercase tracking-wider shrink-0 cursor-pointer"
-                >
-                  Calibrate Voice DNA →
-                </button>
+                )}
+
+                <ContentStudio
+                  item={selectedItem || defaultSampleItem}
+                  profile={profile}
+                  onOpenBooking={onOpenBooking}
+                  onNavigateToBrandDna={() => setActiveTab('profile_dna')}
+                />
               </div>
             )}
 
-            <ContentStudio
-              item={selectedItem || defaultSampleItem}
-              profile={profile}
-              onOpenBooking={onOpenBooking}
-              onNavigateToBrandDna={() => setActiveTab('profile_dna')}
-            />
-          </div>
-        )}
+            {/* ==================================================================== */}
+            {/* TAB 3: INDUSTRY MARKET REPORT (Trailing 30D-YTD) */}
+            {/* ==================================================================== */}
+            {activeTab === 'market_report' && (
+              <MarketReportPanel
+                user={user}
+                profile={profile}
+                onOpenBooking={onOpenBooking}
+                onNavigateToContentStudio={() => setActiveTab('content_studio')}
+              />
+            )}
 
-        {/* ==================================================================== */}
-        {/* TAB 3: INDUSTRY MARKET REPORT (Trailing 30D-YTD + Merged Marketing Shorts) */}
-        {/* ==================================================================== */}
-        {activeTab === 'market_report' && (
-          <MarketReportPanel
-            user={user}
-            profile={profile}
-            onOpenBooking={onOpenBooking}
-            onNavigateToContentStudio={() => setActiveTab('content_studio')}
-          />
-        )}
+            {/* ==================================================================== */}
+            {/* TAB 4: LEARNING FEED (7 Curated Channels, 1 Video/Channel) */}
+            {/* ==================================================================== */}
+            {activeTab === 'learning_feed' && (
+              <LearningFeedPanel
+                profile={profile}
+                onOpenBooking={onOpenBooking}
+              />
+            )}
 
-        {/* ==================================================================== */}
-        {/* TAB 4: LEARNING FEED (7 Curated Channels, 1 Video/Channel, Refreshable) */}
-        {/* ==================================================================== */}
-        {activeTab === 'learning_feed' && (
-          <LearningFeedPanel
-            profile={profile}
-            onOpenBooking={onOpenBooking}
-          />
-        )}
-
-        {/* ==================================================================== */}
-        {/* TAB 5: FOUNDER'S NOTE (Closing Note, Research Rigor/Sourcing, Consultation CTA) */}
-        {/* ==================================================================== */}
-        {activeTab === 'founder_note' && (
-          <FounderNotePanel
-            profile={profile}
-            onOpenBooking={onOpenBooking}
-          />
-        )}
-
+            {/* ==================================================================== */}
+            {/* TAB 5: FOUNDER'S NOTE (Closing Note, Research Rigor/Sourcing, Consultation CTA) */}
+            {/* ==================================================================== */}
+            {activeTab === 'founder_note' && (
+              <FounderNotePanel
+                profile={profile}
+                onOpenBooking={onOpenBooking}
+              />
+            )}
+          </motion.div>
+        </AnimatePresence>
       </main>
 
       {/* Owner Platform Usage Telemetry Modal */}
