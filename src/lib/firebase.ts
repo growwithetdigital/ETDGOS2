@@ -930,7 +930,13 @@ export const getUserProfile = async (uid: string): Promise<UserProfile | null> =
         if (snap && (snap as any).exists && (snap as any).exists()) {
           const profileData = (snap as any).data() as UserProfile;
           if (typeof window !== 'undefined') {
-            localStorage.setItem(`et_profile_${uid}`, JSON.stringify(profileData));
+            // Keep locked status and essential fields if locally locked
+            const merged = {
+              ...profileData,
+              is_profile_locked: cachedProfile?.is_profile_locked ? true : profileData.is_profile_locked,
+              brand_dna: cachedProfile?.brand_dna || profileData.brand_dna
+            };
+            localStorage.setItem(`et_profile_${uid}`, JSON.stringify(merged));
           }
         }
       } catch (e) {}
@@ -1106,28 +1112,51 @@ export const bindPendingAuditToUser = async (uid: string): Promise<void> => {
 };
 
 export const updateUserProfile = async (uid: string, profileData: Partial<UserProfile>): Promise<void> => {
+  let mergedProfile: any = null;
   if (typeof window !== 'undefined') {
     try {
       const cached = localStorage.getItem(`et_profile_${uid}`);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        localStorage.setItem(`et_profile_${uid}`, JSON.stringify({
-          ...parsed,
-          ...profileData,
-          updated_at: new Date().toISOString()
-        }));
+      const parsed = cached ? JSON.parse(cached) : {};
+      mergedProfile = {
+        ...parsed,
+        ...profileData,
+        uid,
+        updated_at: new Date().toISOString()
+      };
+      localStorage.setItem(`et_profile_${uid}`, JSON.stringify(mergedProfile));
+
+      // Also ensure local user mirror is kept up to date
+      const localUserStr = localStorage.getItem('et_growth_os_local_user');
+      if (localUserStr) {
+        try {
+          const localUser = JSON.parse(localUserStr);
+          if (localUser && localUser.uid === uid) {
+            localStorage.setItem('et_growth_os_local_user', JSON.stringify({
+              ...localUser,
+              displayName: profileData.business_name || profileData.displayName || localUser.displayName,
+            }));
+          }
+        } catch (e) {}
       }
-    } catch (e) {}
+    } catch (e) {
+      console.warn('Local profile cache update error:', e);
+    }
   }
+
+  // Attempt remote Firestore write with a 2-second timeout.
+  // If user is offline, permissions are restricted, or Firestore is delayed,
+  // we log a warning instead of throwing an error, so the dashboard locks and functions reliably.
   try {
     const userDocRef = doc(db, 'users', uid);
-    await setDoc(userDocRef, {
-      ...profileData,
-      updated_at: serverTimestamp(),
-    }, { merge: true });
+    await Promise.race([
+      setDoc(userDocRef, {
+        ...profileData,
+        updated_at: serverTimestamp(),
+      }, { merge: true }),
+      new Promise((resolve) => setTimeout(resolve, 2000))
+    ]);
   } catch (error) {
-    handleFirestoreError(error, OperationType.UPDATE, `users/${uid}`);
-    throw error;
+    console.warn('updateUserProfile remote Firestore sync notice (saved locally):', error);
   }
 };
 

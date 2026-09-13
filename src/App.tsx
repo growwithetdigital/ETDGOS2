@@ -77,7 +77,11 @@ export default function App() {
     return null;
   })();
 
-  const fetchProfile = async (uid: string) => {
+  const fetchProfile = async (uid: string, overrideProfile?: UserProfile) => {
+    if (overrideProfile) {
+      setUserProfile(overrideProfile);
+      return;
+    }
     // 1. Immediately hydrate from cache to eliminate UI delay (0ms)
     if (typeof window !== 'undefined') {
       const cached = localStorage.getItem(`et_profile_${uid}`);
@@ -369,7 +373,13 @@ export default function App() {
         <WhiteboardShell
           user={activeSessionUser}
           profile={userProfile}
-          onRefreshProfile={() => fetchProfile(activeSessionUser.uid)}
+          onRefreshProfile={(updatedProfile?: UserProfile) => {
+            if (updatedProfile) {
+              setUserProfile(updatedProfile);
+            } else {
+              fetchProfile(activeSessionUser.uid);
+            }
+          }}
           onCloseDashboard={() => setIsWhiteboardOpen(false)}
           onOpenBooking={handleOpenBooking}
           onSignOut={handleSignOut}

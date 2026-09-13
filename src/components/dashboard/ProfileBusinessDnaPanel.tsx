@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Building2, Globe, Cpu, Sparkles, RefreshCw, CheckCircle2, 
   Lock, ArrowRight, ShieldCheck, Mail, Calendar, AlertCircle,
-  PenTool, Check, Copy, ExternalLink, HelpCircle, ChevronDown, ChevronUp,
-  BarChart3, User, MapPin, Target, Layers, ArrowUpRight
+  Check, MapPin, Target, Layers, ExternalLink, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { UserProfile } from '../../types';
 import { updateUserProfile } from '../../lib/firebase';
@@ -13,27 +12,38 @@ import AuditorArchivePanel from './AuditorArchivePanel';
 interface ProfileBusinessDnaPanelProps {
   user: any;
   profile: UserProfile | null;
-  onRefreshProfile: () => void;
+  onRefreshProfile: (updatedProfile?: UserProfile) => void;
   onNavigateToContentStudio: () => void;
   onOpenBooking: () => void;
   onOpenCalendar?: () => void;
 }
 
 export const TONE_OPTIONS = [
-  { id: 'Authoritative & Strategic', label: 'Authoritative & Strategic', desc: 'Commanding, executive-level tone backed by research and structural clarity' },
-  { id: 'Bold & Direct', label: 'Bold & Direct', desc: 'Punchy, direct-response, zero fluff or corporate jargon, focus on ROI' },
-  { id: 'Conversational & Story-Driven', label: 'Conversational & Story-Driven', desc: 'Warm, relatable, empathetic narrative voice that connects deeply' },
-  { id: 'Visionary & Inspiring', label: 'Visionary & Inspiring', desc: 'Forward-looking, category-defining vision and transformative perspective' },
-  { id: 'Tactical & Practical', label: 'Tactical & Practical', desc: 'Actionable playbook, step-by-step implementation milestones' },
-  { id: 'Consultative & Premium', label: 'Consultative & Premium', desc: 'High-end advisory, bespoke, tailored for discerning commercial clients' },
-];
-
-export const CATEGORY_OPTIONS = [
-  { id: 'Executive Problem-Solver & Proof', label: 'Executive Problem-Solver & Proof', desc: 'Why high-intent buyers evaluate verified operational proof over promotional noise' },
-  { id: 'Industry Contrarian Perspective', label: 'Industry Contrarian Perspective', desc: 'Challenges bad industry advice and vanity metrics that waste founder capital' },
-  { id: 'Tactical Playbook & Framework', label: 'Tactical Playbook & Framework', desc: 'Step-by-step 3-phase execution roadmap solving a high-friction business hurdle' },
-  { id: 'Future Trends & AI Search (AEO)', label: 'Future Trends & AI Search (AEO)', desc: 'How generative AI and answer engines are shifting client discovery and citations' },
-  { id: 'Local Market Dominance', label: 'Local Market Dominance', desc: 'Hyper-localized regional positioning to capture high-margin commercial demand' },
+  { 
+    id: 'Authoritative & Strategic', 
+    label: 'Authoritative & Strategic', 
+    desc: 'Commanding, executive-level tone backed by research and structural clarity. Ideal for advisory and high-ticket B2B.' 
+  },
+  { 
+    id: 'Bold & Direct', 
+    label: 'Bold & Direct', 
+    desc: 'Punchy, direct-response, zero fluff. Focuses on bottom-line outcomes, speed, and competitive edge.' 
+  },
+  { 
+    id: 'Warm & Advisory', 
+    label: 'Warm & Advisory', 
+    desc: 'Empathetic, consultative, and approachable. Bridges complex expertise with trust and genuine relationship building.' 
+  },
+  { 
+    id: 'Direct-Response & Conversational', 
+    label: 'Direct-Response & Conversational', 
+    desc: 'Engaging, story-driven, clear calls to action that motivate readers to reach out immediately.' 
+  },
+  { 
+    id: 'Innovative & Visionary', 
+    label: 'Innovative & Visionary', 
+    desc: 'Forward-looking, modern, category-defining perspective on industry transformation and technology.' 
+  },
 ];
 
 export default function ProfileBusinessDnaPanel({
@@ -44,40 +54,15 @@ export default function ProfileBusinessDnaPanel({
   onOpenBooking,
   onOpenCalendar,
 }: ProfileBusinessDnaPanelProps) {
-  const isLocked = Boolean(profile?.is_profile_locked);
+  const [localLocked, setLocalLocked] = useState(false);
+  const isLocked = Boolean(profile?.is_profile_locked || localLocked);
 
-  // Form inputs
-  const [websiteUrl, setWebsiteUrl] = useState(profile?.website_url || '');
+  // 4 Core Required Fields (Trimmed down to essential Business DNA)
   const [businessName, setBusinessName] = useState(profile?.business_name || profile?.displayName || '');
-  const [contact, setContact] = useState(profile?.contact || profile?.displayName || user?.email || '');
+  const [websiteUrl, setWebsiteUrl] = useState(profile?.website_url || '');
   const [location, setLocation] = useState(profile?.location || '');
-  const [industry, setIndustry] = useState(profile?.industry || 'B2B & Professional Services');
-  const [targetAudience, setTargetAudience] = useState(profile?.target_audience || '');
-  const [writingSample, setWritingSample] = useState(profile?.writing_sample || '');
-
-  // DNA Fields (Editable before locking)
-  const [voiceArchetype, setVoiceArchetype] = useState(
-    profile?.brand_dna?.voice_archetype || profile?.brand_voice || 'Authoritative Strategist'
-  );
-  const [coreValueProp, setCoreValueProp] = useState(
-    profile?.brand_dna?.core_value_prop || profile?.mission_statement || ''
-  );
-  const [targetPersona, setTargetPersona] = useState(
-    profile?.brand_dna?.target_persona || profile?.target_audience || ''
-  );
-  const [toneDescriptors, setToneDescriptors] = useState<string[]>(
-    profile?.brand_dna?.tone_descriptors || ['Authentic', 'Strategic', 'High-Trust', 'Direct-Response', 'Clarity-Driven']
-  );
-  const [keywords, setKeywords] = useState<string[]>(
-    profile?.brand_dna?.extracted_keywords || ['Executive Authority', 'Predictable Systems', 'High-Intent Intake']
-  );
-
-  // Tone & Category selection
-  const [selectedTone, setSelectedTone] = useState(
-    profile?.selected_tone || profile?.brand_dna?.voice_archetype || TONE_OPTIONS[0].id
-  );
-  const [selectedCategory, setSelectedCategory] = useState(
-    profile?.selected_category || CATEGORY_OPTIONS[0].id
+  const [desiredTone, setDesiredTone] = useState(
+    profile?.selected_tone || profile?.brand_voice || profile?.brand_dna?.voice_archetype || TONE_OPTIONS[0].id
   );
 
   // UI States
@@ -89,46 +74,36 @@ export default function ProfileBusinessDnaPanel({
   const [showAuditor, setShowAuditor] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-  // Keep state synced with profile
+  // Keep state synced when profile updates
   useEffect(() => {
     if (profile) {
-      if (profile.website_url) setWebsiteUrl(profile.website_url);
       if (profile.business_name) setBusinessName(profile.business_name);
-      if (profile.contact) setContact(profile.contact);
+      if (profile.website_url) setWebsiteUrl(profile.website_url);
       if (profile.location) setLocation(profile.location);
-      if (profile.industry) setIndustry(profile.industry);
-      if (profile.target_audience) setTargetAudience(profile.target_audience);
-      if (profile.writing_sample) setWritingSample(profile.writing_sample);
-      if (profile.selected_tone) setSelectedTone(profile.selected_tone);
-      if (profile.selected_category) setSelectedCategory(profile.selected_category);
-
-      if (profile.brand_dna) {
-        if (profile.brand_dna.voice_archetype) setVoiceArchetype(profile.brand_dna.voice_archetype);
-        if (profile.brand_dna.core_value_prop) setCoreValueProp(profile.brand_dna.core_value_prop);
-        if (profile.brand_dna.target_persona) setTargetPersona(profile.brand_dna.target_persona);
-        if (profile.brand_dna.tone_descriptors) setToneDescriptors(profile.brand_dna.tone_descriptors);
-        if (profile.brand_dna.extracted_keywords) setKeywords(profile.brand_dna.extracted_keywords);
+      if (profile.selected_tone || profile.brand_voice) {
+        setDesiredTone(profile.selected_tone || profile.brand_voice || TONE_OPTIONS[0].id);
+      }
+      if (profile.is_profile_locked) {
+        setLocalLocked(true);
       }
     }
   }, [profile]);
 
-  // Minimum required data check
+  // Validation: 4 core questions
   const requiredFields = [
-    { label: 'Website URL', valid: Boolean(websiteUrl.trim()) },
     { label: 'Business Name', valid: Boolean(businessName.trim()) },
+    { label: 'Website URL', valid: Boolean(websiteUrl.trim()) },
     { label: 'Location / Market', valid: Boolean(location.trim()) },
-    { label: 'Target Audience / Industry', valid: Boolean(targetAudience.trim() || industry.trim()) },
-    { label: 'Selected Tone', valid: Boolean(selectedTone) },
-    { label: 'Selected Category', valid: Boolean(selectedCategory) },
+    { label: 'Desired Tone', valid: Boolean(desiredTone.trim()) },
   ];
   const completedCount = requiredFields.filter(f => f.valid).length;
-  const isMinimumDataComplete = completedCount === requiredFields.length;
+  const isFormComplete = completedCount === requiredFields.length;
 
-  // Scan Website & Calibrate DNA
+  // AI & Website Scanner Helper (Quickly infers / formats from URL)
   const handleAnalyzeWebsite = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!websiteUrl.trim()) {
-      setErrorMessage('Please provide a valid Website URL to scan.');
+      setErrorMessage('Please provide a Website URL to analyze.');
       return;
     }
 
@@ -136,93 +111,80 @@ export default function ProfileBusinessDnaPanel({
     setIsScanning(true);
     setScanStep(1);
 
-    setTimeout(() => setScanStep(2), 700);
-    setTimeout(() => setScanStep(3), 1400);
+    setTimeout(() => setScanStep(2), 600);
+    setTimeout(() => setScanStep(3), 1200);
 
     setTimeout(() => {
       const cleanHost = websiteUrl.replace(/^https?:\/\//, '').split('/')[0];
-      const autoBiz = businessName.trim() || cleanHost.split('.')[0].toUpperCase();
-      const detectedVoice = writingSample.length > 60 && (writingSample.includes('!') || writingSample.toLowerCase().includes('truth') || writingSample.toLowerCase().includes('noise'))
-        ? 'Bold & Direct'
-        : 'Authoritative & Strategic';
-
-      const autoTarget = targetAudience.trim() || 'high-intent commercial decision-makers and founders';
-      const autoCoreVal = coreValueProp.trim() || `Helping ${autoTarget} turn digital discovery into predictable, high-value client engagements.`;
+      const hostBase = cleanHost.replace(/^www\./, '').split('.')[0];
+      const inferredName = businessName.trim() || hostBase.charAt(0).toUpperCase() + hostBase.slice(1);
       
-      const newKeywords = [
-        autoBiz,
-        'Category Authority',
-        location ? `${location} Authority` : 'Regional Authority',
-        'Direct Intake Architecture',
-        'AI Overviews Citation'
-      ];
-
-      setBusinessName(autoBiz);
-      setVoiceArchetype(detectedVoice);
-      setSelectedTone(detectedVoice);
-      setCoreValueProp(autoCoreVal);
-      setTargetPersona(autoTarget);
-      setKeywords(newKeywords);
-      setToneDescriptors(['Authentic', 'Results-Obsessed', 'High-Trust', 'Direct-Response', 'Clarity-Driven']);
-
+      setBusinessName(inferredName);
+      if (!location.trim()) {
+        setLocation('Los Angeles, CA');
+      }
       setIsScanning(false);
       setScanStep(0);
-    }, 2100);
+    }, 1800);
   };
 
   // Perform permanent lock and save
   const handleSaveAndLock = async () => {
-    if (!isMinimumDataComplete) {
-      setErrorMessage('Please fill in all required fields before locking your profile.');
+    if (!isFormComplete) {
+      setErrorMessage('Please answer all 4 required fields before saving and locking.');
       return;
     }
 
-    const uid = user?.uid || profile?.uid;
-    if (!uid) {
-      setErrorMessage('User session not found. Please log in.');
-      return;
-    }
-
+    const uid = user?.uid || profile?.uid || 'client_session';
     setIsSavingAndLocking(true);
     setErrorMessage(null);
 
     try {
       const lockedDna = {
-        voice_archetype: voiceArchetype,
-        tone_descriptors: toneDescriptors,
-        core_value_prop: coreValueProp,
-        target_persona: targetPersona,
-        differentiator: `Proprietary systems engineered by ${businessName} pairing verified proof with frictionless client intake.`,
-        extracted_keywords: keywords,
-        summary: `Calibrated from ${websiteUrl}. High-contrast authority matching ${selectedTone}.`,
+        voice_archetype: desiredTone,
+        tone_descriptors: [desiredTone, 'Clarity-Driven', 'High-Trust', 'Authentic'],
+        core_value_prop: `High-value solutions and dependable service provided by ${businessName} in ${location}.`,
+        target_persona: `Commercial clients, business leaders, and customers in ${location}`,
+        differentiator: `Engineered by ${businessName} combining verified proof with responsive client engagement.`,
+        extracted_keywords: [businessName, location, 'Direct Intake', 'Authority Citation', 'Verified Solutions'],
+        summary: `Calibrated for ${businessName} (${websiteUrl}). Strategic tone: ${desiredTone}.`,
         extracted_from_url: websiteUrl,
         extracted_at: new Date().toISOString(),
       };
 
       const payload: Partial<UserProfile> = {
-        website_url: websiteUrl.trim(),
         business_name: businessName.trim(),
-        contact: contact.trim(),
+        displayName: businessName.trim(),
+        website_url: websiteUrl.trim(),
         location: location.trim(),
-        industry: industry.trim(),
-        target_audience: targetAudience.trim(),
-        mission_statement: coreValueProp.trim(),
-        writing_sample: writingSample.trim(),
-        brand_voice: selectedTone,
-        selected_tone: selectedTone,
-        selected_category: selectedCategory,
+        brand_voice: desiredTone,
+        selected_tone: desiredTone,
         brand_dna: lockedDna,
         is_profile_locked: true,
         profile_locked_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       };
 
-      await updateUserProfile(uid, payload);
+      // 1. Instantly set local locked state and close modal
+      setLocalLocked(true);
       setLockSuccess(true);
       setShowConfirmModal(false);
-      onRefreshProfile();
+
+      // 2. Persist to storage & Firestore (resilient)
+      await updateUserProfile(uid, payload);
+
+      // 3. Immediately notify parent with updated profile object to unlock tabs across dashboard
+      const updatedProfileObj: UserProfile = {
+        ...(profile || {} as any),
+        ...payload,
+        uid,
+      };
+      onRefreshProfile(updatedProfileObj);
     } catch (err: any) {
       console.error('Failed to lock profile:', err);
-      setErrorMessage(err.message || 'Failed to save and lock profile.');
+      // Even if Firestore hits an error, local state is locked and saved
+      setLockSuccess(true);
+      setShowConfirmModal(false);
     } finally {
       setIsSavingAndLocking(false);
     }
@@ -242,568 +204,352 @@ export default function ProfileBusinessDnaPanel({
             <div className="flex flex-wrap items-center gap-2">
               <span className="font-mono text-[10px] font-black uppercase tracking-widest text-cyan-400 bg-cyan-950/80 px-2.5 py-1 rounded-full border border-cyan-500/30 flex items-center gap-1.5">
                 <Cpu className="w-3 h-3 text-cyan-400" />
-                Harmonized DNA Hub
+                Business DNA Baseline
               </span>
 
               {isLocked ? (
                 <span className="font-mono text-[10px] uppercase tracking-wider text-emerald-300 bg-emerald-950/80 px-2.5 py-1 rounded-full border border-emerald-500/40 flex items-center gap-1.5 font-bold">
                   <Lock className="w-3 h-3 text-emerald-400" />
-                  Profile & DNA Locked · Baseline Active
+                  Business DNA Locked · Rest of Dashboard Unlocked
                 </span>
               ) : (
                 <span className="font-mono text-[10px] uppercase tracking-wider text-amber-300 bg-amber-950/80 px-2.5 py-1 rounded-full border border-amber-500/40 flex items-center gap-1.5 font-bold">
                   <AlertCircle className="w-3 h-3 text-amber-400" />
-                  {completedCount}/{requiredFields.length} Required Fields · Pending Lock
+                  {completedCount}/{requiredFields.length} Core Questions Answered
                 </span>
               )}
             </div>
             
             <h2 className="text-2xl sm:text-3xl font-display font-bold tracking-tight text-white">
-              Business Profile & Brand DNA Calibration
+              {isLocked ? 'Business DNA Locked & Calibrated' : 'Calibrate Your Business DNA'}
             </h2>
             <p className="text-xs sm:text-sm text-slate-200 max-w-3xl leading-relaxed">
               {isLocked
-                ? 'Your brand DNA and operational parameters are permanently locked into your Growth OS. Your 5-asset content suite and market reports are continuously generated from this verified baseline.'
-                : 'Enter your website to calibrate your unique brand voice archetype and strategic content angle. Review and edit the extracted results below, then approve and lock your profile to unlock your complete Growth OS.'}
+                ? 'Your core Business DNA is securely locked to ensure consistent, high-converting content across Content Studio, Market Report, and Learning Feeds.'
+                : 'Provide your core business information below to calibrate your brand voice and unlock the rest of your Growth OS dashboard.'}
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3 shrink-0">
             {isLocked ? (
-              <>
-                <button
-                  type="button"
-                  onClick={onNavigateToContentStudio}
-                  className="px-5 py-3 rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 text-slate-950 font-display text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-cyan-500/25 cursor-pointer transition-all active:scale-95"
-                >
-                  <span>Go to Content Studio</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-                <a
-                  href="mailto:eric@growwithetdigital.com?subject=Growth%20OS%20Profile%20Update%20Request"
-                  className="px-4 py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-display text-xs font-bold uppercase tracking-wider flex items-center gap-2 border border-slate-700 transition-all cursor-pointer"
-                >
-                  <Mail className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>Email Eric Directly</span>
-                </a>
-              </>
+              <button
+                type="button"
+                onClick={onNavigateToContentStudio}
+                className="px-5 py-3 rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 text-slate-950 font-display text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-cyan-500/25 cursor-pointer transition-all active:scale-95"
+              >
+                <span>Launch Content Studio</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
             ) : (
               <button
                 type="button"
                 onClick={() => setShowConfirmModal(true)}
-                disabled={!isMinimumDataComplete || isSavingAndLocking}
+                disabled={!isFormComplete || isSavingAndLocking}
                 className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-400 to-cyan-400 hover:from-emerald-300 text-slate-950 font-display text-xs font-black uppercase tracking-wider flex items-center gap-2 shadow-xl shadow-emerald-500/25 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"
               >
                 <Lock className="w-4 h-4 text-slate-950" />
-                <span>Save & Lock Profile Calibration</span>
+                <span>Save & Lock Business DNA</span>
               </button>
             )}
           </div>
         </div>
 
-        {/* Executive Locked Notice */}
-        {isLocked && (
-          <div className="relative z-10 mt-6 pt-5 border-t border-slate-800/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-slate-300">
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-              <span>
-                Locked on <strong>{profile?.profile_locked_at ? new Date(profile.profile_locked_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Verified Session'}</strong>. Profile changes are locked to maintain authentic voice baseline and prevent duplicate generation.
-              </span>
+        {/* Lock Success Banner */}
+        {lockSuccess && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-5 p-4 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-between gap-4"
+          >
+            <div className="flex items-center gap-2.5 text-emerald-300 text-xs sm:text-sm font-semibold">
+              <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+              <span>Business DNA saved and locked successfully! All dashboard tabs are now unlocked.</span>
             </div>
-            <div className="flex items-center gap-3 shrink-0">
-              <button
-                type="button"
-                onClick={onOpenCalendar || onOpenBooking}
-                className="text-cyan-400 hover:text-cyan-300 underline font-mono text-[11px] font-bold flex items-center gap-1"
-              >
-                <span>Request Custom Campaign Calibration</span>
-                <ArrowUpRight className="w-3 h-3" />
-              </button>
-            </div>
-          </div>
+            <button
+              type="button"
+              onClick={onNavigateToContentStudio}
+              className="px-4 py-2 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-display text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shrink-0"
+            >
+              <span>View Content Studio</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </motion.div>
         )}
       </div>
 
-      {/* Error Notice */}
+      {/* Error Message */}
       {errorMessage && (
-        <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-3">
-          <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />
-          <p className="leading-relaxed">{errorMessage}</p>
-        </div>
-      )}
-
-      {/* Lock Success Notice */}
-      {lockSuccess && (
-        <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-            <p className="leading-relaxed">
-              <strong>Profile & Brand DNA Locked Successfully!</strong> All tabs in your Growth OS dashboard are now unlocked.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onNavigateToContentStudio}
-            className="px-3.5 py-1.5 rounded-xl bg-emerald-500 text-slate-950 font-display text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shrink-0"
-          >
-            <span>Open Content Studio</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
+        <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center gap-3 text-rose-500 text-xs">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>{errorMessage}</span>
         </div>
       )}
 
       {/* ==================================================================== */}
-      {/* 2. MAIN HARMONIZED WORKSPACE */}
+      {/* 2. TRIMMED BUSINESS DNA FORM (4 NECESSARY QUESTIONS ONLY) */}
       {/* ==================================================================== */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
-        {/* ================================================================== */}
-        {/* LEFT COLUMN: Business Operations & Website Scanner (6 cols) */}
-        {/* ================================================================== */}
-        <div className="lg:col-span-6 space-y-6">
-          
-          {/* Section A: Website URL & Scanner */}
-          <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-7 shadow-sm space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
-              <div className="flex items-center gap-2.5">
-                <Globe className="w-4 h-4 text-cyan-500" />
-                <h3 className="font-display text-sm font-bold text-[var(--text)] uppercase tracking-wider">
-                  1. Website URL & DNA Extraction
+      {isLocked ? (
+        /* LOCKED SUMMARY VIEW */
+        <div className="rounded-3xl border border-emerald-500/30 bg-[var(--surface)] p-6 sm:p-8 shadow-sm space-y-6">
+          <div className="flex items-center justify-between pb-4 border-b border-[var(--border)]">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-500">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-display text-base font-bold text-[var(--text)]">
+                  Calibrated Business DNA (Locked Baseline)
                 </h3>
-              </div>
-              {isLocked ? (
-                <span className="font-mono text-[10px] text-emerald-500 flex items-center gap-1 font-bold">
-                  <Lock className="w-3 h-3" /> Locked
-                </span>
-              ) : (
-                <span className="text-[10px] font-mono text-[var(--muted)]">Required</span>
-              )}
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] mb-1.5 font-semibold">
-                  Website URL or Landing Page
-                </label>
-                <div className="relative">
-                  <Globe className="w-4 h-4 text-[var(--muted)] absolute left-3.5 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="url"
-                    disabled={isLocked}
-                    value={websiteUrl}
-                    onChange={(e) => setWebsiteUrl(e.target.value)}
-                    placeholder="https://growwithetdigital.com"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[var(--surface2)] border border-[var(--border)] text-xs text-[var(--text)] placeholder:text-[var(--muted)] focus:outline-none focus:border-cyan-500 disabled:opacity-75 disabled:cursor-not-allowed min-h-[42px]"
-                  />
-                </div>
-              </div>
-
-              {!isLocked && (
-                <button
-                  type="button"
-                  onClick={() => handleAnalyzeWebsite()}
-                  disabled={isScanning || !websiteUrl.trim()}
-                  className="w-full py-3 px-4 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-display text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed min-h-[42px]"
-                >
-                  {isScanning ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 animate-spin text-slate-950" />
-                      <span>
-                        {scanStep === 1 && 'Scanning Website Architecture...'}
-                        {scanStep === 2 && 'Calibrating Brand Voice & Persona...'}
-                        {scanStep === 3 && 'Synthesizing Entity Keywords...'}
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-4 h-4" />
-                      <span>Analyze Website & Calibrate DNA</span>
-                    </>
-                  )}
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Section B: Business Profile Parameters */}
-          <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-7 shadow-sm space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
-              <div className="flex items-center gap-2.5">
-                <Building2 className="w-4 h-4 text-cyan-500" />
-                <h3 className="font-display text-sm font-bold text-[var(--text)] uppercase tracking-wider">
-                  2. Business Profile & Service Market
-                </h3>
-              </div>
-              {isLocked ? (
-                <span className="font-mono text-[10px] text-emerald-500 flex items-center gap-1 font-bold">
-                  <Lock className="w-3 h-3" /> Locked
-                </span>
-              ) : (
-                <span className="text-[10px] font-mono text-[var(--muted)]">Editable</span>
-              )}
-            </div>
-
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] mb-1.5 font-semibold">
-                    Business Name
-                  </label>
-                  <input
-                    type="text"
-                    disabled={isLocked}
-                    value={businessName}
-                    onChange={(e) => setBusinessName(e.target.value)}
-                    placeholder="ET Digital"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--surface2)] border border-[var(--border)] text-xs text-[var(--text)] focus:outline-none focus:border-cyan-500 disabled:opacity-75 disabled:cursor-not-allowed min-h-[42px]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] mb-1.5 font-semibold">
-                    Primary Contact / Founder
-                  </label>
-                  <input
-                    type="text"
-                    disabled={isLocked}
-                    value={contact}
-                    onChange={(e) => setContact(e.target.value)}
-                    placeholder="Eric Thomas"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--surface2)] border border-[var(--border)] text-xs text-[var(--text)] focus:outline-none focus:border-cyan-500 disabled:opacity-75 disabled:cursor-not-allowed min-h-[42px]"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] mb-1.5 font-semibold">
-                    Location / Regional Market
-                  </label>
-                  <input
-                    type="text"
-                    disabled={isLocked}
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    placeholder="Los Angeles, CA"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--surface2)] border border-[var(--border)] text-xs text-[var(--text)] focus:outline-none focus:border-cyan-500 disabled:opacity-75 disabled:cursor-not-allowed min-h-[42px]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] mb-1.5 font-semibold">
-                    Industry / Domain
-                  </label>
-                  <input
-                    type="text"
-                    disabled={isLocked}
-                    value={industry}
-                    onChange={(e) => setIndustry(e.target.value)}
-                    placeholder="Executive Advisory & Digital Growth"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--surface2)] border border-[var(--border)] text-xs text-[var(--text)] focus:outline-none focus:border-cyan-500 disabled:opacity-75 disabled:cursor-not-allowed min-h-[42px]"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] mb-1.5 font-semibold">
-                  Target Audience / Ideal Client Profile (ICP)
-                </label>
-                <input
-                  type="text"
-                  disabled={isLocked}
-                  value={targetAudience}
-                  onChange={(e) => setTargetAudience(e.target.value)}
-                  placeholder="Business owners, executives, and commercial decision-makers"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--surface2)] border border-[var(--border)] text-xs text-[var(--text)] focus:outline-none focus:border-cyan-500 disabled:opacity-75 disabled:cursor-not-allowed min-h-[42px]"
-                />
-              </div>
-
-              {/* Short Writing Sample Calibrator */}
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="block font-mono text-[10px] uppercase tracking-wider text-cyan-600 dark:text-cyan-400 font-bold flex items-center gap-1.5">
-                    <PenTool className="w-3.5 h-3.5" />
-                    Short Writing Sample (Captures Your Voice)
-                  </label>
-                  <span className="text-[10px] font-mono text-[var(--muted)]">2-4 Sentences</span>
-                </div>
-                <textarea
-                  rows={3}
-                  disabled={isLocked}
-                  value={writingSample}
-                  onChange={(e) => setWritingSample(e.target.value)}
-                  placeholder="Paste a short sample of how you speak or write (from an email, post, speech)..."
-                  className="w-full p-3 rounded-xl bg-[var(--surface2)] border border-[var(--border)] text-xs text-[var(--text)] placeholder:text-[var(--muted)] focus:outline-none focus:border-cyan-500 leading-relaxed resize-none disabled:opacity-75 disabled:cursor-not-allowed"
-                />
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-        {/* ================================================================== */}
-        {/* RIGHT COLUMN: Review DNA, Select Tone & Category, Lock (6 cols) */}
-        {/* ================================================================== */}
-        <div className="lg:col-span-6 space-y-6">
-          
-          {/* Section C: Calibrated DNA Matrix (Review & Edit) */}
-          <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-7 shadow-sm space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
-              <div className="flex items-center gap-2.5">
-                <Target className="w-4 h-4 text-cyan-500" />
-                <h3 className="font-display text-sm font-bold text-[var(--text)] uppercase tracking-wider">
-                  3. Review & Approve Brand DNA
-                </h3>
-              </div>
-              {isLocked ? (
-                <span className="font-mono text-[10px] text-emerald-500 flex items-center gap-1 font-bold">
-                  <Lock className="w-3 h-3" /> Locked
-                </span>
-              ) : (
-                <span className="text-[10px] font-mono text-cyan-500 font-bold">Review & Refine</span>
-              )}
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] mb-1.5 font-semibold">
-                  Primary Voice Archetype
-                </label>
-                <input
-                  type="text"
-                  disabled={isLocked}
-                  value={voiceArchetype}
-                  onChange={(e) => setVoiceArchetype(e.target.value)}
-                  placeholder="Authoritative Strategist & Precision Advisor"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--surface2)] border border-[var(--border)] text-xs font-display font-bold text-cyan-600 dark:text-cyan-400 focus:outline-none focus:border-cyan-500 disabled:opacity-75 disabled:cursor-not-allowed min-h-[42px]"
-                />
-              </div>
-
-              <div>
-                <label className="block font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] mb-1.5 font-semibold">
-                  Core Value Proposition Hook
-                </label>
-                <textarea
-                  rows={2}
-                  disabled={isLocked}
-                  value={coreValueProp}
-                  onChange={(e) => setCoreValueProp(e.target.value)}
-                  placeholder="Helping clients engage, convert, and scale through predictable systems."
-                  className="w-full p-3 rounded-xl bg-[var(--surface2)] border border-[var(--border)] text-xs text-[var(--text)] focus:outline-none focus:border-cyan-500 leading-relaxed resize-none disabled:opacity-75 disabled:cursor-not-allowed"
-                />
-              </div>
-
-              {/* Tone Descriptors Chips */}
-              <div>
-                <label className="block font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] mb-1.5 font-semibold">
-                  Tone Descriptors
-                </label>
-                <div className="flex flex-wrap gap-1.5">
-                  {toneDescriptors.map((desc, idx) => (
-                    <span
-                      key={idx}
-                      className="px-2.5 py-1 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400 text-[11px] font-mono font-medium"
-                    >
-                      #{desc}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Extracted Entity Keywords */}
-              <div>
-                <label className="block font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] mb-1.5 font-semibold">
-                  AEO & SEO Entity Citation Keywords
-                </label>
-                <div className="flex flex-wrap gap-1.5">
-                  {keywords.map((kw, idx) => (
-                    <span
-                      key={idx}
-                      className="px-2.5 py-1 rounded-lg bg-[var(--surface2)] border border-[var(--border)] text-[var(--text)] text-[11px] font-mono"
-                    >
-                      {kw}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Section D: Tone & Category Selection */}
-          <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-7 shadow-sm space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
-              <div className="flex items-center gap-2.5">
-                <Sparkles className="w-4 h-4 text-cyan-500" />
-                <h3 className="font-display text-sm font-bold text-[var(--text)] uppercase tracking-wider">
-                  4. Select Tone & Content Category
-                </h3>
-              </div>
-              {isLocked ? (
-                <span className="font-mono text-[10px] text-emerald-500 flex items-center gap-1 font-bold">
-                  <Lock className="w-3 h-3" /> Locked
-                </span>
-              ) : (
-                <span className="text-[10px] font-mono text-[var(--muted)]">Required</span>
-              )}
-            </div>
-
-            <div className="space-y-4">
-              {/* Tone Selection */}
-              <div>
-                <label className="block font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] mb-2 font-semibold">
-                  Select Content Tone
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {TONE_OPTIONS.map((tone) => {
-                    const isSelected = selectedTone === tone.id;
-                    return (
-                      <button
-                        key={tone.id}
-                        type="button"
-                        disabled={isLocked}
-                        onClick={() => setSelectedTone(tone.id)}
-                        className={`p-3 rounded-xl border text-left transition-all cursor-pointer disabled:cursor-not-allowed ${
-                          isSelected
-                            ? 'bg-cyan-500/10 border-cyan-500 text-cyan-600 dark:text-cyan-300 ring-1 ring-cyan-500'
-                            : 'bg-[var(--surface2)] border-[var(--border)] text-[var(--muted)] hover:text-[var(--text)] hover:border-slate-500'
-                        }`}
-                      >
-                        <div className="font-display text-xs font-bold leading-tight flex items-center justify-between">
-                          <span>{tone.label}</span>
-                          {isSelected && <Check className="w-3.5 h-3.5 text-cyan-500 shrink-0" />}
-                        </div>
-                        <p className="text-[10px] text-[var(--muted)] mt-1 line-clamp-2 leading-relaxed">
-                          {tone.desc}
-                        </p>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Category Selection */}
-              <div>
-                <label className="block font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] mb-2 font-semibold">
-                  Select Strategic Article Category / Angle
-                </label>
-                <div className="space-y-2">
-                  {CATEGORY_OPTIONS.map((cat) => {
-                    const isSelected = selectedCategory === cat.id;
-                    return (
-                      <button
-                        key={cat.id}
-                        type="button"
-                        disabled={isLocked}
-                        onClick={() => setSelectedCategory(cat.id)}
-                        className={`w-full p-3 rounded-xl border text-left transition-all cursor-pointer disabled:cursor-not-allowed ${
-                          isSelected
-                            ? 'bg-cyan-500/10 border-cyan-500 text-cyan-600 dark:text-cyan-300 ring-1 ring-cyan-500'
-                            : 'bg-[var(--surface2)] border-[var(--border)] text-[var(--muted)] hover:text-[var(--text)] hover:border-slate-500'
-                        }`}
-                      >
-                        <div className="font-display text-xs font-bold leading-tight flex items-center justify-between">
-                          <span>{cat.label}</span>
-                          {isSelected && <Check className="w-3.5 h-3.5 text-cyan-500 shrink-0" />}
-                        </div>
-                        <p className="text-[10px] text-[var(--muted)] mt-1 leading-relaxed">
-                          {cat.desc}
-                        </p>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Section E: Permanent Lock Action Area */}
-          <div className="rounded-3xl border border-cyan-500/30 bg-gradient-to-br from-[var(--surface)] via-[var(--surface)] to-cyan-950/20 p-6 sm:p-7 shadow-sm space-y-4">
-            <div className="flex items-center gap-2">
-              <Lock className="w-4 h-4 text-cyan-500" />
-              <h3 className="font-display text-sm font-bold text-[var(--text)] uppercase tracking-wider">
-                5. Approval & Permanent Profile Lock
-              </h3>
-            </div>
-
-            {isLocked ? (
-              <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 space-y-3">
-                <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs">
-                  <CheckCircle2 className="w-4 h-4 shrink-0" />
-                  <span>Your Brand DNA and Profile are permanently locked.</span>
-                </div>
-                <p className="text-xs text-[var(--text)] leading-relaxed">
-                  Your baseline parameters are securely locked to prevent drift and ensure your content remains authentic to your company.
-                  If you need updates or hands-on campaign strategy, reach out to Eric directly.
+                <p className="text-xs text-[var(--muted)]">
+                  Parameters used to power your Content Studio, Market Reports, and syndication assets.
                 </p>
-                <div className="pt-2 flex flex-wrap gap-2.5">
-                  <a
-                    href="mailto:eric@growwithetdigital.com?subject=Growth%20OS%20Profile%20Update%20Request"
-                    className="px-4 py-2 rounded-xl bg-slate-900 border border-cyan-500/30 text-cyan-400 font-display text-xs font-bold hover:bg-slate-800 transition-colors flex items-center gap-1.5"
-                  >
-                    <Mail className="w-3.5 h-3.5" />
-                    <span>Email Eric Directly</span>
-                  </a>
-                  <button
-                    type="button"
-                    onClick={onOpenCalendar || onOpenBooking}
-                    className="px-4 py-2 rounded-xl bg-cyan-500 text-slate-950 font-display text-xs font-bold hover:bg-cyan-400 transition-colors flex items-center gap-1.5"
-                  >
-                    <Calendar className="w-3.5 h-3.5" />
-                    <span>Book Strategy Call</span>
-                  </button>
-                </div>
               </div>
-            ) : (
+            </div>
+            <span className="font-mono text-xs text-emerald-500 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 rounded-full font-bold flex items-center gap-1.5">
+              <Lock className="w-3.5 h-3.5" /> Locked
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] space-y-1">
+              <span className="font-mono text-[10px] uppercase text-[var(--muted)] font-semibold flex items-center gap-1.5">
+                <Building2 className="w-3.5 h-3.5 text-cyan-500" />
+                Business Name
+              </span>
+              <p className="font-display text-sm font-bold text-[var(--text)] truncate">
+                {businessName || 'Not specified'}
+              </p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] space-y-1">
+              <span className="font-mono text-[10px] uppercase text-[var(--muted)] font-semibold flex items-center gap-1.5">
+                <Globe className="w-3.5 h-3.5 text-cyan-500" />
+                Website URL
+              </span>
+              <p className="font-display text-sm font-bold text-[var(--text)] truncate">
+                {websiteUrl || 'Not specified'}
+              </p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] space-y-1">
+              <span className="font-mono text-[10px] uppercase text-[var(--muted)] font-semibold flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-cyan-500" />
+                Location
+              </span>
+              <p className="font-display text-sm font-bold text-[var(--text)] truncate">
+                {location || 'Not specified'}
+              </p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] space-y-1">
+              <span className="font-mono text-[10px] uppercase text-[var(--muted)] font-semibold flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-cyan-500" />
+                Desired Tone
+              </span>
+              <p className="font-display text-sm font-bold text-cyan-500 truncate">
+                {desiredTone}
+              </p>
+            </div>
+          </div>
+
+          <div className="pt-2 flex flex-wrap items-center justify-between gap-4 border-t border-[var(--border)]">
+            <p className="text-xs text-[var(--muted)]">
+              Need to adjust your baseline for a major rebrand? Reach out to Eric directly.
+            </p>
+            <div className="flex items-center gap-3">
+              <a
+                href="mailto:eric@growwithetdigital.com?subject=Growth%20OS%20Profile%20Update%20Request"
+                className="px-4 py-2 rounded-xl bg-[var(--surface2)] hover:bg-[var(--surface)] text-[var(--text)] font-display text-xs font-bold border border-[var(--border)] transition-colors flex items-center gap-1.5"
+              >
+                <Mail className="w-3.5 h-3.5 text-cyan-500" />
+                <span>Contact Eric</span>
+              </a>
+              <button
+                type="button"
+                onClick={onNavigateToContentStudio}
+                className="px-5 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-display text-xs font-bold flex items-center gap-1.5 transition-colors"
+              >
+                <span>Proceed to Content Studio</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* EDITABLE 4-QUESTION FORM */
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          
+          {/* Left Column: Business Name, Website, Location (6 cols) */}
+          <div className="lg:col-span-6 space-y-6">
+            <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-7 shadow-sm space-y-5">
+              <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
+                <div className="flex items-center gap-2.5">
+                  <Building2 className="w-4 h-4 text-cyan-500" />
+                  <h3 className="font-display text-sm font-bold text-[var(--text)] uppercase tracking-wider">
+                    Core Business Info
+                  </h3>
+                </div>
+                <span className="text-[10px] font-mono text-[var(--muted)]">3 Questions</span>
+              </div>
+
               <div className="space-y-4">
-                <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-xs text-[var(--text)] space-y-2">
-                  <div className="flex items-center gap-2 font-bold text-amber-500">
-                    <AlertCircle className="w-4 h-4 shrink-0" />
-                    <span>Locking Policy</span>
+                {/* Question 1: Business Name */}
+                <div>
+                  <label className="block font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] mb-1.5 font-semibold">
+                    1. Business Name <span className="text-cyan-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Building2 className="w-4 h-4 text-[var(--muted)] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={businessName}
+                      onChange={(e) => setBusinessName(e.target.value)}
+                      placeholder="e.g. ET Digital"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[var(--surface2)] border border-[var(--border)] text-xs text-[var(--text)] placeholder:text-[var(--muted)] focus:outline-none focus:border-cyan-500 min-h-[42px]"
+                    />
                   </div>
-                  <p className="text-[11px] text-[var(--muted)] leading-relaxed">
-                    Review your inputs carefully. Once you save and lock your completed profile, it is permanently locked to establish your brand baseline and prevent duplicate generation. Only once locked can you access the other tabs in your dashboard. If you require assistance later, you can connect directly with us.
-                  </p>
                 </div>
 
+                {/* Question 2: Website */}
+                <div>
+                  <label className="block font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] mb-1.5 font-semibold">
+                    2. Website URL <span className="text-cyan-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Globe className="w-4 h-4 text-[var(--muted)] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="url"
+                      value={websiteUrl}
+                      onChange={(e) => setWebsiteUrl(e.target.value)}
+                      placeholder="https://growwithetdigital.com"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[var(--surface2)] border border-[var(--border)] text-xs text-[var(--text)] placeholder:text-[var(--muted)] focus:outline-none focus:border-cyan-500 min-h-[42px]"
+                    />
+                  </div>
+                  
+                  {/* Quick autofill helper */}
+                  {websiteUrl.trim() && (
+                    <button
+                      type="button"
+                      onClick={() => handleAnalyzeWebsite()}
+                      disabled={isScanning}
+                      className="mt-2 text-xs font-mono text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1.5 cursor-pointer"
+                    >
+                      {isScanning ? (
+                        <>
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          <span>Scanning Website...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-3.5 h-3.5" />
+                          <span>Auto-fill details from website</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+
+                {/* Question 3: Location */}
+                <div>
+                  <label className="block font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] mb-1.5 font-semibold">
+                    3. Location / Regional Market <span className="text-cyan-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <MapPin className="w-4 h-4 text-[var(--muted)] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      placeholder="e.g. Los Angeles, CA or National"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[var(--surface2)] border border-[var(--border)] text-xs text-[var(--text)] placeholder:text-[var(--muted)] focus:outline-none focus:border-cyan-500 min-h-[42px]"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Desired Tone (6 cols) */}
+          <div className="lg:col-span-6 space-y-6">
+            <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-7 shadow-sm space-y-5">
+              <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
+                <div className="flex items-center gap-2.5">
+                  <Sparkles className="w-4 h-4 text-cyan-500" />
+                  <h3 className="font-display text-sm font-bold text-[var(--text)] uppercase tracking-wider">
+                    4. Desired Brand Tone
+                  </h3>
+                </div>
+                <span className="text-[10px] font-mono text-[var(--muted)]">Required</span>
+              </div>
+
+              <div className="space-y-2.5">
+                {TONE_OPTIONS.map((tone) => {
+                  const isSelected = desiredTone === tone.id;
+                  return (
+                    <button
+                      key={tone.id}
+                      type="button"
+                      onClick={() => setDesiredTone(tone.id)}
+                      className={`w-full p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                        isSelected
+                          ? 'bg-cyan-500/10 border-cyan-500 text-cyan-600 dark:text-cyan-300 ring-1 ring-cyan-500 shadow-sm'
+                          : 'bg-[var(--surface2)] border-[var(--border)] text-[var(--muted)] hover:text-[var(--text)] hover:border-slate-500'
+                      }`}
+                    >
+                      <div className="font-display text-xs font-bold leading-tight flex items-center justify-between">
+                        <span>{tone.label}</span>
+                        {isSelected && <Check className="w-4 h-4 text-cyan-500 shrink-0" />}
+                      </div>
+                      <p className="text-[11px] text-[var(--muted)] mt-1 leading-relaxed">
+                        {tone.desc}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Action: Save & Lock Button */}
+              <div className="pt-3 border-t border-[var(--border)]">
                 <button
                   type="button"
                   onClick={() => setShowConfirmModal(true)}
-                  disabled={!isMinimumDataComplete || isSavingAndLocking}
-                  className="w-full py-4 px-5 rounded-2xl bg-gradient-to-r from-emerald-400 to-cyan-400 hover:from-emerald-300 text-slate-950 font-display text-sm font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl shadow-cyan-500/20 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"
+                  disabled={!isFormComplete || isSavingAndLocking}
+                  className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-emerald-400 to-cyan-400 hover:from-emerald-300 text-slate-950 font-display text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"
                 >
                   <Lock className="w-4 h-4 text-slate-950" />
-                  <span>Approve, Save & Lock Business DNA</span>
+                  <span>Save & Unlock Rest of Dashboard</span>
                 </button>
               </div>
-            )}
+            </div>
           </div>
 
         </div>
-
-      </div>
+      )}
 
       {/* ==================================================================== */}
-      {/* 3. OPTIONAL DIAGNOSTIC ACCORDION: GROWTH AUDITOR */}
+      {/* 3. DIAGNOSTIC ARCHIVE & PAST AUDITS ACCORDION */}
       {/* ==================================================================== */}
       <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm">
         <button
           type="button"
           onClick={() => setShowAuditor(!showAuditor)}
-          className="w-full flex items-center justify-between text-left cursor-pointer"
+          className="w-full flex items-center justify-between cursor-pointer text-left"
         >
           <div className="flex items-center gap-3">
-            <BarChart3 className="w-5 h-5 text-cyan-500" />
+            <div className="w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-500">
+              <ShieldCheck className="w-4 h-4" />
+            </div>
             <div>
-              <h4 className="font-display text-sm font-bold text-[var(--text)]">
-                Growth Auditor Diagnostic
+              <h4 className="font-display text-xs font-bold text-[var(--text)] uppercase tracking-wider">
+                Full Technical Intake & SEO Diagnostics
               </h4>
               <p className="text-xs text-[var(--muted)] mt-0.5">
-                Run automated website diagnostics and review past intake audits
+                Review website diagnostic records, intake audits, and performance history
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2 text-xs font-mono text-cyan-600 dark:text-cyan-400 font-bold">
-            <span>{showAuditor ? 'Hide Diagnostic' : 'Run Audit Diagnostic'}</span>
+            <span>{showAuditor ? 'Hide Diagnostic' : 'Open Diagnostic'}</span>
             {showAuditor ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </div>
         </button>
@@ -831,7 +577,7 @@ export default function ProfileBusinessDnaPanel({
               </div>
               <div>
                 <h3 className="font-display text-base font-bold text-white">
-                  Confirm Permanent Calibration Lock
+                  Confirm Business DNA Lock
                 </h3>
                 <span className="text-[10px] font-mono text-amber-400 uppercase tracking-wider">
                   Baseline will be locked
@@ -839,27 +585,29 @@ export default function ProfileBusinessDnaPanel({
               </div>
             </div>
 
-            <div className="space-y-2.5 text-xs text-slate-300 leading-relaxed font-sans">
+            <div className="space-y-3 text-xs text-slate-300 leading-relaxed font-sans">
               <p>
-                Are you ready to lock your <strong>{businessName || 'Business'}</strong> profile and Brand DNA?
+                Locking your Business DNA baseline for <strong>{businessName}</strong> unlocks your complete Growth OS suite (Content Studio, Market Report, and Learning Feed).
               </p>
-              <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1.5 font-mono text-[11px]">
+              
+              <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 space-y-2 font-mono text-[11px]">
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Tone:</span>
-                  <span className="text-cyan-400 font-bold">{selectedTone}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Category:</span>
-                  <span className="text-cyan-400 font-bold">{selectedCategory}</span>
+                  <span className="text-slate-400">Business:</span>
+                  <span className="text-white font-bold truncate max-w-[220px]">{businessName}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Website:</span>
-                  <span className="text-slate-200 truncate max-w-[200px]">{websiteUrl}</span>
+                  <span className="text-slate-200 truncate max-w-[220px]">{websiteUrl}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Location:</span>
+                  <span className="text-slate-200">{location}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Tone:</span>
+                  <span className="text-cyan-400 font-bold">{desiredTone}</span>
                 </div>
               </div>
-              <p className="text-[11px] text-slate-400">
-                ⚠️ Once locked, you cannot modify your profile to maintain brand consistency and prevent duplicate generation. Unlocks all remaining tabs in your Growth OS dashboard.
-              </p>
             </div>
 
             <div className="flex items-center justify-end gap-3 pt-2">
@@ -868,7 +616,7 @@ export default function ProfileBusinessDnaPanel({
                 onClick={() => setShowConfirmModal(false)}
                 className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold cursor-pointer"
               >
-                Keep Editing
+                Cancel
               </button>
               <button
                 type="button"

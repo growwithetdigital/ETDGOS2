@@ -39,7 +39,7 @@ import Logo from '../Logo';
 interface WhiteboardShellProps {
   user: any;
   profile: UserProfile | null;
-  onRefreshProfile: () => void;
+  onRefreshProfile: (updatedProfile?: UserProfile) => void;
   onCloseDashboard: () => void;
   onOpenBooking: () => void;
   onSignOut?: () => void;
@@ -260,37 +260,42 @@ export default function WhiteboardShell({
   const dashboardTabs = [
     { 
       id: 'profile_dna' as NavTabId, 
-      label: 'Profile & Business DNA', 
+      label: 'Business DNA', 
+      fullLabel: 'Profile & Business DNA',
       icon: Cpu, 
-      badge: isProfileLocked ? 'Locked & Active' : 'Setup Required',
+      badge: isProfileLocked ? 'Active' : 'Setup',
       isGated: false
     },
     { 
       id: 'content_studio' as NavTabId, 
       label: 'Content Studio', 
+      fullLabel: 'Content Studio',
       icon: isProfileLocked ? Layers : Lock, 
-      badge: isProfileLocked ? '1-Asset Suite' : 'Locked',
+      badge: isProfileLocked ? 'Suite' : 'Locked',
       isGated: !isProfileLocked
     },
     { 
       id: 'market_report' as NavTabId, 
-      label: 'Industry Market Report', 
+      label: 'Market Report', 
+      fullLabel: 'Industry Market Report',
       icon: isProfileLocked ? FileBarChart : Lock, 
-      badge: isProfileLocked ? 'Trailing 30D–YTD' : 'Locked',
+      badge: isProfileLocked ? 'Report' : 'Locked',
       isGated: !isProfileLocked
     },
     { 
       id: 'learning_feed' as NavTabId, 
       label: 'Learning Feed', 
+      fullLabel: 'Learning Feed',
       icon: isProfileLocked ? Tv : Lock, 
-      badge: isProfileLocked ? '7 Channels' : 'Locked',
+      badge: isProfileLocked ? 'Feeds' : 'Locked',
       isGated: !isProfileLocked
     },
     { 
       id: 'founder_note' as NavTabId, 
       label: "Founder's Note", 
+      fullLabel: "Founder's Note",
       icon: isProfileLocked ? Heart : Lock, 
-      badge: isProfileLocked ? 'Closing Note' : 'Locked',
+      badge: isProfileLocked ? 'Note' : 'Locked',
       isGated: !isProfileLocked
     },
   ];
@@ -480,10 +485,10 @@ export default function WhiteboardShell({
       </header>
 
       {/* ==================================================================== */}
-      {/* 3. DYNAMIC GAMING / VISIONOS NAVIGATION DOCK */}
+      {/* 3. DYNAMIC NAVIGATION DOCK (100% VISIBLE, NO HORIZONTAL SCROLL) */}
       {/* ==================================================================== */}
-      <div className="bg-[var(--surface2)]/80 border-b border-[var(--border)] px-4 sm:px-8 sticky top-[57px] z-30 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto flex items-center gap-2 overflow-x-auto py-2.5 no-scrollbar">
+      <div className="bg-[var(--surface2)]/90 border-b border-[var(--border)] px-2 sm:px-4 md:px-8 sticky top-[57px] z-30 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto grid grid-cols-5 gap-1 sm:gap-2 py-2 w-full">
           {activeNavItems.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -491,22 +496,23 @@ export default function WhiteboardShell({
               <motion.button
                 key={tab.id}
                 type="button"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.97 }}
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => handleTabClick(tab.id as NavTabId, tab.isGated)}
                 id={`dashboard-tab-${tab.id}`}
-                className={`relative px-4 py-2 rounded-xl font-display text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer shrink-0 ${
+                title={tab.fullLabel || tab.label}
+                className={`relative px-1 sm:px-3 py-2 rounded-xl font-display text-[10px] sm:text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1 sm:gap-1.5 transition-all cursor-pointer w-full text-center truncate ${
                   isActive
-                    ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-slate-950 shadow-md shadow-cyan-500/25 font-black scale-100'
+                    ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-slate-950 shadow-md shadow-cyan-500/25 font-black'
                     : tab.isGated
                     ? 'text-[var(--muted)]/60 hover:text-[var(--muted)] hover:bg-[var(--surface)] border border-dashed border-[var(--border)]'
                     : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--surface)] border border-transparent hover:border-[var(--border)]'
                 }`}
               >
-                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-slate-950' : tab.isGated ? 'text-amber-400/80' : 'text-[var(--accent)]'}`} />
-                <span>{tab.label}</span>
+                <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-slate-950' : tab.isGated ? 'text-amber-400/80' : 'text-[var(--accent)]'}`} />
+                <span className="truncate">{tab.label}</span>
                 {'badge' in tab && (
-                  <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded font-semibold ${
+                  <span className={`hidden lg:inline-flex text-[9px] font-mono px-1.5 py-0.5 rounded font-semibold shrink-0 ${
                     isActive ? 'bg-slate-950/20 text-slate-950' : tab.isGated ? 'bg-amber-950/60 text-amber-400 border border-amber-500/30' : 'bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/30'
                   }`}>
                     {tab.badge}
