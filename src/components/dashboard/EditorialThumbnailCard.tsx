@@ -29,20 +29,21 @@ export interface ImageFormatOption {
 export const IMAGE_FORMAT_OPTIONS: ImageFormatOption[] = [
   {
     id: 'linkedin_fb_landscape',
-    name: 'LinkedIn & Facebook',
+    name: 'LinkedIn / Facebook',
     platform: 'LinkedIn & Facebook',
     ratioLabel: '1.91:1 Landscape',
     dimensions: '1200 x 628',
     width: 1200,
     height: 628,
     renderIcons: () => (
-      <div className="flex items-center -space-x-1">
+      <div className="flex items-center gap-1">
         <Linkedin className="w-4 h-4 text-[#0A66C2]" />
+        <span className="text-xs text-[var(--muted)] font-mono font-bold">/</span>
         <Facebook className="w-4 h-4 text-[#1877F2]" />
       </div>
     ),
     aspectClass: 'aspect-[1200/628]',
-    fileSuffix: 'linkedin-facebook-1200x628',
+    fileSuffix: 'linkedin-facebook',
     description: 'Paired standard landscape format for LinkedIn and Facebook feeds'
   },
   {
@@ -55,7 +56,7 @@ export const IMAGE_FORMAT_OPTIONS: ImageFormatOption[] = [
     height: 1080,
     renderIcons: () => <Instagram className="w-4 h-4 text-[#E4405F]" />,
     aspectClass: 'aspect-square',
-    fileSuffix: 'instagram-square-1080x1080',
+    fileSuffix: 'instagram-square',
     description: 'Standard 1:1 square post for Instagram feed grid'
   },
   {
@@ -68,7 +69,7 @@ export const IMAGE_FORMAT_OPTIONS: ImageFormatOption[] = [
     height: 675,
     renderIcons: () => <XIcon className="w-3.5 h-3.5 text-[var(--text)]" />,
     aspectClass: 'aspect-[16/9]',
-    fileSuffix: 'x-post-1200x675',
+    fileSuffix: 'x-post',
     description: 'High-engagement 16:9 widescreen post for X feed'
   },
   {
@@ -81,7 +82,7 @@ export const IMAGE_FORMAT_OPTIONS: ImageFormatOption[] = [
     height: 400,
     renderIcons: () => <Mail className="w-4 h-4 text-purple-500" />,
     aspectClass: 'aspect-[3/1]',
-    fileSuffix: 'email-header-1200x400',
+    fileSuffix: 'email-header',
     description: 'Horizontal banner sized for email campaigns and client newsletters'
   },
   {
@@ -94,21 +95,27 @@ export const IMAGE_FORMAT_OPTIONS: ImageFormatOption[] = [
     height: 900,
     renderIcons: () => <Globe className="w-4 h-4 text-amber-500" />,
     aspectClass: 'aspect-[4/3]',
-    fileSuffix: 'gbp-update-1200x900',
+    fileSuffix: 'gbp-update',
     description: 'Optimal 4:3 scale for Google Business Profile local search posts'
   },
   {
     id: 'story_vertical',
-    name: 'Stories & Reels',
-    platform: 'Stories & Reels',
-    ratioLabel: '9:16 Vertical',
+    name: 'IG / FB Story',
+    platform: 'Instagram & Facebook Stories (9:16)',
+    ratioLabel: '9:16 Vertical Story',
     dimensions: '1080 x 1920',
     width: 1080,
     height: 1920,
-    renderIcons: () => <Smartphone className="w-4 h-4 text-cyan-500" />,
+    renderIcons: () => (
+      <div className="flex items-center gap-1">
+        <Instagram className="w-4 h-4 text-[#E4405F]" />
+        <span className="text-xs text-[var(--muted)] font-mono font-bold">/</span>
+        <Facebook className="w-4 h-4 text-[#1877F2]" />
+      </div>
+    ),
     aspectClass: 'aspect-[9/16] max-h-[520px] mx-auto',
-    fileSuffix: 'story-1080x1920',
-    description: 'Full-screen mobile story format for Instagram, Facebook, and TikTok'
+    fileSuffix: 'ig-fb-story-9x16',
+    description: 'Full-screen 9:16 vertical format (1080 × 1920) sized specifically for Instagram & Facebook Stories'
   }
 ];
 
@@ -628,7 +635,7 @@ export default function EditorialThumbnailCard({
                 Featured Content Graphic
               </span>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-500 font-semibold border border-cyan-500/30">
-                {activeFormat.dimensions}
+                {activeFormat.name} · {activeFormat.ratioLabel}
               </span>
             </div>
             <p className="text-[11px] text-[var(--muted)]">
@@ -717,7 +724,7 @@ export default function EditorialThumbnailCard({
               >
                 <div className="flex items-center justify-between w-full">
                   <div className="shrink-0">{fmt.renderIcons()}</div>
-                  <span className="text-[10px] font-mono font-bold ml-1 opacity-90">{fmt.dimensions}</span>
+                  <span className="text-[10px] font-mono font-bold ml-1 opacity-90">{fmt.ratioLabel.split(' ')[0]}</span>
                 </div>
                 <div className="mt-1.5 font-display text-[11px] font-bold truncate">
                   {fmt.name}
@@ -773,7 +780,7 @@ export default function EditorialThumbnailCard({
             )}
           </div>
 
-          {/* Bottom Bar: OVERLAY OF BUSINESS NAME & WEBSITE */}
+          {/* Bottom Bar: OVERLAY OF BUSINESS NAME & WEBSITE (NO DIMENSIONS ON IMAGE) */}
           <div className="relative z-10 pt-2.5 border-t border-white/20 flex items-center justify-between text-xs text-white">
             <div>
               <span className="font-bold font-sans text-white text-xs sm:text-sm block tracking-tight truncate max-w-[200px] sm:max-w-none">
@@ -786,10 +793,7 @@ export default function EditorialThumbnailCard({
 
             <div className="text-right">
               <span className="font-mono text-[9px] uppercase tracking-wider text-cyan-300 block font-bold">
-                {activeFormat.id === 'gbp_update' ? 'GBP Citation' : 'Verified Proof'}
-              </span>
-              <span className="text-[9px] text-slate-400 font-mono">
-                {activeFormat.dimensions}
+                {activeFormat.id === 'gbp_update' ? 'GBP Citation' : 'Verified Authority'}
               </span>
             </div>
           </div>
@@ -927,12 +931,12 @@ export default function EditorialThumbnailCard({
             onClick={() => handleDownloadSingleFormat(activeFormat)}
             disabled={isDownloading}
             className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-display text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-md shadow-cyan-500/20 active:scale-95 disabled:opacity-50"
-            title={`Export ${activeFormat.name} (${activeFormat.dimensions})`}
+            title={`Export ${activeFormat.name} Graphic`}
           >
             {downloadSuccessFormat === activeFormat.id ? (
               <>
                 <Check className="w-4 h-4 text-slate-950" />
-                <span>Saved {activeFormat.dimensions}!</span>
+                <span>Graphic Downloaded!</span>
               </>
             ) : (
               <>
