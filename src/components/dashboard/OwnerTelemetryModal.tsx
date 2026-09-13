@@ -40,7 +40,7 @@ export default function OwnerTelemetryModal({
     if (!isAuthorized) return;
     setLoading(true);
     try {
-      const data = await getPlatformUsageStats();
+      const data = await getPlatformUsageStats(currentEmail);
       setStats(data);
     } catch (err) {
       console.warn('Telemetry fetch error:', err);

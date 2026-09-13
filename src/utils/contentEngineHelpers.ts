@@ -607,7 +607,8 @@ export function getIndustryMarketIntel(profile: UserProfile | null): IndustryMar
 
 /**
  * Generates 1 concise, high-impact Blog Post of up to 300 words (~280-295 words),
- * optimized for modern Google AI Overviews (AEO) and SEO based on the client's Brand DNA.
+ * optimized for modern Google AI Overviews (AEO) and SEO based on the client's Brand DNA,
+ * selected tone, and selected category.
  */
 export function generate300WordBlogPost(profile: UserProfile | null): EvergreenBlogPost {
   const business = profile?.business_name || profile?.displayName || 'ET Digital';
@@ -617,12 +618,93 @@ export function generate300WordBlogPost(profile: UserProfile | null): EvergreenB
   const website = (profile?.website_url || 'https://growwithetdigital.com').replace(/\/$/, '');
   const differentiator = profile?.brand_dna?.differentiator || `proprietary systems engineered by ${business}`;
 
-  const title = `Why High-Intent Buyers in ${location} Choose Category Proof Over Marketing Noise`;
-  const target_keyword = `${business} ${location} authority`;
-  const editorial_quote = `Modern decision-makers do not evaluate partners through generic claims—they invest in trusted authorities who provide transparent answers and zero-friction access.`;
+  const tone = profile?.selected_tone || profile?.brand_dna?.voice_archetype || 'Authoritative & Strategic';
+  const category = profile?.selected_category || 'Executive Problem-Solver & Proof';
 
-  // Exactly ~285 words, structured for AI search extraction
-  const cleanBody = `In today's fast-moving commercial market, high-intent decision-makers in ${location} no longer respond to promotional hype. Whether hiring an advisor, retaining a specialist, or upgrading infrastructure, modern buyers evaluate partners through one standard: clarity, verified proof, and speed to resolution.
+  let title = `Why High-Intent Buyers in ${location} Choose Category Proof Over Marketing Noise`;
+  let target_keyword = `${business} ${location} authority`;
+  let editorial_quote = `Modern decision-makers do not evaluate partners through generic claims—they invest in trusted authorities who provide transparent answers and zero-friction access.`;
+  let cleanBody = '';
+
+  if (category.includes('Contrarian')) {
+    title = `The Uncomfortable Truth About Growth in ${location}: Why Shouting Louder Repels High-Value Clients`;
+    target_keyword = `${business} ${location} contrarian strategy`;
+    editorial_quote = `Vanity metrics stroke founder egos; transparent proof converts high-value contracts.`;
+    cleanBody = `Most ${audience} in ${location} are told that winning their market requires publishing non-stop noise. It is bad advice. In reality, aggressive promotion signals desperation to sophisticated buyers.
+
+At ${business}, our mission is ${mission}. We observe established firms waste thousands on broad awareness, only to watch qualified prospects bounce within six seconds due to generic messaging.
+
+Three Contrarian Rules of High-Value Acquisition:
+
+1. Stop Pitching, Start Diagnosing: High-intent prospects do not want a sales pitch. They look for practitioners in ${location} who understand their exact operational friction and articulate the cost of inaction.
+
+2. Eliminate Intake Friction: Forcing buyers through multi-step qualification questionnaires before providing value kills conversions. Simplicity and direct communication signal confidence.
+
+3. Proof Over Promises: Case studies, verified milestones, and transparent frameworks outperform polished slogans every single time.
+
+Building Compounding Authority:
+
+Winning your category in ${location} isn't about outspending competitors on ads; it is about establishing undeniable trust. Through ${differentiator}, ${business} turns your digital footprint into an authentic authority engine.
+
+Take Action:
+Review where high-intent buyers are searching in your industry. Visit ${website} to explore our direct strategic frameworks.`;
+  } else if (category.includes('Playbook') || category.includes('Tactical')) {
+    title = `The 3-Part Operational Framework for Category Leadership in ${location}`;
+    target_keyword = `${business} ${location} growth playbook`;
+    editorial_quote = `Discipline beats speculation every time. Predictable acquisition requires architecture, not sporadic bursts of marketing.`;
+    cleanBody = `For ${audience} navigating the competitive ${location} marketplace, achieving sustainable scale requires shifting from sporadic tactics to an authoritative operating standard.
+
+At ${business}, our guiding principle is ${mission}. When organizations install a structured growth architecture, customer acquisition changes from a chaotic gamble into a reliable asset.
+
+The 3-Phase Execution Roadmap:
+
+Phase 1 — Authority Positioning: Clearly define what you solve, who you serve, and why your approach works. Answer the exact technical questions prospective clients research prior to reaching out.
+
+Phase 2 — Frictionless Conversion: Ensure your website offers immediate clarity and direct pathways to engage. Remove convoluted form fields that create administrative fatigue for buyers in ${location}.
+
+Phase 3 — Compounding Reach: Deploy continuous thought leadership grounded in ${differentiator} to ensure AI search engines and referral networks cite your business as the definitive regional solution.
+
+The Next Milestone:
+Stop relying on unpredictable word-of-mouth. Visit ${website} to calibrate your enterprise acquisition architecture today.`;
+  } else if (category.includes('AI') || category.includes('Trends') || category.includes('AEO')) {
+    title = `How AI Overviews and Answer Engines (AEO) Are Shifting Discovery in ${location}`;
+    target_keyword = `${business} ${location} AI search authority`;
+    editorial_quote = `When answer engines synthesize your industry, your business must either be the definitive citation or be rendered invisible.`;
+    cleanBody = `Buyer discovery is undergoing its most radical transformation in two decades. Decision-makers in ${location} no longer scroll through pages of blue search links. Instead, generative answer engines synthesize immediate recommendations.
+
+At ${business}, we believe ${mission}. To thrive in this new landscape, businesses must optimize for Answer Engine Optimization (AEO) and direct entity trust.
+
+How to Lead the AI Search Evolution:
+
+1. Direct Entity Citation: AI engines reference domain authorities with clear, structured perspectives. Vague corporate platitudes are ignored in generative summaries.
+
+2. Verified Regional Proof: Buyers searching for ${audience} expertise in ${location} evaluate transparent case evidence and authentic founder narratives before scheduling a discovery meeting.
+
+3. Frictionless Intake: When AI assistants direct prospects to your digital touchpoints, your intake process must deliver immediate clarity.
+
+Dominating the Next Era of Discovery:
+By aligning authentic narrative engineering with ${differentiator}, ${business} positions your brand at the center of modern search. Visit ${website} to evaluate your enterprise visibility.`;
+  } else if (category.includes('Local')) {
+    title = `How Local Leaders in ${location} Capture High-Intent Commercial Demand`;
+    target_keyword = `${business} ${location} local leader`;
+    editorial_quote = `Local dominance is not an accident of geography; it is the natural reward for providing the clearest answers in your market.`;
+    cleanBody = `In regional markets like ${location}, high-margin clients demand local accountability combined with world-class operational standards.
+
+At ${business}, our mission is ${mission}. We help ${audience} break out of local price competition by establishing undisputed category authority.
+
+Three Pillars of Regional Market Dominance:
+
+1. Hyper-Relevant Local Context: Speak directly to the regulatory, economic, and commercial realities of ${location}. Generic national messaging fails to resonate with discerning local buyers.
+
+2. Uncompromising Transparency: Share your methodologies openly. High-value clients choose advisors who respect their intelligence and outline measurable expectations.
+
+3. Seamless Client Intake: Eliminate unnecessary friction between initial discovery and your first strategic working session.
+
+Claim Your Market:
+When you pair authentic local credibility with ${differentiator}, client acquisition compounds. Visit ${website} to access our regional dominance framework.`;
+  } else {
+    // Executive Problem-Solver & Proof (Default)
+    cleanBody = `In today's fast-moving commercial market, high-intent decision-makers in ${location} no longer respond to promotional hype. Whether hiring an advisor, retaining a specialist, or upgrading infrastructure, modern buyers evaluate partners through one standard: clarity, verified proof, and speed to resolution.
 
 At ${business}, our mission is ${mission}. Yet even established organizations face a predictable bottleneck: spending capital on broad awareness, only to lose high-value prospects to confusing messaging and clunky intake processes.
 
@@ -640,6 +722,12 @@ Establishing category leadership is not about shouting louder; it is about provi
 
 Take the Next Step:
 Evaluate your current digital presence and discover where high-intent buyers are searching. Visit ${website} to explore our direct frameworks or schedule a strategic consultation.`;
+  }
+
+  // Adjust wording tone if Bold & Direct
+  if (tone.includes('Bold') || tone.includes('Direct')) {
+    editorial_quote = `Clarity beats cleverness. If your buyers can't see the direct path to value in five seconds, you've already lost the deal.`;
+  }
 
   return {
     title,
@@ -649,7 +737,7 @@ Evaluate your current digital presence and discover where high-intent buyers are
     meta_description: `An executive briefing for ${location}: How ${business} helps ${audience} turn online discovery into qualified client relationships through authentic proof and frictionless intake.`,
     read_time: '1.5 Min Read',
     editorial_quote,
-    category: 'Strategic Authority Briefing',
+    category,
   };
 }
 
@@ -665,8 +753,18 @@ export function generateSingleSocialCaption(profile: UserProfile | null, blogTit
   const location = profile?.location || 'Los Angeles';
   const audience = profile?.target_audience || 'business leaders';
   const website = profile?.website_url || 'https://growwithetdigital.com';
+  const tone = profile?.selected_tone || 'Authoritative & Strategic';
+  const category = profile?.selected_category || 'Executive Problem-Solver';
 
-  const hook = `Most businesses think growth is about shouting louder. It isn't.`;
+  let hook = `Most businesses think growth is about shouting louder. It isn't.`;
+  if (tone.includes('Bold')) {
+    hook = `Stop running sporadic marketing tactics and hoping for predictable revenue.`;
+  } else if (category.includes('AI') || category.includes('Trends')) {
+    hook = `AI search engines are rewriting how buyers in ${location} choose who to hire.`;
+  } else if (category.includes('Contrarian')) {
+    hook = `Unpopular truth: The loudest brand in ${location} is rarely the most profitable.`;
+  }
+
   const caption = `${hook}
 
 In today's market, high-intent ${audience} in ${location} are exhausted by promotional noise. They aren't looking for another pitch—they are looking for verified proof and clear answers before they ever book a call.
@@ -709,9 +807,10 @@ export function generate150WordEblast(profile: UserProfile | null, blogTitle: st
 
   // Brand DNA intelligence injection
   const brandDna = profile?.brand_dna;
-  const voiceArchetype = brandDna?.voice_archetype || profile?.brand_voice || 'Authoritative Strategist';
+  const voiceArchetype = profile?.selected_tone || brandDna?.voice_archetype || profile?.brand_voice || 'Authoritative Strategist';
   const coreValueProp = brandDna?.core_value_prop || profile?.mission_statement || 'transforming operations into predictable category leadership';
   const differentiator = brandDna?.differentiator || 'frictionless conversion paths and high-intent authority';
+  const category = profile?.selected_category || 'Executive Problem-Solver';
 
   // Distinct sender signoff (never repeat sender name twice)
   const isDuplicateName = !contact || !business ||
@@ -719,11 +818,13 @@ export function generate150WordEblast(profile: UserProfile | null, blogTitle: st
     business.toLowerCase().includes(contact.toLowerCase());
   const signoffName = isDuplicateName ? (contact || business) : `${contact}\n${business}`;
 
-  const isDirectTone = voiceArchetype.toLowerCase().includes('direct') || voiceArchetype.toLowerCase().includes('pragmatic');
+  const isDirectTone = voiceArchetype.toLowerCase().includes('direct') || voiceArchetype.toLowerCase().includes('bold') || voiceArchetype.toLowerCase().includes('pragmatic');
 
   const subject = isDirectTone
     ? `The reality of modern growth in ${location}`
-    : `Why leading ${audience} in ${location} choose proof over noise`;
+    : category.includes('AI')
+      ? `How AI search is altering client acquisition in ${location}`
+      : `Why leading ${audience} in ${location} choose proof over noise`;
 
   const preview = `A 90-second executive breakdown on converting discovery into high-value clients...`;
 

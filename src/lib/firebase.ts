@@ -380,12 +380,19 @@ export const trackPlatformUsage = async (
       updatePayload.total_generations_count = increment(1);
     }
     await setDoc(userDocRef, updatePayload, { merge: true });
+
+    // Also persist event to platform_telemetry collection (readable only by admin)
+    const telemDocRef = doc(db, 'platform_telemetry', event.id);
+    await setDoc(telemDocRef, {
+      ...event,
+      created_at: serverTimestamp()
+    });
   } catch (err) {
     // Graceful background fallback
   }
 };
 
-export const getPlatformUsageStats = async (): Promise<{
+export const getPlatformUsageStats = async (requesterEmail?: string | null): Promise<{
   users: any[];
   events: PlatformTelemetryEvent[];
   totalSessions: number;
@@ -393,6 +400,11 @@ export const getPlatformUsageStats = async (): Promise<{
   totalAudits: number;
   totalUsers: number;
 }> => {
+  const caller = (requesterEmail || auth.currentUser?.email || '').trim().toLowerCase();
+  if (caller !== 'ericlamarthomas@gmail.com') {
+    throw new Error('Access denied: Telemetry insights are restricted strictly to platform administrator (ericlamarthomas@gmail.com).');
+  }
+
   let usersList: any[] = [];
   let eventsList: PlatformTelemetryEvent[] = [];
 
@@ -402,6 +414,32 @@ export const getPlatformUsageStats = async (): Promise<{
       usersList = Object.values(registry);
       eventsList = JSON.parse(localStorage.getItem('et_telemetry_events') || '[]');
     } catch (e) {}
+  }
+
+  // Also query live Firestore users collection (secured by firestore.rules to isAdmin() only)
+  try {
+    const usersSnapshot = await getDocs(collection(db, 'users'));
+    usersSnapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      const existingIdx = usersList.findIndex(u => u.uid === docSnap.id || (data.email && u.email === data.email));
+      const userEntry = {
+        uid: docSnap.id,
+        email: data.email || 'No email provided',
+        displayName: data.displayName || data.business_name || 'Growth Client',
+        tier: data.tier || 'free',
+        logins: data.login_count || 1,
+        generations: data.total_generations_count || 0,
+        audits: data.audit_id ? 1 : 0,
+        lastActive: data.last_active_at || (data.updated_at?.toDate ? data.updated_at.toDate().toISOString() : data.updated_at) || new Date().toISOString()
+      };
+      if (existingIdx >= 0) {
+        usersList[existingIdx] = { ...usersList[existingIdx], ...userEntry };
+      } else {
+        usersList.push(userEntry);
+      }
+    });
+  } catch (fsErr) {
+    // Graceful fallback to local telemetry store
   }
 
   // Ensure owner Eric Thomas is always present with authoritative representation
@@ -550,7 +588,7 @@ export const signUpWithEmail = async (email: string, pass: string, displayName: 
     competitor_website: '',
     target_audience: '',
     brand_voice: 'Authoritative & Strategic',
-    tier: (normalizedEmail === 'ericlamarthomas@gmail.com' || uid.includes('owner')) ? 'consultation' : 'free',
+    tier: (normalizedEmail === 'ericlamarthomas@gmail.com') ? 'consultation' : 'free',
     status: 'active',
     has_seen_welcome: false,
     total_generations_count: 0,
@@ -679,7 +717,7 @@ export const signInWithEmail = async (email: string, pass: string): Promise<User
       competitor_website: '',
       target_audience: '',
       brand_voice: 'Authoritative & Strategic',
-      tier: (normalizedEmail === 'ericlamarthomas@gmail.com' || uid.includes('owner')) ? 'consultation' : 'free',
+      tier: (normalizedEmail === 'ericlamarthomas@gmail.com') ? 'consultation' : 'free',
       status: 'active',
       has_seen_welcome: false,
       total_generations_count: 0,
@@ -785,7 +823,7 @@ export const googleSignInWithProfile = async (): Promise<User> => {
       localStorage.setItem('et_growth_os_local_user', JSON.stringify(user));
       localStorage.setItem('et_growth_os_active_uid', user.uid);
 
-      const isOwner = user.email === 'ericlamarthomas@gmail.com' || user.uid.includes('owner');
+      const isOwner = (user.email || '').trim().toLowerCase() === 'ericlamarthomas@gmail.com';
       const immediateProfile: UserProfile = {
         uid: user.uid,
         email: user.email || '',
@@ -938,8 +976,8 @@ export const getUserProfile = async (uid: string): Promise<UserProfile | null> =
     } catch (e) {}
   }
 
-  const isOwner = uid.includes('owner') || detectedEmail === 'ericlamarthomas@gmail.com';
-  const finalEmail = detectedEmail || (isOwner ? 'ericlamarthomas@gmail.com' : 'user@growthos.internal');
+  const isOwner = (detectedEmail || '').trim().toLowerCase() === 'ericlamarthomas@gmail.com';
+  const finalEmail = detectedEmail || (isOwner ? 'ericlamarthomas@gmail.com' : 'client@growthos.internal');
   const finalName = detectedName || (isOwner ? 'Eric Thomas' : 'Growth Partner');
 
   // Resilient default profile
@@ -1068,6 +1106,19 @@ export const bindPendingAuditToUser = async (uid: string): Promise<void> => {
 };
 
 export const updateUserProfile = async (uid: string, profileData: Partial<UserProfile>): Promise<void> => {
+  if (typeof window !== 'undefined') {
+    try {
+      const cached = localStorage.getItem(`et_profile_${uid}`);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        localStorage.setItem(`et_profile_${uid}`, JSON.stringify({
+          ...parsed,
+          ...profileData,
+          updated_at: new Date().toISOString()
+        }));
+      }
+    } catch (e) {}
+  }
   try {
     const userDocRef = doc(db, 'users', uid);
     await setDoc(userDocRef, {

@@ -62,7 +62,7 @@ export default function FounderNotePanel({
             className="shrink-0 px-5 py-3 rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 text-slate-950 font-display text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-cyan-500/25 transition-all cursor-pointer active:scale-95"
             id="founder-note-header-consult-btn"
           >
-            <span>Schedule Consultation</span>
+            <span>Schedule a Consultation</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
@@ -210,7 +210,7 @@ export default function FounderNotePanel({
             id="founder-note-closing-calendar-btn"
           >
             <Calendar className="w-4 h-4" />
-            <span>We’d love to work with you on your growth needs — click here to schedule a consultation</span>
+            <span>Schedule a Consultation</span>
             <ArrowUpRight className="w-4 h-4 text-slate-950" />
           </button>
         </div>

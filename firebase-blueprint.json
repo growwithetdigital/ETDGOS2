@@ -79,9 +79,27 @@
         "created_at": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "uid", "blog_post", "social_captions", "graphic"]
+    },
+    "platform_telemetry": {
+      "title": "Platform Telemetry Event",
+      "description": "Administrative usage event for tracking logins, content generations, and audits.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "uid": { "type": "string" },
+        "userEmail": { "type": "string", "format": "email" },
+        "userName": { "type": "string" },
+        "action": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "uid", "action", "timestamp"]
     }
   },
   "firestore": {
+    "platform_telemetry/{docId}": {
+      "schema": "platform_telemetry",
+      "description": "Administrative event telemetry readable exclusively by owner admin."
+    },
     "bookings/{bookingId}": {
       "schema": "booking",
       "description": "Leads submitted via the branded Book a Free Session form."

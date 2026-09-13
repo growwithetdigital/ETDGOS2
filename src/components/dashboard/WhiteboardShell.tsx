@@ -157,11 +157,13 @@ export default function WhiteboardShell({
   const [showAllModules, setShowAllModules] = useState(false);
   const [dailyTipIndex, setDailyTipIndex] = useState(0);
   const [copiedDailyTip, setCopiedDailyTip] = useState(false);
+  const [lockedTabNotice, setLockedTabNotice] = useState<string | null>(null);
 
   // Check if current user is owner / admin strictly matching the 3 authorized emails
   const isOwner = isAuthorizedForTelemetry(user?.email, profile?.email);
 
   const isFreeTier = profile?.tier === 'free' || !profile?.tier;
+  const isProfileLocked = Boolean(profile?.is_profile_locked);
 
   // Theme Variables - Balanced Contrast: crisp, WCAG-compliant readability on both light and dark surfaces
   const themeStyles = useMemo(() => {
@@ -254,20 +256,57 @@ export default function WhiteboardShell({
   }, [user?.uid, defaultSampleItem]);
 
   // Exactly 5 Consolidated Dashboard Tabs
-  // 1. Profile & Business DNA (merge Profile + Business DNA + Growth Auditor)
-  // 2. Content Studio
-  // 3. Industry Market Report (curated news/trends trailing 30D-YTD + folded-in Marketing Shorts)
-  // 4. Learning Feed (7 channels, 1 video/channel, refreshable)
-  // 5. Founder's Note (closing tab, thank you, research rigor/sourcing, consultation CTA)
+  // Gated until profile is completed and locked
   const dashboardTabs = [
-    { id: 'profile_dna', label: 'Profile & Business DNA', icon: Cpu, badge: 'DNA · Auditor' },
-    { id: 'content_studio', label: 'Content Studio', icon: Layers, badge: '1-Asset Suite' },
-    { id: 'market_report', label: 'Industry Market Report', icon: FileBarChart, badge: 'Trailing 30D–YTD' },
-    { id: 'learning_feed', label: 'Learning Feed', icon: Tv, badge: '7 Channels' },
-    { id: 'founder_note', label: "Founder's Note", icon: Heart, badge: 'Closing Note' },
+    { 
+      id: 'profile_dna' as NavTabId, 
+      label: 'Profile & Business DNA', 
+      icon: Cpu, 
+      badge: isProfileLocked ? 'Locked & Active' : 'Setup Required',
+      isGated: false
+    },
+    { 
+      id: 'content_studio' as NavTabId, 
+      label: 'Content Studio', 
+      icon: isProfileLocked ? Layers : Lock, 
+      badge: isProfileLocked ? '1-Asset Suite' : 'Locked',
+      isGated: !isProfileLocked
+    },
+    { 
+      id: 'market_report' as NavTabId, 
+      label: 'Industry Market Report', 
+      icon: isProfileLocked ? FileBarChart : Lock, 
+      badge: isProfileLocked ? 'Trailing 30D–YTD' : 'Locked',
+      isGated: !isProfileLocked
+    },
+    { 
+      id: 'learning_feed' as NavTabId, 
+      label: 'Learning Feed', 
+      icon: isProfileLocked ? Tv : Lock, 
+      badge: isProfileLocked ? '7 Channels' : 'Locked',
+      isGated: !isProfileLocked
+    },
+    { 
+      id: 'founder_note' as NavTabId, 
+      label: "Founder's Note", 
+      icon: isProfileLocked ? Heart : Lock, 
+      badge: isProfileLocked ? 'Closing Note' : 'Locked',
+      isGated: !isProfileLocked
+    },
   ];
 
   const activeNavItems = dashboardTabs;
+
+  const handleTabClick = (tabId: NavTabId, isGated: boolean) => {
+    if (isGated && !isProfileLocked) {
+      setLockedTabNotice('🔒 Profile & Business DNA Lock Required. Please calibrate your website and click "Save & Lock Profile" in Tab 1 to unlock your Content Studio, Industry Market Report, and Learning Feed.');
+      setActiveTab('profile_dna');
+      setTimeout(() => setLockedTabNotice(null), 6000);
+      return;
+    }
+    setActiveTab(tabId);
+    setLockedTabNotice(null);
+  };
 
   const handleSignOutClick = async () => {
     if (onSignOut) {
@@ -454,19 +493,21 @@ export default function WhiteboardShell({
                 type="button"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.97 }}
-                onClick={() => setActiveTab(tab.id as NavTabId)}
+                onClick={() => handleTabClick(tab.id as NavTabId, tab.isGated)}
                 id={`dashboard-tab-${tab.id}`}
                 className={`relative px-4 py-2 rounded-xl font-display text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer shrink-0 ${
                   isActive
                     ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-slate-950 shadow-md shadow-cyan-500/25 font-black scale-100'
+                    : tab.isGated
+                    ? 'text-[var(--muted)]/60 hover:text-[var(--muted)] hover:bg-[var(--surface)] border border-dashed border-[var(--border)]'
                     : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--surface)] border border-transparent hover:border-[var(--border)]'
                 }`}
               >
-                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-slate-950' : 'text-[var(--accent)]'}`} />
+                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-slate-950' : tab.isGated ? 'text-amber-400/80' : 'text-[var(--accent)]'}`} />
                 <span>{tab.label}</span>
                 {'badge' in tab && (
                   <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded font-semibold ${
-                    isActive ? 'bg-slate-950/20 text-slate-950' : 'bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/30'
+                    isActive ? 'bg-slate-950/20 text-slate-950' : tab.isGated ? 'bg-amber-950/60 text-amber-400 border border-amber-500/30' : 'bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/30'
                   }`}>
                     {tab.badge}
                   </span>
@@ -476,6 +517,25 @@ export default function WhiteboardShell({
           })}
         </div>
       </div>
+
+      {/* Locked Notice Alert Banner */}
+      {lockedTabNotice && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 pt-4">
+          <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center justify-between gap-3 shadow-lg">
+            <div className="flex items-center gap-2.5">
+              <Lock className="w-4 h-4 text-amber-400 shrink-0" />
+              <span>{lockedTabNotice}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setLockedTabNotice(null)}
+              className="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 text-[10px] font-mono font-bold cursor-pointer"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ==================================================================== */}
       {/* 4. MAIN WORKSPACE BODY (With Operating System motion transitions) */}
@@ -575,12 +635,14 @@ export default function WhiteboardShell({
         </AnimatePresence>
       </main>
 
-      {/* Owner Platform Usage Telemetry Modal */}
-      <OwnerTelemetryModal
-        isOpen={isTelemetryOpen}
-        onClose={() => setIsTelemetryOpen(false)}
-        currentEmail={user?.email}
-      />
+      {/* Owner Platform Usage Telemetry Modal - Strictly Render for isOwner */}
+      {isOwner && (
+        <OwnerTelemetryModal
+          isOpen={isTelemetryOpen}
+          onClose={() => setIsTelemetryOpen(false)}
+          currentEmail={user?.email || profile?.email}
+        />
+      )}
 
     </div>
   );

@@ -47,15 +47,30 @@ export default function App() {
     if (typeof window !== 'undefined') {
       try {
         const stored = localStorage.getItem('et_growth_os_local_user');
-        if (stored) return JSON.parse(stored) as User;
+        if (stored) {
+          const parsed = JSON.parse(stored) as User;
+          if (parsed && parsed.email) return parsed;
+        }
         const activeUid = localStorage.getItem('et_growth_os_active_uid');
         if (activeUid && localStorage.getItem('et_signed_out') !== 'true') {
-          return {
-            uid: activeUid,
-            email: 'ericlamarthomas@gmail.com',
-            displayName: 'Eric Thomas',
-            emailVerified: true,
-          } as User;
+          const accounts = JSON.parse(localStorage.getItem('et_registered_accounts') || '{}');
+          const matched = Object.values(accounts).find((a: any) => a.uid === activeUid) as any;
+          if (matched && matched.email) {
+            return {
+              uid: matched.uid,
+              email: matched.email,
+              displayName: matched.displayName || 'Growth Partner',
+              emailVerified: true,
+            } as User;
+          }
+          if (activeUid === 'et_owner_primary') {
+            return {
+              uid: activeUid,
+              email: 'ericlamarthomas@gmail.com',
+              displayName: 'Eric Thomas',
+              emailVerified: true,
+            } as User;
+          }
         }
       } catch (e) {}
     }
@@ -102,12 +117,12 @@ export default function App() {
     }
 
     if (!activeUser) {
-      const storedUid = (typeof window !== 'undefined' && localStorage.getItem('et_growth_os_active_uid')) || 'owner_eric_thomas';
+      const storedUid = (typeof window !== 'undefined' && localStorage.getItem('et_growth_os_active_uid')) || 'client_' + Math.random().toString(36).substring(2, 9);
       activeUser = {
         uid: storedUid,
-        email: 'ericlamarthomas@gmail.com',
-        displayName: 'Eric Thomas',
-        emailVerified: true,
+        email: 'client@growthos.internal',
+        displayName: 'Growth Partner',
+        emailVerified: false,
       } as User;
       if (typeof window !== 'undefined') {
         localStorage.setItem('et_growth_os_local_user', JSON.stringify(activeUser));
@@ -115,14 +130,15 @@ export default function App() {
     }
 
     setCurrentUser(activeUser);
+    const isOwner = (activeUser.email || '').trim().toLowerCase() === 'ericlamarthomas@gmail.com';
     setUserProfile((prev) => prev ? { ...prev, has_seen_welcome: true } : {
       uid: activeUser.uid,
       email: activeUser.email || '',
-      displayName: activeUser.displayName || 'Eric Thomas',
-      tier: 'consultation',
+      displayName: activeUser.displayName || (isOwner ? 'Eric Thomas' : 'Growth Partner'),
+      tier: isOwner ? 'consultation' : 'free',
       status: 'active',
       has_seen_welcome: true,
-      business_name: 'ET Digital Growth OS',
+      business_name: isOwner ? 'ET Digital Growth OS' : 'Growth Partner',
       contact: 'Eric Thomas',
       website_url: 'https://growwithetdigital.com',
       location: 'Los Angeles, CA',
@@ -335,10 +351,10 @@ export default function App() {
 
   if (isWhiteboardOpen) {
     const activeSessionUser = effectiveUser || {
-      uid: (typeof window !== 'undefined' && localStorage.getItem('et_growth_os_active_uid')) || 'owner_eric_thomas',
-      email: 'ericlamarthomas@gmail.com',
-      displayName: 'Eric Thomas',
-      emailVerified: true,
+      uid: (typeof window !== 'undefined' && localStorage.getItem('et_growth_os_active_uid')) || 'client_session',
+      email: 'client@growthos.internal',
+      displayName: 'Growth Partner',
+      emailVerified: false,
     } as User;
 
     return (
@@ -475,7 +491,7 @@ export default function App() {
       {/* First-time Welcome & Bookmark Modal */}
       {showWelcomeModal && (
         <WelcomeBookmarkModal
-          uid={effectiveUser?.uid || 'owner_eric_thomas'}
+          uid={effectiveUser?.uid || 'guest_user'}
           isOpen={showWelcomeModal}
           onClose={handleEnterGrowthOS}
           onEnterGOS={handleEnterGrowthOS}

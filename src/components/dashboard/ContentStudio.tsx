@@ -459,6 +459,19 @@ TARGET: ${gbpData.target_keyword}
                 <span>Links to your website</span>
               </div>
             </div>
+
+            {/* Strategic Suggestion to attach the featured image download */}
+            <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-[var(--text)] flex items-start gap-2.5">
+              <Sparkles className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+              <div className="space-y-0.5">
+                <span className="font-mono text-[10px] uppercase font-bold text-amber-600 dark:text-amber-400 block tracking-wider">
+                  Pro-Tip: Attach Branded Graphic
+                </span>
+                <p className="text-[11px] text-[var(--muted)] leading-relaxed">
+                  Download the high-resolution 1:1 image from the <strong>Article Featured Image Options</strong> above and attach it when publishing this GBP post. Google rewards visual updates with up to 3x higher map-pack engagement.
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Executive Implementation Bridge */}

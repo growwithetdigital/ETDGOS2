@@ -26,6 +26,12 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    function isAdmin() {
+      return isSignedIn() 
+        && request.auth.token.email != null 
+        && request.auth.token.email.lower() == 'ericlamarthomas@gmail.com';
+    }
+
     function isValidBooking(data) {
       return data.name is string && data.name.size() > 0 && data.name.size() <= 100
         && data.email is string && data.email.size() > 0 && data.email.size() <= 100
@@ -35,24 +41,30 @@ service cloud.firestore {
         && data.createdAt == request.time;
     }
 
-    // Public Bookings
+    // Platform Telemetry & Usage Analytics (Admin Only Read)
+    match /platform_telemetry/{docId} {
+      allow create: if isValidId(docId);
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Public Bookings (Admin Only Read & Delete)
     match /bookings/{bookingId} {
       allow create: if isValidId(bookingId) 
         && incoming().keys().hasAll(['name', 'email', 'company', 'objective', 'createdAt'])
         && (incoming().keys().size() == 5 || (incoming().keys().size() == 6 && incoming().keys().contains('notes')))
         && isValidBooking(incoming());
       
-      allow read: if isSignedIn();
-      allow delete: if isSignedIn();
+      allow read: if isAdmin();
+      allow delete: if isAdmin();
     }
 
-    // Playbook Lead Downloads
+    // Playbook Lead Downloads (Admin Only Read)
     match /playbook_downloads/{leadId} {
       allow create: if isValidId(leadId)
         && incoming().name is string && incoming().name.size() > 0
         && incoming().email is string && incoming().email.size() > 0
         && incoming().createdAt == request.time;
-      allow read: if isSignedIn();
+      allow read: if isAdmin();
     }
 
     // Website Audits (Anonymous submission allowed; handoff binds UID)
@@ -60,20 +72,20 @@ service cloud.firestore {
       allow create: if isValidId(auditId)
         && incoming().website_url is string && incoming().website_url.size() > 0
         && incoming().business_name is string && incoming().business_name.size() > 0;
-      allow read: if !isSignedIn() || (isSignedIn() && (resource.data.uid == null || resource.data.uid == request.auth.uid));
-      allow update: if isSignedIn() && (resource.data.uid == null || resource.data.uid == request.auth.uid);
+      allow read: if !isSignedIn() || (isSignedIn() && (resource.data.uid == null || resource.data.uid == request.auth.uid || isAdmin()));
+      allow update: if isSignedIn() && (resource.data.uid == null || resource.data.uid == request.auth.uid || isAdmin());
     }
 
     // User Profile Documents
     match /users/{userId} {
-      allow read: if isOwner(userId);
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId);
-      allow delete: if false;
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) || isAdmin();
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if isAdmin();
 
       // User Content Library Subcollection
       match /content_library/{contentId} {
-        allow read: if isOwner(userId);
+        allow read: if isOwner(userId) || isAdmin();
         allow create, update, delete: if isOwner(userId);
       }
     }
