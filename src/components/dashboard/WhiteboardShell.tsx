@@ -613,6 +613,7 @@ export default function WhiteboardShell({
               <MarketReportPanel
                 user={user}
                 profile={profile}
+                onRefreshProfile={onRefreshProfile}
                 onOpenBooking={onOpenBooking}
                 onNavigateToContentStudio={() => setActiveTab('content_studio')}
               />

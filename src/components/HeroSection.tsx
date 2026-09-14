@@ -88,9 +88,9 @@ export default function HeroSection({ onOpenBooking }: HeroSectionProps) {
               </h1>
             </div>
 
-            {/* Subtitle / Positioning Copy */}
+            {/* Subtitle / Positioning Copy in Eric's human, approachable voice */}
             <p className="text-base sm:text-lg text-slate-300 max-w-2xl leading-relaxed font-sans font-normal">
-              Helping businesses engage, convert, and grow with modern digital marketing systems. We build high-converting websites, execute targeted campaigns, and implement AI-powered strategies to scale your revenue.
+              Hey, I'm Eric Thomas. At ET Digital, I partner with founders and growing businesses to cut through marketing noise and attract their dream clients. We build clean, high-converting websites, craft messages people actually care about, and set up reliable systems to grow your revenue—without confusing agency jargon.
             </p>
 
             {/* Top Two CTA Buttons: Schedule Discovery Call & Explore Services */}

@@ -341,7 +341,7 @@ export default function BusinessDnaPanel({
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 text-xs font-mono text-cyan-600 dark:text-cyan-400 hover:underline font-bold"
                   >
-                    <span>Read Reputable Article</span>
+                    <span>Read on {marketIntel.article_source.includes('Ad Age') ? 'adage.com' : 'HubSpot'}</span>
                     <ExternalLink className="w-3 h-3" />
                   </a>
                 </div>

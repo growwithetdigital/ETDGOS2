@@ -71,6 +71,12 @@ export interface UserProfile {
     summary?: string;
     extracted_from_url?: string;
     extracted_at?: string;
+    brand_colors?: string;
+    positioning?: string;
+    online_reputation?: string;
+    ideal_client_avatar?: string;
+    paragraph_dna?: string;
+    industry?: string;
   };
   writing_sample?: string;
   is_profile_locked?: boolean;
@@ -89,9 +95,11 @@ export interface UserProfile {
 export interface PostAnalyticsData {
   platform: string;
   postTitle: string;
+  contentFormat?: string;
   engagementSource: string;
   engagementType: string;
   outcome: string;
+  growthGenerated?: string;
   beforeReach: number;
   afterReach: number;
   beforeEngagements: number;
@@ -103,6 +111,7 @@ export interface PostAnalyticsData {
   hasInputData: boolean;
   lastUpdated?: string;
   aiAssessment?: string;
+  predictionCadence?: 'quarterly' | 'monthly' | 'weekly' | 'daily';
 }
 
 export interface PlatformTelemetryEvent {

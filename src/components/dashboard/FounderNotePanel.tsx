@@ -195,10 +195,10 @@ export default function FounderNotePanel({
             </span>
           </div>
           <h3 className="text-2xl sm:text-3xl font-display font-bold text-white tracking-tight">
-            We’d love to work with you on your growth needs
+            I'd love to work with you directly on your growth goals
           </h3>
           <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
-            Ready to expand beyond quarterly dispatches into an omnichannel growth operating system with tailored weekly dispatches, custom distribution, and direct strategy sessions with our team?
+            If you're ready to expand beyond quarterly content into a predictable growth engine—with weekly or daily content, custom distribution, and direct one-on-one strategy sessions with me—let's grab 20 minutes on the calendar.
           </p>
         </div>
 

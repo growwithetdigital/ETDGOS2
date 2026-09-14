@@ -4,7 +4,7 @@ import {
   RefreshCw, FileText, Linkedin, Facebook, Instagram, 
   Mail, MapPin, CheckCircle2, Lock, ArrowRight,
   Send, Compass, Layers, ShieldCheck, Zap, TrendingUp,
-  Target, Crown
+  Target, Crown, HelpCircle, ChevronDown, ChevronUp, MessageSquare, Star, Search
 } from 'lucide-react';
 import XIcon from '../icons/XIcon';
 import { GeneratedContentItem, UserProfile } from '../../types';
@@ -15,7 +15,8 @@ import {
   generateSingleSocialCaption,
   generate150WordEblast,
   generateGbpPost,
-  getNichePhotoForBusiness
+  getNichePhotoForBusiness,
+  getIndustryResearchAndQuestion
 } from '../../utils/contentEngineHelpers';
 import EditorialThumbnailCard from './EditorialThumbnailCard';
 
@@ -35,6 +36,7 @@ export default function ContentStudio({
   onNavigateToBrandDna,
 }: ContentStudioProps) {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [showResearchDetails, setShowResearchDetails] = useState(true);
   
   // Profile completion check
   const isProfileComplete = Boolean(
@@ -56,6 +58,15 @@ export default function ContentStudio({
     }
     return generate300WordBlogPost(profile);
   }, [item, profile]);
+
+  const research = useMemo(() => {
+    return blogPost.research_signals || getIndustryResearchAndQuestion(
+      profile?.industry || profile?.brand_dna?.industry,
+      profile?.website_url,
+      profile?.target_audience,
+      businessName
+    );
+  }, [blogPost, profile, businessName]);
 
   const cleanBlogBody = useMemo(() => {
     return stripMarkdownFormatting(blogPost.markdown_content);
@@ -249,29 +260,115 @@ TARGET: ${gbpData.target_keyword}
               </button>
             </div>
 
-            {/* Keyword Entity Target */}
-            <div className="p-3 rounded-xl bg-[var(--surface2)] border border-[var(--border)] flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2">
-                <Target className="w-3.5 h-3.5 text-cyan-500" />
-                <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] font-semibold">
-                  AEO & SEO Target:
-                </span>
-                <span className="font-mono text-xs text-[var(--text)] font-bold">
-                  "{blogPost.target_keyword}"
-                </span>
+            {/* Research Question & SEO/AEO Target Bar */}
+            <div className="space-y-3">
+              <div className="p-3.5 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2">
+                  <Target className="w-4 h-4 text-cyan-500 shrink-0" />
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] font-semibold">
+                    AEO & SEO Target:
+                  </span>
+                  <span className="font-mono text-xs text-[var(--text)] font-bold">
+                    "{blogPost.target_keyword}"
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowResearchDetails(!showResearchDetails)}
+                  className="font-mono text-[10px] text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  <Sparkles className="w-3 h-3" />
+                  <span>{showResearchDetails ? 'Hide Research Signals' : 'View Research Signals'}</span>
+                  {showResearchDetails ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                </button>
               </div>
-              <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold">
-                Direct Answer Entity
-              </span>
+
+              {/* Research Intelligence Panel Grounding (Reddit, Reviews, Search Trends) */}
+              {showResearchDetails && (
+                <div className="p-4 rounded-2xl bg-gradient-to-br from-[var(--surface2)] to-[var(--surface)] border border-cyan-500/30 space-y-3 animate-in fade-in duration-200">
+                  <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-[var(--border)]">
+                    <div className="flex items-center gap-2">
+                      <HelpCircle className="w-3.5 h-3.5 text-cyan-500 shrink-0" />
+                      <span className="font-mono text-[10px] uppercase tracking-wider text-cyan-600 dark:text-cyan-400 font-bold">
+                        Specific Industry Question Answered (from Business DNA):
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-mono text-[var(--muted)]">
+                      {research.industry_category}
+                    </span>
+                  </div>
+
+                  <p className="text-xs font-display font-bold text-[var(--text)] leading-snug">
+                    "{research.industry_question}"
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+                    {/* 1. Reddit Discussions */}
+                    <div className="p-3 rounded-xl bg-[var(--surface)] border border-[var(--border)] space-y-1">
+                      <div className="flex items-center gap-1.5 text-rose-500 font-mono text-[10px] font-bold uppercase tracking-wider">
+                        <MessageSquare className="w-3 h-3" />
+                        <span>Reddit Sentiment</span>
+                      </div>
+                      <p className="text-[11px] text-[var(--muted)] leading-relaxed">
+                        {research.reddit_insight}
+                      </p>
+                    </div>
+
+                    {/* 2. Customer Reviews */}
+                    <div className="p-3 rounded-xl bg-[var(--surface)] border border-[var(--border)] space-y-1">
+                      <div className="flex items-center gap-1.5 text-amber-500 font-mono text-[10px] font-bold uppercase tracking-wider">
+                        <Star className="w-3 h-3" />
+                        <span>Reviews Consensus</span>
+                      </div>
+                      <p className="text-[11px] text-[var(--muted)] leading-relaxed">
+                        {research.reviews_insight}
+                      </p>
+                    </div>
+
+                    {/* 3. Search & AEO Clicks */}
+                    <div className="p-3 rounded-xl bg-[var(--surface)] border border-[var(--border)] space-y-1">
+                      <div className="flex items-center gap-1.5 text-emerald-500 font-mono text-[10px] font-bold uppercase tracking-wider">
+                        <Search className="w-3 h-3" />
+                        <span>Search Clicks (AEO)</span>
+                      </div>
+                      <p className="text-[11px] text-[var(--muted)] leading-relaxed">
+                        {research.search_trends_insight}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-[var(--border)]/60 flex items-center justify-between text-[10px] font-mono text-[var(--muted)]">
+                    <span>Tone & Voice: <strong className="text-[var(--text)]">{profile?.selected_tone || 'Authoritative & Strategic'}</strong></span>
+                    <span className="text-cyan-600 dark:text-cyan-400">Foundation Tier Briefing (~300 Words)</span>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Blog Post Content (Clean, formatted paragraphs without markdown noise) */}
-            <div className="prose prose-sm dark:prose-invert max-w-none text-xs sm:text-sm text-[var(--text)] leading-relaxed space-y-4">
+            <div className="prose prose-sm dark:prose-invert max-w-none text-xs sm:text-sm text-[var(--text)] leading-relaxed space-y-4 pt-1">
               {cleanBlogBody.split('\n\n').map((paragraph, index) => (
                 <p key={index} className="leading-relaxed font-sans">
                   {paragraph}
                 </p>
               ))}
+            </div>
+
+            {/* Subtle Deep-Dive Boundary Note */}
+            <div className="pt-4 border-t border-[var(--border)] flex flex-wrap items-center justify-between gap-3 text-xs text-[var(--muted)] font-sans">
+              <p className="text-[11px] leading-relaxed max-w-md">
+                This free editorial answers your industry's primary question according to your Business DNA. Multi-vector roadmaps and competitor moat architectures are deployed in customized engagements.
+              </p>
+              {onOpenBooking && (
+                <button
+                  type="button"
+                  onClick={onOpenBooking}
+                  className="font-mono text-xs text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer font-bold shrink-0"
+                >
+                  <span>Explore Deep-Dive Systems</span>
+                  <ArrowRight className="w-3 h-3" />
+                </button>
+              )}
             </div>
 
           </div>

@@ -4,10 +4,11 @@ import {
   Building2, Globe, Cpu, Sparkles, RefreshCw, CheckCircle2, 
   Lock, ArrowRight, ShieldCheck, Mail, Calendar, AlertCircle,
   Check, MapPin, Target, Layers, ExternalLink, ChevronDown, ChevronUp,
-  RotateCcw, FileText, BarChart3, Award, MessageSquare, Compass, Send
+  RotateCcw, FileText, BarChart3, Award, MessageSquare, Compass, Send, Copy
 } from 'lucide-react';
 import { UserProfile } from '../../types';
 import { updateUserProfile } from '../../lib/firebase';
+import { generateOneParagraphBusinessDna } from '../../utils/contentEngineHelpers';
 import PostAnalyticsAnalyzer from './PostAnalyticsAnalyzer';
 
 interface ProfileBusinessDnaPanelProps {
@@ -18,6 +19,19 @@ interface ProfileBusinessDnaPanelProps {
   onOpenBooking: () => void;
   onOpenCalendar?: () => void;
 }
+
+export const INDUSTRY_OPTIONS = [
+  'Digital Marketing, Advertising & Growth Agencies',
+  'Healthcare, Clinical & Wellness Practices',
+  'Legal, Law Firms & Corporate Advisory',
+  'Real Estate, Property Development & Architecture',
+  'Technology, Software & Enterprise SaaS',
+  'Financial Advisory, Wealth Management & Accounting',
+  'Home Services, Contracting & Local Trades',
+  'Executive Coaching, Consulting & Professional Advisory',
+  'E-commerce, Retail & Consumer Brands',
+  'Executive Advisory & Professional Services'
+];
 
 export const TONE_OPTIONS = [
   { 
@@ -62,9 +76,28 @@ export default function ProfileBusinessDnaPanel({
   const [businessName, setBusinessName] = useState(profile?.business_name || profile?.displayName || '');
   const [websiteUrl, setWebsiteUrl] = useState(profile?.website_url || '');
   const [location, setLocation] = useState(profile?.location || '');
+  const [industry, setIndustry] = useState(
+    profile?.industry || profile?.brand_dna?.industry || INDUSTRY_OPTIONS[0]
+  );
   const [desiredTone, setDesiredTone] = useState(
     profile?.selected_tone || profile?.brand_voice || profile?.brand_dna?.voice_archetype || TONE_OPTIONS[0].id
   );
+
+  // The 4 Foundation Brand DNA Parameters
+  const [brandColors, setBrandColors] = useState(
+    profile?.brand_dna?.brand_colors || 'Electric Cyan (#06B6D4), Deep Slate (#0F172A), and Polar White'
+  );
+  const [positioning, setPositioning] = useState(
+    profile?.brand_dna?.positioning || ''
+  );
+  const [onlineReputation, setOnlineReputation] = useState(
+    profile?.brand_dna?.online_reputation || ''
+  );
+  const [idealClientAvatar, setIdealClientAvatar] = useState(
+    profile?.brand_dna?.ideal_client_avatar || ''
+  );
+  const [showAdvancedDna, setShowAdvancedDna] = useState(false);
+  const [copiedDna, setCopiedDna] = useState(false);
 
   // UI States
   const [isScanning, setIsScanning] = useState(false);
@@ -82,9 +115,17 @@ export default function ProfileBusinessDnaPanel({
       if (profile.business_name) setBusinessName(profile.business_name);
       if (profile.website_url) setWebsiteUrl(profile.website_url);
       if (profile.location) setLocation(profile.location);
+      if (profile.industry || profile.brand_dna?.industry) {
+        setIndustry(profile.industry || profile.brand_dna?.industry || INDUSTRY_OPTIONS[0]);
+      }
       if (profile.selected_tone || profile.brand_voice) {
         setDesiredTone(profile.selected_tone || profile.brand_voice || TONE_OPTIONS[0].id);
       }
+      if (profile.brand_dna?.brand_colors) setBrandColors(profile.brand_dna.brand_colors);
+      if (profile.brand_dna?.positioning) setPositioning(profile.brand_dna.positioning);
+      if (profile.brand_dna?.online_reputation) setOnlineReputation(profile.brand_dna.online_reputation);
+      if (profile.brand_dna?.ideal_client_avatar) setIdealClientAvatar(profile.brand_dna.ideal_client_avatar);
+
       if (profile.is_profile_locked) {
         setLocalLocked(true);
       } else {
@@ -93,11 +134,30 @@ export default function ProfileBusinessDnaPanel({
     }
   }, [profile]);
 
-  // Validation: 4 core questions
+  // Dynamic fallback values for the 4 core DNA ingredients
+  const resolvedPositioning = positioning.trim() || `The premier proof-first authority in ${industry} providing verifiable frameworks and zero-friction execution.`;
+  const resolvedReputation = onlineReputation.trim() || `Authoritative 4.9★ client trust sentiment with verified case studies praising transparency and speed.`;
+  const resolvedAvatar = idealClientAvatar.trim() || `Growth-minded founders, practice heads, and commercial leaders in ${location || 'target market'} who demand proven outcomes.`;
+  const resolvedColors = brandColors.trim() || 'Electric Cyan (#06B6D4), Deep Slate (#0F172A), and Polar White';
+
+  // Compute the 1-paragraph DNA
+  const paragraphDna = profile?.brand_dna?.paragraph_dna || generateOneParagraphBusinessDna({
+    businessName: businessName || 'ET Digital',
+    location: location || 'Los Angeles, CA',
+    industry,
+    tone: desiredTone,
+    brandColors: resolvedColors,
+    positioning: resolvedPositioning,
+    onlineReputation: resolvedReputation,
+    idealClientAvatar: resolvedAvatar,
+  });
+
+  // Validation: Core questions
   const requiredFields = [
     { label: 'Business Name', valid: Boolean(businessName.trim()) },
     { label: 'Website URL', valid: Boolean(websiteUrl.trim()) },
     { label: 'Location / Market', valid: Boolean(location.trim()) },
+    { label: 'Industry', valid: Boolean(industry.trim()) },
     { label: 'Desired Tone', valid: Boolean(desiredTone.trim()) },
   ];
   const completedCount = requiredFields.filter(f => f.valid).length;
@@ -136,27 +196,46 @@ export default function ProfileBusinessDnaPanel({
   // Save & Lock Business DNA
   const handleSaveAndLock = async () => {
     if (!isFormComplete) {
-      setErrorMessage('Please complete all 4 essential fields before locking.');
+      setErrorMessage('Please complete all essential fields before locking.');
       return;
     }
 
     setIsSavingAndLocking(true);
     setErrorMessage(null);
 
+    const computedParagraph = generateOneParagraphBusinessDna({
+      businessName: businessName.trim(),
+      location: location.trim(),
+      industry,
+      tone: desiredTone,
+      brandColors: resolvedColors,
+      positioning: resolvedPositioning,
+      onlineReputation: resolvedReputation,
+      idealClientAvatar: resolvedAvatar,
+    });
+
     const updatedProfilePayload: Partial<UserProfile> = {
       business_name: businessName.trim(),
       displayName: businessName.trim(),
       website_url: websiteUrl.trim(),
       location: location.trim(),
+      industry,
       selected_tone: desiredTone,
       brand_voice: desiredTone,
       is_profile_locked: true,
       profile_locked_at: new Date().toISOString(),
       brand_dna: {
         voice_archetype: desiredTone,
-        core_value_prop: `Helping clients engage, convert, and scale through authentic proof and clarity.`,
-        target_persona: `Discerning clients and commercial buyers in ${location.trim() || 'target market'}`,
-        differentiator: `High-trust, verifiable systems engineered specifically for ${businessName.trim()}`,
+        industry,
+        brand_colors: resolvedColors,
+        positioning: resolvedPositioning,
+        online_reputation: resolvedReputation,
+        ideal_client_avatar: resolvedAvatar,
+        paragraph_dna: computedParagraph,
+        summary: computedParagraph,
+        core_value_prop: resolvedPositioning,
+        target_persona: resolvedAvatar,
+        differentiator: `Proof-first systems engineered specifically for ${businessName.trim()}`,
         tone_descriptors: ['Verified Authority', 'Frictionless Clarity', 'Measurable Outcomes'],
         extracted_at: new Date().toISOString(),
       }
@@ -251,7 +330,7 @@ export default function ProfileBusinessDnaPanel({
               Business DNA Calibration
             </h2>
             <p className="text-xs sm:text-sm text-slate-200 max-w-2xl leading-relaxed">
-              We’ve streamlined our intake to the 4 essential identity questions below. Once saved, your Brand DNA locks in and powers your Content Studio, Market Intelligence, and syndication assets.
+              Hey! Let's dial in your business foundation in 4 quick questions. Once saved and locked in, your authentic voice powers your Content Studio, real-time market report, and interactive growth tracking.
             </p>
           </div>
 
@@ -329,26 +408,46 @@ export default function ProfileBusinessDnaPanel({
       {/* 2. BUSINESS DNA VIEW: EDITABLE 4 QUESTIONS VS LOCKED STRATEGIC REPORT */}
       {/* ==================================================================== */}
       {isLocked ? (
-        /* LOCKED COMPREHENSIVE STRATEGIC BRAND ARCHITECTURE REPORT */
+        /* LOCKED 1-PARAGRAPH BUSINESS DNA SYNTHESIS (FREE TIER) */
         <div className="space-y-6">
           
           {/* Top Baseline Recap Card */}
           <div className="rounded-3xl border border-emerald-500/30 bg-[var(--surface)] p-6 sm:p-8 shadow-sm space-y-6">
-            <div className="flex items-center justify-between pb-4 border-b border-[var(--border)]">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-[var(--border)]">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-500">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-500 shrink-0">
                   <ShieldCheck className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-display text-base font-bold text-[var(--text)]">
-                    Calibrated Business DNA & Strategic Baseline
-                  </h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-display text-base font-bold text-[var(--text)]">
+                      Foundation Business DNA
+                    </h3>
+                    <span className="font-mono text-[10px] text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">
+                      1-Paragraph Synthesis
+                    </span>
+                  </div>
                   <p className="text-xs text-[var(--muted)]">
-                    Parameters actively powering your Content Studio, Market Reports, and syndication assets.
+                    Parameters actively powering your Content Studio, blog posts, and syndication assets.
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(paragraphDna);
+                    setCopiedDna(true);
+                    setTimeout(() => setCopiedDna(false), 2000);
+                  }}
+                  className="px-3 py-1.5 rounded-xl border border-[var(--border)] bg-[var(--surface2)] hover:bg-[var(--surface)] text-[var(--text)] font-mono text-xs flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                  title="Copy Business DNA paragraph"
+                >
+                  {copiedDna ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5 text-cyan-500" />}
+                  <span>{copiedDna ? 'Copied!' : 'Copy DNA'}</span>
+                </button>
+
                 <button
                   type="button"
                   onClick={() => setShowResetModal(true)}
@@ -364,6 +463,7 @@ export default function ProfileBusinessDnaPanel({
               </div>
             </div>
 
+            {/* Baseline Parameters */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] space-y-1">
                 <span className="font-mono text-[10px] uppercase text-[var(--muted)] font-semibold flex items-center gap-1.5">
@@ -378,17 +478,17 @@ export default function ProfileBusinessDnaPanel({
               <div className="p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] space-y-1">
                 <span className="font-mono text-[10px] uppercase text-[var(--muted)] font-semibold flex items-center gap-1.5">
                   <Globe className="w-3.5 h-3.5 text-cyan-500" />
-                  Website URL
+                  Industry Niche
                 </span>
                 <p className="font-display text-sm font-bold text-[var(--text)] truncate">
-                  {websiteUrl || 'Not specified'}
+                  {industry || 'Advisory & Growth'}
                 </p>
               </div>
 
               <div className="p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] space-y-1">
                 <span className="font-mono text-[10px] uppercase text-[var(--muted)] font-semibold flex items-center gap-1.5">
                   <MapPin className="w-3.5 h-3.5 text-cyan-500" />
-                  Location
+                  Location / Market
                 </span>
                 <p className="font-display text-sm font-bold text-[var(--text)] truncate">
                   {location || 'Not specified'}
@@ -406,76 +506,136 @@ export default function ProfileBusinessDnaPanel({
               </div>
             </div>
 
-            {/* Strategic Architecture Report Cards (Deep Strategic Intelligence) */}
-            <div className="pt-2 space-y-4">
-              <div className="flex items-center gap-2 pb-2 border-b border-[var(--border)]">
-                <Award className="w-4 h-4 text-cyan-500" />
-                <h4 className="font-display text-xs font-bold uppercase tracking-wider text-[var(--text)]">
-                  Strategic Brand Architecture & Market Positioning
-                </h4>
+            {/* THE ONE-PARAGRAPH BUSINESS DNA */}
+            <div className="p-6 rounded-2xl bg-gradient-to-br from-[var(--surface2)] to-[var(--surface)] border border-cyan-500/30 space-y-4 shadow-sm">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-cyan-600 dark:text-cyan-400 font-bold flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  One-Paragraph Business DNA
+                </span>
+                <span className="text-[10px] font-mono text-[var(--muted)]">
+                  Free Tier Foundation
+                </span>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* 1. Core Brand Essence */}
-                <div className="p-5 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] space-y-2.5">
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-cyan-600 dark:text-cyan-400 font-bold block">
-                    Core Brand Essence & Archetype
+              <p className="text-xs sm:text-sm text-[var(--text)] leading-relaxed tracking-normal font-sans">
+                {paragraphDna}
+              </p>
+
+              {/* The 4 Explicit Required Ingredients Highlighted */}
+              <div className="pt-3 border-t border-[var(--border)] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                <div className="p-3 rounded-xl bg-[var(--surface)] border border-[var(--border)] space-y-1">
+                  <span className="font-mono text-[9px] uppercase tracking-wider text-cyan-500 font-bold block">
+                    🎨 Brand Colors
                   </span>
-                  <div className="font-display text-sm font-bold text-[var(--text)]">
-                    The Strategic Authority & Trusted Partner
+                  <span className="text-xs font-sans text-[var(--text)] font-semibold line-clamp-2">
+                    {resolvedColors}
+                  </span>
+                </div>
+
+                <div className="p-3 rounded-xl bg-[var(--surface)] border border-[var(--border)] space-y-1">
+                  <span className="font-mono text-[9px] uppercase tracking-wider text-cyan-500 font-bold block">
+                    🎯 Market Positioning
+                  </span>
+                  <span className="text-xs font-sans text-[var(--text)] font-semibold line-clamp-2">
+                    {resolvedPositioning}
+                  </span>
+                </div>
+
+                <div className="p-3 rounded-xl bg-[var(--surface)] border border-[var(--border)] space-y-1">
+                  <span className="font-mono text-[9px] uppercase tracking-wider text-cyan-500 font-bold block">
+                    ⭐ Online Reputation
+                  </span>
+                  <span className="text-xs font-sans text-[var(--text)] font-semibold line-clamp-2">
+                    {resolvedReputation}
+                  </span>
+                </div>
+
+                <div className="p-3 rounded-xl bg-[var(--surface)] border border-[var(--border)] space-y-1">
+                  <span className="font-mono text-[9px] uppercase tracking-wider text-cyan-500 font-bold block">
+                    👤 Ideal Clients Avatar
+                  </span>
+                  <span className="text-xs font-sans text-[var(--text)] font-semibold line-clamp-2">
+                    {resolvedAvatar}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* SUBTLY GATED DEEP-DIVE STRATEGIC MATRIX */}
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface2)] p-5 space-y-3.5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <Lock className="w-4 h-4 text-cyan-500" />
+                  <h4 className="font-display text-xs font-bold uppercase tracking-wider text-[var(--text)]">
+                    Deep-Dive Strategic Intelligence Matrix
+                  </h4>
+                </div>
+                <span className="text-[10px] font-mono text-[var(--muted)] bg-[var(--surface)] px-2.5 py-0.5 rounded-full border border-[var(--border)]">
+                  Available via ET Digital Partnership
+                </span>
+              </div>
+
+              {/* Gated Preview Modules */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 opacity-80">
+                <div className="p-3.5 rounded-xl bg-[var(--surface)] border border-[var(--border)] space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-display font-bold text-[var(--text)]">12-Vector Semantic Moat</span>
+                    <Lock className="w-3.5 h-3.5 text-[var(--muted)]" />
                   </div>
-                  <p className="text-xs text-[var(--muted)] leading-relaxed">
-                    Voice calibrated to command respect without sounding sterile. Positions {businessName} as the definitive expert in {location}.
+                  <p className="text-[11px] text-[var(--muted)] leading-relaxed">
+                    Entity-level competitor gap mapping and algorithmic defense architecture.
                   </p>
                 </div>
 
-                {/* 2. Positioning Statement */}
-                <div className="p-5 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] space-y-2.5">
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-cyan-600 dark:text-cyan-400 font-bold block">
-                    Market Positioning Formula
-                  </span>
-                  <div className="font-display text-sm font-bold text-[var(--text)]">
-                    Proof-First Market Navigator
+                <div className="p-3.5 rounded-xl bg-[var(--surface)] border border-[var(--border)] space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-display font-bold text-[var(--text)]">Buyer Journey Psychographics</span>
+                    <Lock className="w-3.5 h-3.5 text-[var(--muted)]" />
                   </div>
-                  <p className="text-xs text-[var(--muted)] leading-relaxed">
-                    "For decision-makers in {location}, {businessName} cuts through marketing noise to provide transparent answers, clear frameworks, and measurable outcomes."
+                  <p className="text-[11px] text-[var(--muted)] leading-relaxed">
+                    18-month buyer decision trees for commercial enterprise contracts.
                   </p>
                 </div>
 
-                {/* 3. Acquisition Void */}
-                <div className="p-5 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] space-y-2.5">
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-cyan-600 dark:text-cyan-400 font-bold block">
-                    Market Void You Uniquely Fill
-                  </span>
-                  <div className="font-display text-sm font-bold text-[var(--text)]">
-                    Zero-Friction Client Discovery
+                <div className="p-3.5 rounded-xl bg-[var(--surface)] border border-[var(--border)] space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-display font-bold text-[var(--text)]">Omnichannel Syndication Graph</span>
+                    <Lock className="w-3.5 h-3.5 text-[var(--muted)]" />
                   </div>
-                  <p className="text-xs text-[var(--muted)] leading-relaxed">
-                    Competitors force prospects through high-friction sales pitches. You win by publishing genuine answers and low-friction access.
+                  <p className="text-[11px] text-[var(--muted)] leading-relaxed">
+                    Automated multi-network publishing architecture and high-ticket conversion funnels.
                   </p>
                 </div>
+              </div>
+
+              <div className="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)]">
+                <p className="text-[11px] text-[var(--muted)] max-w-xl leading-relaxed">
+                  Your Foundation Business DNA gives you the essential 1-paragraph positioning baseline. For the full deep-dive commercial architecture and custom implementation, connect with ET Digital.
+                </p>
+                <button
+                  type="button"
+                  onClick={onOpenCalendar || onOpenBooking}
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 text-white font-display text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+                >
+                  <span>Schedule Deep-Dive Strategy Call</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
               </div>
             </div>
 
             {/* Bottom Contact ET Digital Bar */}
             <div className="pt-4 flex flex-wrap items-center justify-between gap-4 border-t border-[var(--border)]">
               <p className="text-xs text-[var(--muted)]">
-                Have questions about scaling your systems or custom agency execution? Contact ET Digital directly.
+                Ready to deploy your 1-asset editorial kit calibrated from this Business DNA?
               </p>
               <div className="flex items-center gap-3">
-                <a
-                  href="mailto:hello@growwithetdigital.com?subject=Growth%20OS%20Strategy%20Inquiry"
-                  className="px-4 py-2 rounded-xl bg-[var(--surface2)] hover:bg-[var(--surface)] text-[var(--text)] font-display text-xs font-bold border border-[var(--border)] transition-colors flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Mail className="w-3.5 h-3.5 text-cyan-500" />
-                  <span>Contact ET Digital</span>
-                </a>
                 <button
                   type="button"
-                  onClick={onOpenCalendar || onOpenBooking}
-                  className="px-5 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-display text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm"
+                  onClick={onNavigateToContentStudio}
+                  className="px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-display text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm"
                 >
-                  <span>Schedule Strategy Call</span>
+                  <span>Proceed to Content Studio</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -484,10 +644,10 @@ export default function ProfileBusinessDnaPanel({
 
         </div>
       ) : (
-        /* EDITABLE 4-QUESTION FORM (TRIMMED DOWN) */
+        /* EDITABLE BUSINESS DNA FORM WITH 1-PARAGRAPH SYNTHESIS */
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
-          {/* Left Column: Business Name, Website, Location (6 cols) */}
+          {/* Left Column: Core Identity & Industry (6 cols) */}
           <div className="lg:col-span-6 space-y-6">
             <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-7 shadow-sm space-y-5">
               <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
@@ -497,7 +657,7 @@ export default function ProfileBusinessDnaPanel({
                     Core Business Info
                   </h3>
                 </div>
-                <span className="text-[10px] font-mono text-[var(--muted)]">3 Questions</span>
+                <span className="text-[10px] font-mono text-[var(--muted)]">Core Baseline</span>
               </div>
 
               <div className="space-y-4">
@@ -573,14 +733,122 @@ export default function ProfileBusinessDnaPanel({
                     />
                   </div>
                   <p className="mt-1.5 text-[11px] text-[var(--muted)] leading-relaxed">
-                    Used to localize your market briefings, SEO targets, and Google Business Profile posts.
+                    Used to localize market briefings, Google Business Profile assets, and SEO entities.
+                  </p>
+                </div>
+
+                {/* Question 4: Industry Niche */}
+                <div>
+                  <label className="block font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] mb-1.5 font-semibold">
+                    4. Industry Sector / Niche <span className="text-cyan-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={industry}
+                      onChange={(e) => setIndustry(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--surface2)] border border-[var(--border)] text-xs text-[var(--text)] focus:outline-none focus:border-cyan-500 min-h-[42px] cursor-pointer"
+                    >
+                      {INDUSTRY_OPTIONS.map((opt) => (
+                        <option key={opt} value={opt} className="bg-[var(--surface)] text-[var(--text)]">
+                          {opt}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <p className="mt-1.5 text-[11px] text-[var(--muted)] leading-relaxed">
+                    Directly determines the Reddit trends, buyer reviews, and search click data analyzed in your free blog post.
                   </p>
                 </div>
               </div>
             </div>
+
+            {/* Optional Collapsible: Brand Colors, Positioning, Reputation & Avatar */}
+            <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm space-y-4">
+              <button
+                type="button"
+                onClick={() => setShowAdvancedDna(!showAdvancedDna)}
+                className="w-full flex items-center justify-between text-left cursor-pointer group"
+              >
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-cyan-500" />
+                  <span className="font-display text-xs font-bold uppercase tracking-wider text-[var(--text)] group-hover:text-cyan-500 transition-colors">
+                    Fine-Tune Brand DNA Parameters (Colors, Positioning, Avatar)
+                  </span>
+                </div>
+                {showAdvancedDna ? (
+                  <ChevronUp className="w-4 h-4 text-[var(--muted)]" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 text-[var(--muted)]" />
+                )}
+              </button>
+
+              <p className="text-[11px] text-[var(--muted)] leading-relaxed">
+                Your 1-paragraph Business DNA automatically synthesizes these 4 pillars. You can leave them as intelligent defaults or tailor them below.
+              </p>
+
+              {showAdvancedDna && (
+                <div className="space-y-4 pt-2 border-t border-[var(--border)] animate-in fade-in duration-200">
+                  {/* Brand Colors */}
+                  <div>
+                    <label className="block font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] mb-1 font-semibold">
+                      🎨 Brand Color Palette
+                    </label>
+                    <input
+                      type="text"
+                      value={brandColors}
+                      onChange={(e) => setBrandColors(e.target.value)}
+                      placeholder="e.g. Electric Cyan (#06B6D4), Deep Slate (#0F172A), Polar White"
+                      className="w-full px-3.5 py-2 rounded-xl bg-[var(--surface2)] border border-[var(--border)] text-xs text-[var(--text)] focus:outline-none focus:border-cyan-500 min-h-[40px]"
+                    />
+                  </div>
+
+                  {/* Positioning */}
+                  <div>
+                    <label className="block font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] mb-1 font-semibold">
+                      🎯 Market Positioning Hook
+                    </label>
+                    <input
+                      type="text"
+                      value={positioning}
+                      onChange={(e) => setPositioning(e.target.value)}
+                      placeholder={resolvedPositioning}
+                      className="w-full px-3.5 py-2 rounded-xl bg-[var(--surface2)] border border-[var(--border)] text-xs text-[var(--text)] focus:outline-none focus:border-cyan-500 min-h-[40px]"
+                    />
+                  </div>
+
+                  {/* Online Reputation */}
+                  <div>
+                    <label className="block font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] mb-1 font-semibold">
+                      ⭐ Online Reputation & Social Proof
+                    </label>
+                    <input
+                      type="text"
+                      value={onlineReputation}
+                      onChange={(e) => setOnlineReputation(e.target.value)}
+                      placeholder={resolvedReputation}
+                      className="w-full px-3.5 py-2 rounded-xl bg-[var(--surface2)] border border-[var(--border)] text-xs text-[var(--text)] focus:outline-none focus:border-cyan-500 min-h-[40px]"
+                    />
+                  </div>
+
+                  {/* Ideal Client Avatar */}
+                  <div>
+                    <label className="block font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] mb-1 font-semibold">
+                      👤 Ideal Client Avatar
+                    </label>
+                    <input
+                      type="text"
+                      value={idealClientAvatar}
+                      onChange={(e) => setIdealClientAvatar(e.target.value)}
+                      placeholder={resolvedAvatar}
+                      className="w-full px-3.5 py-2 rounded-xl bg-[var(--surface2)] border border-[var(--border)] text-xs text-[var(--text)] focus:outline-none focus:border-cyan-500 min-h-[40px]"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Right Column: Question 4 Desired Tone (6 cols) */}
+          {/* Right Column: Question 5 Desired Tone & Real-Time Paragraph DNA Preview (6 cols) */}
           <div className="lg:col-span-6 space-y-6">
             <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-7 shadow-sm space-y-5">
               <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
@@ -590,12 +858,12 @@ export default function ProfileBusinessDnaPanel({
                     Voice Archetype
                   </h3>
                 </div>
-                <span className="text-[10px] font-mono text-cyan-500 font-bold">Question 4</span>
+                <span className="text-[10px] font-mono text-cyan-500 font-bold">5 Questions Total</span>
               </div>
 
               <div>
                 <label className="block font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] mb-2 font-semibold">
-                  4. Desired Brand Tone <span className="text-cyan-500">*</span>
+                  5. Desired Brand Voice <span className="text-cyan-500">*</span>
                 </label>
                 <div className="space-y-2.5">
                   {TONE_OPTIONS.map((opt) => {
@@ -626,10 +894,24 @@ export default function ProfileBusinessDnaPanel({
                 </div>
               </div>
 
+              {/* Real-time 1-Paragraph DNA Preview */}
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-[var(--surface2)] to-[var(--surface)] border border-cyan-500/25 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-[9px] uppercase tracking-wider text-cyan-600 dark:text-cyan-400 font-bold flex items-center gap-1">
+                    <Sparkles className="w-3 h-3" />
+                    Live 1-Paragraph DNA Preview
+                  </span>
+                  <span className="text-[9px] font-mono text-[var(--muted)]">Foundation Synthesis</span>
+                </div>
+                <p className="text-xs text-[var(--text)] font-sans leading-relaxed italic line-clamp-4">
+                  "{paragraphDna}"
+                </p>
+              </div>
+
               {/* Progress and Lock Action */}
               <div className="pt-3 border-t border-[var(--border)] flex items-center justify-between gap-4">
                 <div className="text-xs text-[var(--muted)] font-mono">
-                  Completed: <strong className="text-[var(--text)]">{completedCount}/4</strong> required questions
+                  Completed: <strong className="text-[var(--text)]">{completedCount}/{requiredFields.length}</strong> required baseline fields
                 </div>
 
                 <button
@@ -683,7 +965,7 @@ export default function ProfileBusinessDnaPanel({
 
             <div className="space-y-3 text-xs text-slate-300 leading-relaxed font-sans">
               <p>
-                Locking your Business DNA baseline for <strong>{businessName}</strong> unlocks your complete Growth OS suite (Content Studio, Market Report, and Learning Feed). You can reset it anytime if needed.
+                Locking your Business DNA baseline for <strong>{businessName}</strong> activates your research-calibrated blog post, editorial graphics, and 1-asset growth kit. You can reset or edit anytime if needed.
               </p>
               
               <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 space-y-2 font-mono text-[11px]">
@@ -700,8 +982,16 @@ export default function ProfileBusinessDnaPanel({
                   <span className="text-slate-200">{location}</span>
                 </div>
                 <div className="flex justify-between">
+                  <span className="text-slate-400">Industry:</span>
+                  <span className="text-cyan-400 font-bold truncate max-w-[220px]">{industry}</span>
+                </div>
+                <div className="flex justify-between">
                   <span className="text-slate-400">Tone:</span>
                   <span className="text-cyan-400 font-bold">{desiredTone}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Brand Colors:</span>
+                  <span className="text-slate-200 truncate max-w-[220px]">{resolvedColors}</span>
                 </div>
               </div>
             </div>
