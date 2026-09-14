@@ -489,8 +489,10 @@ export default function PostAnalyticsAnalyzer({
           <div className="space-y-2.5">
             <div className="flex items-center gap-2 flex-wrap">
               {/* Official ET Digital Brand Badge */}
-              <div className="flex items-center gap-2.5 bg-slate-950/90 px-3 py-1.5 rounded-2xl border border-cyan-500/40 shadow-inner">
-                <Logo className="h-7 w-auto" showWordmark={false} />
+              <div className="flex items-center gap-2.5 bg-slate-900/90 px-3 py-1.5 rounded-2xl border border-cyan-500/40 shadow-inner">
+                <div className="bg-white px-2 py-1 rounded-xl shadow-sm flex items-center justify-center shrink-0">
+                  <Logo className="h-6 w-auto" showWordmark={false} />
+                </div>
                 <div className="leading-tight text-left">
                   <span className="font-display font-black text-xs tracking-wider uppercase text-white block">
                     ET DIGITAL
@@ -891,9 +893,9 @@ export default function PostAnalyticsAnalyzer({
             {/* Chart Header with Official ET Digital Logo */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
               <div className="flex items-center gap-3">
-                {/* Official ET Digital Logo Mark */}
-                <div className="p-1 rounded-xl bg-slate-900 border border-cyan-500/40 shadow-md shadow-cyan-500/20 flex items-center justify-center shrink-0">
-                  <Logo className="h-8 w-auto" showWordmark={false} />
+                {/* Official ET Digital Logo Mark on clean white background */}
+                <div className="px-2.5 py-1.5 rounded-xl bg-white border border-slate-200 shadow-md flex items-center justify-center shrink-0">
+                  <Logo className="h-7 w-auto" showWordmark={false} />
                 </div>
                 <div className="text-left">
                   <div className="flex items-center gap-2">
