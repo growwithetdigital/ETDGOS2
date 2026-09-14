@@ -77,12 +77,32 @@ export interface UserProfile {
   profile_locked_at?: string;
   selected_tone?: string;
   selected_category?: string;
+  post_analytics_data?: PostAnalyticsData;
   login_count?: number;
   last_sign_in_at?: string;
   last_active_at?: string;
   role?: 'owner' | 'admin' | 'client';
   created_at?: any;
   updated_at?: any;
+}
+
+export interface PostAnalyticsData {
+  platform: string;
+  postTitle: string;
+  engagementSource: string;
+  engagementType: string;
+  outcome: string;
+  beforeReach: number;
+  afterReach: number;
+  beforeEngagements: number;
+  afterEngagements: number;
+  beforeClicks: number;
+  afterClicks: number;
+  beforeInquiries: number;
+  afterInquiries: number;
+  hasInputData: boolean;
+  lastUpdated?: string;
+  aiAssessment?: string;
 }
 
 export interface PlatformTelemetryEvent {

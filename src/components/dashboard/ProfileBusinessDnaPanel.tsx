@@ -654,7 +654,9 @@ export default function ProfileBusinessDnaPanel({
       {/* ==================================================================== */}
       <div className="pt-4 border-t border-[var(--border)]">
         <PostAnalyticsAnalyzer
+          user={user}
           profile={profile}
+          onRefreshProfile={onRefreshProfile}
           onOpenBooking={onOpenCalendar || onOpenBooking}
         />
       </div>
