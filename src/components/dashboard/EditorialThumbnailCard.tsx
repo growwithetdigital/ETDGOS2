@@ -11,6 +11,7 @@ import {
   getNichePhotoForBusiness
 } from '../../utils/contentEngineHelpers';
 import { UserProfile } from '../../types';
+import { addDownloadedAsset } from '../../utils/downloadStorage';
 
 export interface ImageFormatOption {
   id: string;
@@ -509,6 +510,28 @@ export default function EditorialThumbnailCard({
           document.body.removeChild(link);
           URL.revokeObjectURL(url);
 
+          // Archive in user's Downloads Vault
+          try {
+            let previewData = '';
+            try {
+              previewData = canvas.toDataURL('image/jpeg', 0.85);
+            } catch (e) {
+              previewData = selectedPhoto;
+            }
+            addDownloadedAsset(profile?.uid, {
+              id: `dl_${Date.now()}_${format.id}`,
+              title: title || 'Editorial Graphic',
+              formatId: format.id,
+              formatName: format.name,
+              dimensions: format.dimensions,
+              dataUrl: previewData,
+              downloadedAt: new Date().toISOString(),
+              filename: `${safeSlug}-${format.fileSuffix}.png`
+            });
+          } catch (storageErr) {
+            console.warn('Downloads vault save notice:', storageErr);
+          }
+
           setDownloadSuccessFormat(format.id);
           setTimeout(() => setDownloadSuccessFormat(null), 3000);
           setIsDownloading(false);
@@ -549,6 +572,26 @@ export default function EditorialThumbnailCard({
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
+
+                try {
+                  let previewData = '';
+                  try {
+                    previewData = canvas.toDataURL('image/jpeg', 0.8);
+                  } catch (e) {
+                    previewData = selectedPhoto;
+                  }
+                  addDownloadedAsset(profile?.uid, {
+                    id: `dl_${Date.now()}_${format.id}`,
+                    title: title || 'Editorial Graphic',
+                    formatId: format.id,
+                    formatName: format.name,
+                    dimensions: format.dimensions,
+                    dataUrl: previewData,
+                    downloadedAt: new Date().toISOString(),
+                    filename: `${safeSlug}-${format.fileSuffix}.png`
+                  });
+                } catch (e) {}
+
                 setTimeout(() => {
                   URL.revokeObjectURL(url);
                   resolve();

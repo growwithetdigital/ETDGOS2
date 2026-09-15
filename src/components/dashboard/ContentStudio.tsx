@@ -1,28 +1,38 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
-  Sparkles, Copy, Check, Share2, Download, ExternalLink, 
-  RefreshCw, FileText, Linkedin, Facebook, Instagram, 
+  Sparkles, Copy, Check, Share2,
+  Linkedin, Facebook, Instagram, 
   Mail, MapPin, CheckCircle2, Lock, ArrowRight,
-  Send, Compass, Layers, ShieldCheck, Zap, TrendingUp,
-  Target, Crown, HelpCircle, ChevronDown, ChevronUp, MessageSquare, Star, Search
+  Send, ShieldCheck,
+  AlertTriangle, Edit3, X, Eye
 } from 'lucide-react';
 import XIcon from '../icons/XIcon';
 import { GeneratedContentItem, UserProfile } from '../../types';
 import { 
   stripMarkdownFormatting, 
-  CURATED_NATURAL_PHOTOS, 
   generate300WordBlogPost,
   generateSingleSocialCaption,
   generate150WordEblast,
   generateGbpPost,
-  getNichePhotoForBusiness,
   getIndustryResearchAndQuestion
 } from '../../utils/contentEngineHelpers';
 import EditorialThumbnailCard from './EditorialThumbnailCard';
+import PostAnalyticsAnalyzer from './PostAnalyticsAnalyzer';
+import { 
+  getContentLockStatus, 
+  markContentGenerated, 
+  getRevisionsRemaining, 
+  decrementRevisionsRemaining,
+  getSavedContentRevisions,
+  saveContentRevision,
+  ContentRevisionData
+} from '../../utils/downloadStorage';
 
 interface ContentStudioProps {
   item: GeneratedContentItem;
   profile: UserProfile | null;
+  user?: any;
+  onRefreshProfile?: (updatedProfile?: UserProfile) => void;
   onUpdatePhoto?: (photoUrl: string) => void;
   onOpenBooking?: () => void;
   onNavigateToBrandDna?: () => void;
@@ -31,18 +41,37 @@ interface ContentStudioProps {
 export default function ContentStudio({
   item,
   profile,
-  onUpdatePhoto,
+  user,
+  onRefreshProfile,
   onOpenBooking,
   onNavigateToBrandDna,
 }: ContentStudioProps) {
+  const uid = user?.uid || profile?.uid || 'guest';
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
-  const [showResearchDetails, setShowResearchDetails] = useState(true);
+
+  // 90-Day Lock & 3-Revision Operational States
+  const [lockInfo, setLockInfo] = useState(() => getContentLockStatus(uid, profile));
+  const [revisionsCount, setRevisionsCount] = useState(() => getRevisionsRemaining(uid, profile));
+  const [savedRevisions, setSavedRevisions] = useState<ContentRevisionData | null>(() => getSavedContentRevisions(uid));
   
-  // Profile completion check
-  const isProfileComplete = Boolean(
-    profile?.website_url && 
-    (profile?.brand_dna?.voice_archetype || profile?.business_name || profile?.industry)
-  );
+  // UI Dialog States
+  const [showPreGenerateWarningModal, setShowPreGenerateWarningModal] = useState(false);
+  const [showRevisionEditor, setShowRevisionEditor] = useState(false);
+  const [showRevisionConfirmModal, setShowRevisionConfirmModal] = useState(false);
+
+  // Editable fields for Revision Modal
+  const [draftBlogTitle, setDraftBlogTitle] = useState('');
+  const [draftBlogBody, setDraftBlogBody] = useState('');
+  const [draftSocialCaption, setDraftSocialCaption] = useState('');
+  const [draftEblastSubject, setDraftEblastSubject] = useState('');
+  const [draftEblastBody, setDraftEblastBody] = useState('');
+
+  // Sync lock and revision states when profile/uid changes
+  useEffect(() => {
+    setLockInfo(getContentLockStatus(uid, profile));
+    setRevisionsCount(getRevisionsRemaining(uid, profile));
+    setSavedRevisions(getSavedContentRevisions(uid));
+  }, [uid, profile]);
 
   const businessName = profile?.business_name || profile?.displayName || 'My Brand';
   const location = profile?.location || 'Local & National';
@@ -51,67 +80,59 @@ export default function ContentStudio({
     : '';
 
   // 1. The 1 Blog Post (Up to 300 words, SEO/AEO optimized in Brand DNA)
-  const blogPost = useMemo(() => {
-    // If the item has a fresh 300-word post use it, otherwise generate based on profile
+  const defaultBlogPost = useMemo(() => {
     if (item.blog_post && item.blog_post.word_count && item.blog_post.word_count <= 320) {
       return item.blog_post;
     }
     return generate300WordBlogPost(profile);
   }, [item, profile]);
 
-  const research = useMemo(() => {
-    return blogPost.research_signals || getIndustryResearchAndQuestion(
-      profile?.industry || profile?.brand_dna?.industry,
-      profile?.website_url,
-      profile?.target_audience,
-      businessName
-    );
-  }, [blogPost, profile, businessName]);
+  // Apply custom revision overrides if user saved any of their 3 revisions
+  const blogTitle = savedRevisions?.blogTitle || defaultBlogPost.title;
+  const cleanBlogBody = savedRevisions?.blogBody || stripMarkdownFormatting(defaultBlogPost.markdown_content);
 
-  const cleanBlogBody = useMemo(() => {
-    return stripMarkdownFormatting(blogPost.markdown_content);
-  }, [blogPost.markdown_content]);
-
-  // 2. The 1 Social Caption (Generated only once profile is complete)
-  const socialCaptionData = useMemo(() => {
-    if (!isProfileComplete) return null;
-    return generateSingleSocialCaption(profile, blogPost.title);
-  }, [isProfileComplete, profile, blogPost.title]);
+  // 2. The 1 Social Caption
+  const defaultSocialCaption = useMemo(() => {
+    return generateSingleSocialCaption(profile, blogTitle);
+  }, [profile, blogTitle]);
+  const socialCaptionText = savedRevisions?.socialCaption || defaultSocialCaption?.caption || `${blogTitle} — ${businessName}`;
 
   // 3. The 1 150-Word Eblast
-  const eblastData = useMemo(() => {
-    return generate150WordEblast(profile, blogPost.title);
-  }, [profile, blogPost.title]);
+  const defaultEblast = useMemo(() => {
+    return generate150WordEblast(profile, blogTitle);
+  }, [profile, blogTitle]);
+  const eblastSubject = savedRevisions?.eblastSubject || defaultEblast.subject;
+  const eblastBody = savedRevisions?.eblastBody || defaultEblast.body;
 
   // 4. The 1 Google Business Profile (GBP) Post
   const gbpData = useMemo(() => {
-    return generateGbpPost(profile, blogPost.title);
-  }, [profile, blogPost.title]);
+    return generateGbpPost(profile, blogTitle);
+  }, [profile, blogTitle]);
 
   // Unified Text Bundle for "Copy All Text"
   const allTextBundle = useMemo(() => {
     return `=== BLOG POST (UP TO 300 WORDS) ===
-TITLE: ${blogPost.title}
-KEYWORD: ${blogPost.target_keyword}
-WORD COUNT: ${blogPost.word_count || 285} words
+TITLE: ${blogTitle}
+KEYWORD: ${defaultBlogPost.target_keyword}
+WORD COUNT: ${defaultBlogPost.word_count || 285} words
 
 ${cleanBlogBody}
 
 === 1 SOCIAL MEDIA CAPTION ===
-${socialCaptionData ? socialCaptionData.caption : 'Complete Brand DNA to calibrate social caption.'}
+${socialCaptionText}
 
 === 1 150-WORD EBLAST ===
-SUBJECT: ${eblastData.subject}
-PREVIEW: ${eblastData.preview}
+SUBJECT: ${eblastSubject}
+PREVIEW: ${defaultEblast.preview}
 
-${eblastData.body}
+${eblastBody}
 
 === 1 GOOGLE BUSINESS PROFILE (GBP) POST ===
 ${gbpData.content}
 CTA: ${gbpData.call_to_action}
 TARGET: ${gbpData.target_keyword}
 `;
-  }, [blogPost, cleanBlogBody, socialCaptionData, eblastData, gbpData]);
+  }, [blogTitle, defaultBlogPost, cleanBlogBody, socialCaptionText, eblastSubject, defaultEblast.preview, eblastBody, gbpData]);
 
   const copyToClipboard = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
@@ -119,15 +140,12 @@ TARGET: ${gbpData.target_keyword}
     setTimeout(() => setCopiedKey(null), 2200);
   };
 
-  // Direct Social Share URLs (Copies caption and opens platform without scraping Eric's site/headshot)
+  // Direct Social Share URLs
   const handleSharePlatform = (platform: 'x' | 'instagram' | 'facebook' | 'linkedin') => {
-    const caption = socialCaptionData?.caption || `${blogPost.title} — ${businessName}`;
-    copyToClipboard(caption, `share-${platform}`);
+    copyToClipboard(socialCaptionText, `share-${platform}`);
 
     if (platform === 'x') {
-      const text = socialCaptionData?.caption
-        ? `${socialCaptionData.hook}\n\n"${blogPost.title}"\n`
-        : `${blogPost.title} — ${businessName}\n`;
+      const text = `${defaultSocialCaption?.hook || ''}\n\n"${blogTitle}"\n`;
       const xUrl = clientWebsite
         ? `https://x.com/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent(clientWebsite)}`
         : `https://x.com/intent/post?text=${encodeURIComponent(text)}`;
@@ -149,508 +167,681 @@ TARGET: ${gbpData.target_keyword}
     }
   };
 
+  // Action: First-time generation
+  const handleConfirmGenerate = () => {
+    markContentGenerated(uid);
+    setLockInfo(getContentLockStatus(uid, profile));
+    setRevisionsCount(3);
+    setShowPreGenerateWarningModal(false);
+  };
+
+  // Action: Open Revision Editor
+  const handleOpenRevisionEditor = () => {
+    setDraftBlogTitle(blogTitle);
+    setDraftBlogBody(cleanBlogBody);
+    setDraftSocialCaption(socialCaptionText);
+    setDraftEblastSubject(eblastSubject);
+    setDraftEblastBody(eblastBody);
+    setShowRevisionEditor(true);
+  };
+
+  // Action: Save Revision (consumes 1 revision)
+  const handleApplyRevision = () => {
+    if (revisionsCount <= 0) return;
+
+    const remaining = decrementRevisionsRemaining(uid);
+    const updatedData: ContentRevisionData = {
+      blogTitle: draftBlogTitle.trim(),
+      blogBody: draftBlogBody.trim(),
+      socialCaption: draftSocialCaption.trim(),
+      eblastSubject: draftEblastSubject.trim(),
+      eblastBody: draftEblastBody.trim(),
+    };
+
+    saveContentRevision(uid, updatedData);
+    setSavedRevisions(updatedData);
+    setRevisionsCount(remaining);
+    setShowRevisionConfirmModal(false);
+    setShowRevisionEditor(false);
+  };
+
+  const isContentGenerated = Boolean(lockInfo.generatedAt);
+
   return (
-    <div className="space-y-6 text-left" id="content-studio-os">
+    <div className="space-y-8 text-left" id="content-studio-os">
       
-      {/* Apple OS Style Header Bar */}
-      <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-7 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div>
-          <div className="flex flex-wrap items-center gap-2 mb-2">
-            <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-cyan-500 bg-cyan-500/10 px-2.5 py-0.5 rounded-full border border-cyan-500/30">
-              Content Studio
-            </span>
-            <span className="font-mono text-[10px] text-[var(--muted)] px-2 py-0.5 rounded-full bg-[var(--surface2)] border border-[var(--border)]">
-              1-Asset Operating Standard
-            </span>
-            <span className="font-mono text-[10px] text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/30 flex items-center gap-1 font-semibold">
-              <ShieldCheck className="w-3 h-3" />
-              SEO & AEO Calibrated
-            </span>
+      {/* ==================================================================== */}
+      {/* 1. PRE-GENERATION VERIFICATION SCREEN (Before initial generation) */}
+      {/* ==================================================================== */}
+      {!isContentGenerated ? (
+        <div className="rounded-3xl border border-amber-500/30 bg-[var(--surface)] p-6 sm:p-8 shadow-sm space-y-6">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500 shrink-0">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+            <div className="space-y-1.5">
+              <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-amber-500 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/30">
+                Pre-Generation Verification Required
+              </span>
+              <h2 className="text-xl sm:text-2xl font-display font-bold text-[var(--text)] tracking-tight">
+                Verify Your Business DNA Settings & Filters
+              </h2>
+              <p className="text-xs sm:text-sm text-[var(--muted)] leading-relaxed">
+                Before generating your quarterly 1-Asset Growth Kit, ensure your business parameters and voice archetype are 100% accurate.
+              </p>
+            </div>
           </div>
-          
-          <h2 className="text-xl sm:text-2xl font-display font-bold tracking-tight text-[var(--text)]">
-            Your 1-Asset Growth Kit
-          </h2>
-          <p className="mt-1 text-xs sm:text-sm text-[var(--muted)] max-w-2xl leading-relaxed">
-            Exactly 1 authority blog post, 1 branded editorial graphic, 1 social caption, 1 150-word eblast, and 1 GBP update tailored to {businessName}.
-          </p>
-        </div>
 
-        {/* Global Quick Actions */}
-        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-          <button
-            type="button"
-            onClick={() => copyToClipboard(allTextBundle, 'all-kit')}
-            className="px-4 py-2.5 rounded-2xl border border-[var(--border)] bg-[var(--surface2)] hover:bg-[var(--border)] text-[var(--text)] font-mono text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer shadow-sm active:scale-95"
-          >
-            {copiedKey === 'all-kit' ? (
-              <>
-                <Check className="w-3.5 h-3.5 text-emerald-500" />
-                <span className="text-emerald-500">All Text Copied!</span>
-              </>
-            ) : (
-              <>
-                <Copy className="w-3.5 h-3.5 text-cyan-500" />
-                <span>Copy Entire Kit</span>
-              </>
-            )}
-          </button>
-        </div>
-      </div>
+          {/* Operational Rules Alert Box */}
+          <div className="p-5 rounded-2xl bg-amber-500/5 border border-amber-500/25 space-y-3 font-sans text-xs text-[var(--text)]">
+            <div className="font-mono text-[11px] uppercase tracking-wider text-amber-600 dark:text-amber-400 font-bold flex items-center gap-1.5">
+              <ShieldCheck className="w-4 h-4" />
+              Content Studio Operational Constraints
+            </div>
+            <ul className="space-y-2 text-xs text-[var(--muted)] list-disc pl-5 leading-relaxed">
+              <li>
+                <strong>No Re-generation:</strong> Once generated, your 1-Asset Growth Kit is generated for your quarterly publishing cadence.
+              </li>
+              <li>
+                <strong>90-Day Generation Lock:</strong> Your account is locked for 90 days before the next quarterly asset kit can be produced.
+              </li>
+              <li>
+                <strong>Strictly 3 Revisions:</strong> You will receive exactly 3 text revisions to edit and polish your blog, eblast, and social post before they are permanently locked.
+              </li>
+              <li>
+                <strong>Automatic Downloads Vault:</strong> All high-resolution graphics downloaded from your studio are automatically preserved in your <strong>Downloads</strong> tab.
+              </li>
+            </ul>
+          </div>
 
-      {/* Main OS Grid: Left = 1:1 Graphic & 300-Word Blog Post (7 cols); Right = Social, Eblast, GBP & Pillars (5 cols) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
-        {/* Left Column: 1:1 Image Generator & 300-Word Blog Post */}
-        <div className="lg:col-span-7 space-y-6">
-          
-          {/* Asset 1: 1:1 Branded Editorial Graphic & Image Generator */}
-          <EditorialThumbnailCard
-            title={blogPost.title}
-            previewQuote={
-              profile?.mission_statement
-                ? `Modern decision-makers in ${location} choose verified authority: "${profile.mission_statement}".`
-                : `Modern decision-makers in ${location} choose verified proof and transparent solutions over marketing noise.`
-            }
-            category="AUTHORITY BRIEFING"
-            profile={profile}
-            allTextToCopy={allTextBundle}
-            socialCaptionToShare={socialCaptionData?.caption}
-          />
-
-          {/* Asset 2: 1 Blog Post (Up to 300 Words, SEO/AEO Optimized) */}
-          <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-7 space-y-5 shadow-sm">
-            
-            {/* Header with Word Count & AEO Badge */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-4 border-b border-[var(--border)]">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-cyan-500">
-                    1 Evergreen Blog Post
-                  </span>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-500 font-semibold border border-cyan-500/30">
-                    {blogPost.word_count || 285} Words (Up to 300)
-                  </span>
-                  <span className="text-[10px] font-mono text-[var(--muted)]">
-                    · {blogPost.read_time || '1.5 Min Read'}
-                  </span>
-                </div>
-                <h3 className="text-xl sm:text-2xl font-display font-bold text-[var(--text)] tracking-tight">
-                  {blogPost.title}
-                </h3>
+          {/* Current Business DNA Summary */}
+          <div className="p-5 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] space-y-3">
+            <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] font-semibold block">
+              Current Foundation DNA Parameters
+            </span>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+              <div className="p-3 rounded-xl bg-[var(--surface)] border border-[var(--border)]">
+                <span className="text-[10px] font-mono text-[var(--muted)] uppercase block">Business Name</span>
+                <span className="font-display font-bold text-[var(--text)]">{businessName}</span>
               </div>
+              <div className="p-3 rounded-xl bg-[var(--surface)] border border-[var(--border)]">
+                <span className="text-[10px] font-mono text-[var(--muted)] uppercase block">Website</span>
+                <span className="font-mono text-cyan-500 font-semibold truncate block">{profile?.website_url || 'Not set'}</span>
+              </div>
+              <div className="p-3 rounded-xl bg-[var(--surface)] border border-[var(--border)]">
+                <span className="text-[10px] font-mono text-[var(--muted)] uppercase block">Voice Archetype</span>
+                <span className="font-display font-bold text-cyan-500">{profile?.brand_voice || profile?.selected_tone || 'Authoritative & Strategic'}</span>
+              </div>
+            </div>
+          </div>
 
-              {/* 1-Click Copy Blog Post */}
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 border-t border-[var(--border)]">
+            {onNavigateToBrandDna && (
               <button
                 type="button"
-                onClick={() => copyToClipboard(`${blogPost.title}\n\n${cleanBlogBody}`, 'blog-post')}
-                className="px-3.5 py-2 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 font-mono text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border border-cyan-500/30 shrink-0"
+                onClick={onNavigateToBrandDna}
+                className="text-xs font-mono text-[var(--muted)] hover:text-[var(--text)] underline cursor-pointer"
               >
-                {copiedKey === 'blog-post' ? (
-                  <>
-                    <Check className="w-3.5 h-3.5 text-emerald-500" />
-                    <span className="text-emerald-500">Blog Copied!</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-3.5 h-3.5" />
-                    <span>Copy Blog Post</span>
-                  </>
-                )}
+                ← Adjust Business DNA Settings
               </button>
-            </div>
-
-            {/* Research Question & SEO/AEO Target Bar */}
-            <div className="space-y-3">
-              <div className="p-3.5 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] flex flex-wrap items-center justify-between gap-3 text-xs">
-                <div className="flex items-center gap-2">
-                  <Target className="w-4 h-4 text-cyan-500 shrink-0" />
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] font-semibold">
-                    AEO & SEO Target:
-                  </span>
-                  <span className="font-mono text-xs text-[var(--text)] font-bold">
-                    "{blogPost.target_keyword}"
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowResearchDetails(!showResearchDetails)}
-                  className="font-mono text-[10px] text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer"
-                >
-                  <Sparkles className="w-3 h-3" />
-                  <span>{showResearchDetails ? 'Hide Research Signals' : 'View Research Signals'}</span>
-                  {showResearchDetails ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                </button>
-              </div>
-
-              {/* Research Intelligence Panel Grounding (Reddit, Reviews, Search Trends) */}
-              {showResearchDetails && (
-                <div className="p-4 rounded-2xl bg-gradient-to-br from-[var(--surface2)] to-[var(--surface)] border border-cyan-500/30 space-y-3 animate-in fade-in duration-200">
-                  <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-[var(--border)]">
-                    <div className="flex items-center gap-2">
-                      <HelpCircle className="w-3.5 h-3.5 text-cyan-500 shrink-0" />
-                      <span className="font-mono text-[10px] uppercase tracking-wider text-cyan-600 dark:text-cyan-400 font-bold">
-                        Specific Industry Question Answered (from Business DNA):
-                      </span>
-                    </div>
-                    <span className="text-[10px] font-mono text-[var(--muted)]">
-                      {research.industry_category}
-                    </span>
-                  </div>
-
-                  <p className="text-xs font-display font-bold text-[var(--text)] leading-snug">
-                    "{research.industry_question}"
-                  </p>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
-                    {/* 1. Reddit Discussions */}
-                    <div className="p-3 rounded-xl bg-[var(--surface)] border border-[var(--border)] space-y-1">
-                      <div className="flex items-center gap-1.5 text-rose-500 font-mono text-[10px] font-bold uppercase tracking-wider">
-                        <MessageSquare className="w-3 h-3" />
-                        <span>Reddit Sentiment</span>
-                      </div>
-                      <p className="text-[11px] text-[var(--muted)] leading-relaxed">
-                        {research.reddit_insight}
-                      </p>
-                    </div>
-
-                    {/* 2. Customer Reviews */}
-                    <div className="p-3 rounded-xl bg-[var(--surface)] border border-[var(--border)] space-y-1">
-                      <div className="flex items-center gap-1.5 text-amber-500 font-mono text-[10px] font-bold uppercase tracking-wider">
-                        <Star className="w-3 h-3" />
-                        <span>Reviews Consensus</span>
-                      </div>
-                      <p className="text-[11px] text-[var(--muted)] leading-relaxed">
-                        {research.reviews_insight}
-                      </p>
-                    </div>
-
-                    {/* 3. Search & AEO Clicks */}
-                    <div className="p-3 rounded-xl bg-[var(--surface)] border border-[var(--border)] space-y-1">
-                      <div className="flex items-center gap-1.5 text-emerald-500 font-mono text-[10px] font-bold uppercase tracking-wider">
-                        <Search className="w-3 h-3" />
-                        <span>Search Clicks (AEO)</span>
-                      </div>
-                      <p className="text-[11px] text-[var(--muted)] leading-relaxed">
-                        {research.search_trends_insight}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="pt-2 border-t border-[var(--border)]/60 flex items-center justify-between text-[10px] font-mono text-[var(--muted)]">
-                    <span>Tone & Voice: <strong className="text-[var(--text)]">{profile?.selected_tone || 'Authoritative & Strategic'}</strong></span>
-                    <span className="text-cyan-600 dark:text-cyan-400">Foundation Tier Briefing (~300 Words)</span>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Blog Post Content (Clean, formatted paragraphs without markdown noise) */}
-            <div className="prose prose-sm dark:prose-invert max-w-none text-xs sm:text-sm text-[var(--text)] leading-relaxed space-y-4 pt-1">
-              {cleanBlogBody.split('\n\n').map((paragraph, index) => (
-                <p key={index} className="leading-relaxed font-sans">
-                  {paragraph}
-                </p>
-              ))}
-            </div>
-
-            {/* Subtle Deep-Dive Boundary Note */}
-            <div className="pt-4 border-t border-[var(--border)] flex flex-wrap items-center justify-between gap-3 text-xs text-[var(--muted)] font-sans">
-              <p className="text-[11px] leading-relaxed max-w-md">
-                This free editorial answers your industry's primary question according to your Business DNA. Multi-vector roadmaps and competitor moat architectures are deployed in customized engagements.
-              </p>
-              {onOpenBooking && (
-                <button
-                  type="button"
-                  onClick={onOpenBooking}
-                  className="font-mono text-xs text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer font-bold shrink-0"
-                >
-                  <span>Explore Deep-Dive Systems</span>
-                  <ArrowRight className="w-3 h-3" />
-                </button>
-              )}
-            </div>
-
-          </div>
-
-        </div>
-
-        {/* Right Column: Syndication Suite (Social Caption, 150-Word Eblast, GBP Post) */}
-        <div className="lg:col-span-5 space-y-6">
-          
-          {/* Asset 3: 1 Engaging Social Media Caption */}
-          <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-cyan-500">
-                  1 Social Media Caption
-                </span>
-                <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-500 font-semibold border border-cyan-500/20">
-                  Feed Angle
-                </span>
-              </div>
-
-              {isProfileComplete && socialCaptionData && (
-                <button
-                  type="button"
-                  onClick={() => copyToClipboard(socialCaptionData.caption, 'social-caption')}
-                  className="text-xs font-mono text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer"
-                >
-                  {copiedKey === 'social-caption' ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
-                  <span>{copiedKey === 'social-caption' ? 'Copied' : 'Copy Caption'}</span>
-                </button>
-              )}
-            </div>
-
-            {/* Gated: Not generated until user completes profile */}
-            {!isProfileComplete ? (
-              <div className="p-6 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] text-center space-y-3">
-                <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500 mx-auto">
-                  <Lock className="w-5 h-5" />
-                </div>
-                <div className="space-y-1">
-                  <h4 className="font-display text-sm font-bold text-[var(--text)]">
-                    Calibrated Caption Locked
-                  </h4>
-                  <p className="text-xs text-[var(--muted)] leading-relaxed">
-                    Enter your website URL in Brand DNA to calibrate this social caption to your authentic tone of voice.
-                  </p>
-                </div>
-                {onNavigateToBrandDna && (
-                  <button
-                    type="button"
-                    onClick={onNavigateToBrandDna}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-cyan-500 text-slate-950 font-display text-xs font-bold uppercase tracking-wider transition-all cursor-pointer hover:bg-cyan-400"
-                  >
-                    <span>Complete Website DNA</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
-            ) : (
-              socialCaptionData && (
-                <div className="space-y-3">
-                  <div className="p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] text-xs text-[var(--text)] leading-relaxed whitespace-pre-line font-sans">
-                    {socialCaptionData.caption}
-                  </div>
-
-                  {/* 1-Click Platform Share Icons */}
-                  <div className="flex items-center justify-between pt-1">
-                    <span className="font-mono text-[10px] text-[var(--muted)] uppercase tracking-wider font-semibold">
-                      Publish Directly:
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleSharePlatform('linkedin')}
-                        title="Share on LinkedIn"
-                        className="p-2 rounded-xl border border-[var(--border)] bg-[var(--surface2)] hover:bg-[#0A66C2]/10 hover:border-[#0A66C2]/40 text-[#0A66C2] transition-all cursor-pointer"
-                      >
-                        <Linkedin className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleSharePlatform('x')}
-                        title="Share on X"
-                        className="p-2 rounded-xl border border-[var(--border)] bg-[var(--surface2)] hover:bg-cyan-500/10 hover:border-cyan-500/40 text-[var(--text)] transition-all cursor-pointer"
-                      >
-                        <XIcon className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleSharePlatform('facebook')}
-                        title="Share on Facebook"
-                        className="p-2 rounded-xl border border-[var(--border)] bg-[var(--surface2)] hover:bg-[#1877F2]/10 hover:border-[#1877F2]/40 text-[#1877F2] transition-all cursor-pointer"
-                      >
-                        <Facebook className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleSharePlatform('instagram')}
-                        title="Share on Instagram"
-                        className="p-2 rounded-xl border border-[var(--border)] bg-[var(--surface2)] hover:bg-pink-500/10 hover:border-pink-500/40 text-[#E4405F] transition-all cursor-pointer"
-                      >
-                        <Instagram className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )
             )}
+
+            <button
+              type="button"
+              onClick={() => setShowPreGenerateWarningModal(true)}
+              className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-400 to-cyan-400 hover:from-emerald-300 text-slate-950 font-display text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 cursor-pointer transition-all active:scale-95"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>Verify & Generate 1-Asset Growth Kit</span>
+            </button>
           </div>
-
-          {/* Asset 4: 1 150-Word Eblast */}
-          <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">
-                  1 150-Word Eblast
+        </div>
+      ) : (
+        /* ==================================================================== */
+        /* 2. GENERATED ACTIVE STATE WITH 90-DAY LOCK & REVISION COUNTER */
+        /* ==================================================================== */
+        <div className="space-y-6">
+          
+          {/* Header Bar with 90-Day Lock Badge & Revision Count */}
+          <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-7 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+              <div className="flex flex-wrap items-center gap-2 mb-2">
+                <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-cyan-500 bg-cyan-500/10 px-2.5 py-0.5 rounded-full border border-cyan-500/30">
+                  Content Studio
                 </span>
-                <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-purple-500/10 text-purple-600 dark:text-purple-400 font-semibold border border-purple-500/20">
-                  ~{eblastData.word_count} Words
+                <span className="font-mono text-[10px] text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/30 flex items-center gap-1 font-semibold">
+                  <Lock className="w-3 h-3" />
+                  Locked for {lockInfo.daysRemaining} Days
                 </span>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <a
-                  href={`mailto:?subject=${encodeURIComponent(eblastData.subject)}&body=${encodeURIComponent(eblastData.body)}`}
-                  className="text-xs font-mono text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1 cursor-pointer"
-                  title="Open draft in default mail app"
-                >
-                  <Send className="w-3 h-3" />
-                  <span className="hidden sm:inline">Open Mail</span>
-                </a>
-                <button
-                  type="button"
-                  onClick={() => copyToClipboard(`Subject: ${eblastData.subject}\n\n${eblastData.body}`, 'eblast')}
-                  className="text-xs font-mono text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1 cursor-pointer"
-                >
-                  {copiedKey === 'eblast' ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
-                  <span>{copiedKey === 'eblast' ? 'Copied' : 'Copy Eblast'}</span>
-                </button>
-              </div>
-            </div>
-
-            <div className="space-y-2.5">
-              {/* Subject Line with Dedicated Copy Button */}
-              <div className="p-3.5 rounded-xl bg-[var(--surface2)] border border-[var(--border)] text-xs flex items-center justify-between gap-3">
-                <div className="space-y-0.5 overflow-hidden">
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] font-semibold block">
-                    Subject Line
-                  </span>
-                  <span className="font-display font-bold text-[var(--text)] truncate block">
-                    {eblastData.subject}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => copyToClipboard(eblastData.subject, 'eblast_subject')}
-                  className="px-2.5 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--border)] text-xs font-mono text-purple-600 dark:text-purple-400 font-semibold flex items-center gap-1.5 shrink-0 transition-colors cursor-pointer shadow-2xs active:scale-95"
-                  title="Copy email subject line only"
-                >
-                  {copiedKey === 'eblast_subject' ? (
+                <span className={`font-mono text-[10px] px-2.5 py-0.5 rounded-full border font-semibold flex items-center gap-1 ${
+                  revisionsCount > 0 
+                    ? 'text-cyan-500 bg-cyan-500/10 border-cyan-500/30' 
+                    : 'text-emerald-500 bg-emerald-500/10 border-emerald-500/30'
+                }`}>
+                  {revisionsCount > 0 ? (
                     <>
-                      <Check className="w-3.5 h-3.5 text-emerald-500" />
-                      <span className="text-emerald-500">Copied</span>
+                      <Edit3 className="w-3 h-3" />
+                      {revisionsCount} of 3 Revisions Remaining
                     </>
                   ) : (
                     <>
-                      <Copy className="w-3.5 h-3.5" />
-                      <span>Copy Subject</span>
+                      <CheckCircle2 className="w-3 h-3" />
+                      Content Finalized (3/3 Used)
                     </>
                   )}
-                </button>
+                </span>
               </div>
-
-              {/* Email Body with Dedicated Copy Button */}
-              <div className="relative rounded-2xl bg-[var(--surface2)] border border-[var(--border)] p-4 text-xs text-[var(--text)] leading-relaxed whitespace-pre-line font-sans space-y-3">
-                <div className="flex items-center justify-between pb-2 border-b border-[var(--border)]/60 text-[10px] font-mono text-[var(--muted)]">
-                  <span className="uppercase font-semibold tracking-wider">Email Body Content</span>
-                  <button
-                    type="button"
-                    onClick={() => copyToClipboard(eblastData.body, 'eblast_body')}
-                    className="px-2.5 py-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--border)] text-xs font-mono text-purple-600 dark:text-purple-400 font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs active:scale-95"
-                    title="Copy email body only"
-                  >
-                    {copiedKey === 'eblast_body' ? (
-                      <>
-                        <Check className="w-3.5 h-3.5 text-emerald-500" />
-                        <span className="text-emerald-500">Copied</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3.5 h-3.5" />
-                        <span>Copy Body</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-                <div>{eblastData.body}</div>
-              </div>
+              
+              <h2 className="text-xl sm:text-2xl font-display font-bold tracking-tight text-[var(--text)]">
+                Your 1-Asset Growth Kit
+              </h2>
+              <p className="mt-1 text-xs sm:text-sm text-[var(--muted)] max-w-2xl leading-relaxed">
+                Calibrated for {businessName}. Downloaded photos are saved in your Downloads tab.
+              </p>
             </div>
-          </div>
 
-          {/* Asset 5: 1 Google Business Profile (GBP) Post */}
-          <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
-                  1 Google Business Profile Post
+            {/* Quick Actions Header: Edit Revisions & Copy Entire Kit */}
+            <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+              {revisionsCount > 0 ? (
+                <button
+                  type="button"
+                  onClick={handleOpenRevisionEditor}
+                  className="px-4 py-2.5 rounded-2xl border border-cyan-500/40 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 font-mono text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer shadow-sm active:scale-95"
+                >
+                  <Edit3 className="w-3.5 h-3.5" />
+                  <span>Edit Content ({revisionsCount} left)</span>
+                </button>
+              ) : (
+                <span className="px-3 py-2 rounded-xl bg-slate-800/60 border border-slate-700 text-slate-400 font-mono text-xs flex items-center gap-1.5">
+                  <Lock className="w-3 h-3" />
+                  <span>Locked (3/3 Revisions Used)</span>
                 </span>
-                <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-700 dark:text-amber-400 font-semibold border border-amber-500/20">
-                  Local SEO
-                </span>
-              </div>
+              )}
 
               <button
                 type="button"
-                onClick={() => copyToClipboard(gbpData.content, 'gbp')}
-                className="text-xs font-mono text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1 cursor-pointer"
+                onClick={() => copyToClipboard(allTextBundle, 'all-kit')}
+                className="px-4 py-2.5 rounded-2xl border border-[var(--border)] bg-[var(--surface2)] hover:bg-[var(--border)] text-[var(--text)] font-mono text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer shadow-sm active:scale-95"
               >
-                {copiedKey === 'gbp' ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
-                <span>{copiedKey === 'gbp' ? 'Copied' : 'Copy GBP'}</span>
+                {copiedKey === 'all-kit' ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-500" />
+                    <span className="text-emerald-500">All Text Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3.5 h-3.5 text-cyan-500" />
+                    <span>Copy Entire Kit</span>
+                  </>
+                )}
               </button>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] text-xs text-[var(--text)] leading-relaxed font-sans space-y-2">
-              <p>{gbpData.content}</p>
-              <div className="pt-2 border-t border-[var(--border)] flex items-center justify-between text-[11px] font-mono text-[var(--muted)]">
-                <span>CTA Button: <strong className="text-[var(--text)]">{gbpData.call_to_action}</strong></span>
-                <span>Links to your website</span>
-              </div>
-            </div>
-
-            {/* Strategic Suggestion to attach the featured image download */}
-            <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-[var(--text)] flex items-start gap-2.5">
-              <Sparkles className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-              <div className="space-y-0.5">
-                <span className="font-mono text-[10px] uppercase font-bold text-amber-600 dark:text-amber-400 block tracking-wider">
-                  Pro-Tip: Attach Branded Graphic
-                </span>
-                <p className="text-[11px] text-[var(--muted)] leading-relaxed">
-                  Download the high-resolution 1:1 image from the <strong>Article Featured Image Options</strong> above and attach it when publishing this GBP post. Google rewards visual updates with up to 3x higher map-pack engagement.
-                </p>
-              </div>
             </div>
           </div>
 
-          {/* Executive Implementation Bridge */}
-          <div className="rounded-3xl border border-cyan-500/30 bg-gradient-to-br from-[var(--surface)] via-[var(--surface2)] to-cyan-950/20 p-6 space-y-3 text-left shadow-sm">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--text)] font-bold">
-                  Executive Dispatch Active · Category Authority Architecture
-                </span>
+          {/* Main OS Grid: Left = 1:1 Graphic & Blog Post; Right = Social, Eblast, GBP */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            {/* Left Column: 1:1 Image Generator & 300-Word Blog Post */}
+            <div className="lg:col-span-7 space-y-6">
+              
+              {/* Asset 1: 1:1 Branded Editorial Graphic (Saves to Downloads on download) */}
+              <EditorialThumbnailCard
+                title={blogTitle}
+                previewQuote={
+                  profile?.mission_statement
+                    ? `Modern decision-makers in ${location} choose verified authority: "${profile.mission_statement}".`
+                    : `Modern decision-makers in ${location} choose verified proof and transparent solutions over marketing noise.`
+                }
+                category="AUTHORITY BRIEFING"
+                profile={profile}
+                allTextToCopy={allTextBundle}
+                socialCaptionToShare={socialCaptionText}
+              />
+
+              {/* Asset 2: 1 Blog Post (Up to 300 Words, SEO/AEO Optimized) */}
+              <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-7 space-y-5 shadow-sm">
+                
+                {/* Header with Word Count & AEO Badge */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-4 border-b border-[var(--border)]">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-cyan-500">
+                        1 Evergreen Blog Post
+                      </span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-500 font-semibold border border-cyan-500/30">
+                        {defaultBlogPost.word_count || 285} Words (Up to 300)
+                      </span>
+                    </div>
+                    <h3 className="text-xl sm:text-2xl font-display font-bold text-[var(--text)] tracking-tight">
+                      {blogTitle}
+                    </h3>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    {revisionsCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={handleOpenRevisionEditor}
+                        className="px-3 py-1.5 rounded-xl border border-[var(--border)] bg-[var(--surface2)] hover:bg-[var(--border)] text-xs font-mono text-[var(--text)] flex items-center gap-1.5 cursor-pointer"
+                        title="Edit blog text"
+                      >
+                        <Edit3 className="w-3 h-3 text-cyan-500" />
+                        <span>Edit ({revisionsCount} left)</span>
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => copyToClipboard(`${blogTitle}\n\n${cleanBlogBody}`, 'blog-post')}
+                      className="px-3.5 py-2 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 font-mono text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border border-cyan-500/30 shrink-0"
+                    >
+                      {copiedKey === 'blog-post' ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-500" />
+                          <span className="text-emerald-500">Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>Copy Post</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Body Text */}
+                <div className="p-5 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] text-xs sm:text-sm text-[var(--text)] leading-relaxed font-sans whitespace-pre-line space-y-4">
+                  {cleanBlogBody}
+                </div>
               </div>
-              <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold border border-cyan-500/30">
-                1 Calibrated 5-Asset Suite Complete
-              </span>
+
             </div>
-            <p className="text-xs text-[var(--muted)] leading-relaxed font-sans">
-              Your Growth OS provides a complete, broadcast-ready asset kit calibrated from your authentic Brand DNA. To expand from 1 quarterly piece into an omni-channel compounding authority machine with <strong>weekly tailored dispatches, custom syndication, and private 1-on-1 strategy sessions with ET Digital</strong>, explore our tailored implementation partnerships.
-            </p>
-            {onOpenBooking && (
-              <div className="pt-1 flex flex-wrap items-center justify-between gap-3">
-                <button
-                  type="button"
-                  onClick={onOpenBooking}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 text-white font-display text-xs font-bold uppercase tracking-wider transition-all shadow-sm cursor-pointer"
-                >
-                  <Crown className="w-3.5 h-3.5 text-amber-300" />
-                  <span>Work with ET Digital</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-                <span className="text-[11px] font-mono text-[var(--muted)] hidden sm:inline">
-                  Done-For-You Execution · ET Digital Growth Systems
-                </span>
+
+            {/* Right Column: Social, Eblast, GBP */}
+            <div className="lg:col-span-5 space-y-6">
+              
+              {/* Asset 3: 1 Social Media Post */}
+              <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-cyan-500">
+                      1 Social Media Post
+                    </span>
+                    <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-semibold border border-cyan-500/20">
+                      Multi-Platform
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => copyToClipboard(socialCaptionText, 'social-caption')}
+                    className="text-xs font-mono text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    {copiedKey === 'social-caption' ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+                    <span>{copiedKey === 'social-caption' ? 'Copied' : 'Copy Caption'}</span>
+                  </button>
+                </div>
+
+                {/* Social Caption Preview Box */}
+                <div className="p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] text-xs text-[var(--text)] leading-relaxed font-sans whitespace-pre-line">
+                  {socialCaptionText}
+                </div>
+
+                {/* Platform Share Row */}
+                <div className="pt-2 flex items-center justify-between gap-2">
+                  <span className="text-[10px] font-mono text-[var(--muted)] uppercase font-semibold">
+                    1-Click Direct Share:
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleSharePlatform('linkedin')}
+                      className="p-2 rounded-xl bg-[var(--surface2)] hover:bg-[#0077B5]/20 hover:text-[#0077B5] transition-colors border border-[var(--border)] cursor-pointer"
+                      title="Share to LinkedIn"
+                    >
+                      <Linkedin className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSharePlatform('x')}
+                      className="p-2 rounded-xl bg-[var(--surface2)] hover:bg-slate-700 hover:text-white transition-colors border border-[var(--border)] cursor-pointer"
+                      title="Share to X"
+                    >
+                      <XIcon className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSharePlatform('facebook')}
+                      className="p-2 rounded-xl bg-[var(--surface2)] hover:bg-[#1877F2]/20 hover:text-[#1877F2] transition-colors border border-[var(--border)] cursor-pointer"
+                      title="Share to Facebook"
+                    >
+                      <Facebook className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSharePlatform('instagram')}
+                      className="p-2 rounded-xl bg-[var(--surface2)] hover:bg-[#E4405F]/20 hover:text-[#E4405F] transition-colors border border-[var(--border)] cursor-pointer"
+                      title="Open Instagram"
+                    >
+                      <Instagram className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
               </div>
-            )}
+
+              {/* Asset 4: 1 150-Word Eblast */}
+              <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">
+                      1 150-Word Eblast
+                    </span>
+                    <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-purple-500/10 text-purple-600 dark:text-purple-400 font-semibold border border-purple-500/20">
+                      150 Words
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => copyToClipboard(`Subject: ${eblastSubject}\n\n${eblastBody}`, 'eblast')}
+                      className="text-xs font-mono text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      {copiedKey === 'eblast' ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+                      <span>{copiedKey === 'eblast' ? 'Copied' : 'Copy Eblast'}</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-2.5">
+                  <div className="p-3.5 rounded-xl bg-[var(--surface2)] border border-[var(--border)] text-xs flex items-center justify-between gap-3">
+                    <div className="space-y-0.5 overflow-hidden">
+                      <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] font-semibold block">
+                        Subject Line
+                      </span>
+                      <span className="font-display font-bold text-[var(--text)] truncate block">
+                        {eblastSubject}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] text-xs text-[var(--text)] leading-relaxed whitespace-pre-line font-sans">
+                    {eblastBody}
+                  </div>
+                </div>
+              </div>
+
+              {/* Asset 5: 1 Google Business Profile (GBP) Post */}
+              <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                      1 Google Business Profile Post
+                    </span>
+                    <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-700 dark:text-amber-400 font-semibold border border-amber-500/20">
+                      Local SEO
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => copyToClipboard(gbpData.content, 'gbp')}
+                    className="text-xs font-mono text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    {copiedKey === 'gbp' ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+                    <span>{copiedKey === 'gbp' ? 'Copied' : 'Copy GBP'}</span>
+                  </button>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] text-xs text-[var(--text)] leading-relaxed font-sans space-y-2">
+                  <p>{gbpData.content}</p>
+                  <div className="pt-2 border-t border-[var(--border)] flex items-center justify-between text-[11px] font-mono text-[var(--muted)]">
+                    <span>CTA: <strong className="text-[var(--text)]">{gbpData.call_to_action}</strong></span>
+                    <span>Links to website</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+          {/* ==================================================================== */}
+          {/* 3. VERIFIED DETAILS & PREDICT WITH ET DIGITAL (Moved to Content Studio) */}
+          {/* ==================================================================== */}
+          <div className="pt-6 border-t border-[var(--border)]">
+            <PostAnalyticsAnalyzer
+              user={user}
+              profile={profile}
+              onRefreshProfile={onRefreshProfile}
+              onOpenBooking={onOpenBooking}
+            />
           </div>
 
         </div>
+      )}
 
-      </div>
+      {/* ==================================================================== */}
+      {/* 4. MODAL: CONFIRM INITIAL GENERATION & WARN 90-DAY LOCK */}
+      {/* ==================================================================== */}
+      {showPreGenerateWarningModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
+          <div className="max-w-md w-full rounded-3xl border border-amber-500/40 bg-slate-900 p-6 sm:p-7 shadow-2xl space-y-5 text-left text-white animate-in fade-in zoom-in-95">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 shrink-0">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-display text-base font-bold text-white">
+                  Confirm Settings & Generate?
+                </h3>
+                <span className="text-[10px] font-mono text-amber-400 uppercase tracking-wider">
+                  90-Day Lock Initiates Upon Generation
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-3 text-xs text-slate-300 leading-relaxed font-sans">
+              <p>
+                Please confirm that your Business DNA settings and filters are accurate.
+              </p>
+              <div className="p-3.5 rounded-xl bg-slate-800/80 border border-slate-700/80 space-y-1 text-[11px] font-mono text-slate-300">
+                <div>• <strong>Business:</strong> {businessName}</div>
+                <div>• <strong>Website:</strong> {profile?.website_url || 'Not set'}</div>
+                <div>• <strong>Tone:</strong> {profile?.brand_voice || profile?.selected_tone || 'Authoritative'}</div>
+              </div>
+              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px]">
+                <strong>Important Notice:</strong> Once generated, there is <strong>no regeneration</strong> and you will receive <strong>3 text revisions</strong>. Content generation locks for 90 days.
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowPreGenerateWarningModal(false)}
+                className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold cursor-pointer"
+              >
+                Review Settings
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmGenerate}
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-400 to-cyan-400 hover:from-emerald-300 text-slate-950 text-xs font-black uppercase tracking-wider flex items-center gap-1.5 cursor-pointer shadow-lg shadow-cyan-500/25"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-slate-950" />
+                <span>Confirm & Generate</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ==================================================================== */}
+      {/* 5. MODAL: REVISION EDITOR (Strictly 3 Revisions) */}
+      {/* ==================================================================== */}
+      {showRevisionEditor && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 overflow-y-auto">
+          <div className="max-w-2xl w-full rounded-3xl border border-cyan-500/40 bg-slate-900 p-6 sm:p-7 shadow-2xl space-y-5 text-left text-white my-8">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shrink-0">
+                  <Edit3 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-display text-base font-bold text-white">
+                    Edit Content ({revisionsCount} of 3 Revisions Remaining)
+                  </h3>
+                  <span className="text-[10px] font-mono text-cyan-400 uppercase tracking-wider">
+                    Refine Blog, Social Caption & Eblast
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowRevisionEditor(false)}
+                className="p-2 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1 text-xs">
+              {/* Blog Title */}
+              <div>
+                <label className="block font-mono text-[10px] uppercase tracking-wider text-slate-400 mb-1">
+                  Blog Post Title
+                </label>
+                <input
+                  type="text"
+                  value={draftBlogTitle}
+                  onChange={(e) => setDraftBlogTitle(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-cyan-500"
+                />
+              </div>
+
+              {/* Blog Body */}
+              <div>
+                <label className="block font-mono text-[10px] uppercase tracking-wider text-slate-400 mb-1">
+                  Blog Post Body (Up to 300 Words)
+                </label>
+                <textarea
+                  rows={6}
+                  value={draftBlogBody}
+                  onChange={(e) => setDraftBlogBody(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-cyan-500"
+                />
+              </div>
+
+              {/* Social Caption */}
+              <div>
+                <label className="block font-mono text-[10px] uppercase tracking-wider text-slate-400 mb-1">
+                  Social Media Caption
+                </label>
+                <textarea
+                  rows={4}
+                  value={draftSocialCaption}
+                  onChange={(e) => setDraftSocialCaption(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-cyan-500"
+                />
+              </div>
+
+              {/* Eblast Subject */}
+              <div>
+                <label className="block font-mono text-[10px] uppercase tracking-wider text-slate-400 mb-1">
+                  Eblast Subject Line
+                </label>
+                <input
+                  type="text"
+                  value={draftEblastSubject}
+                  onChange={(e) => setDraftEblastSubject(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-cyan-500"
+                />
+              </div>
+
+              {/* Eblast Body */}
+              <div>
+                <label className="block font-mono text-[10px] uppercase tracking-wider text-slate-400 mb-1">
+                  Eblast Body (150 Words)
+                </label>
+                <textarea
+                  rows={4}
+                  value={draftEblastBody}
+                  onChange={(e) => setDraftEblastBody(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-cyan-500"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-3 border-t border-slate-800">
+              <span className="text-[11px] font-mono text-amber-400">
+                Saving will use 1 revision ({revisionsCount - 1} will remain).
+              </span>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowRevisionEditor(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowRevisionConfirmModal(true)}
+                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 text-slate-950 text-xs font-black uppercase tracking-wider cursor-pointer shadow-lg shadow-cyan-500/25"
+                >
+                  Save Revision
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ==================================================================== */}
+      {/* 6. MODAL: CONFIRM USING 1 REVISION */}
+      {/* ==================================================================== */}
+      {showRevisionConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 backdrop-blur-md p-4">
+          <div className="max-w-md w-full rounded-3xl border border-cyan-500/40 bg-slate-900 p-6 sm:p-7 shadow-2xl space-y-5 text-left text-white animate-in fade-in zoom-in-95">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shrink-0">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-display text-base font-bold text-white">
+                  Confirm Revision Save?
+                </h3>
+                <span className="text-[10px] font-mono text-cyan-400 uppercase tracking-wider">
+                  Consume 1 of {revisionsCount} Revisions
+                </span>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed font-sans">
+              Saving these updates will consume 1 of your 3 revisions. Once all 3 are used, content editing will be locked for the remainder of your 90-day cycle.
+            </p>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowRevisionConfirmModal(false)}
+                className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold cursor-pointer"
+              >
+                Back to Editing
+              </button>
+              <button
+                type="button"
+                onClick={handleApplyRevision}
+                className="px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-black uppercase tracking-wider cursor-pointer shadow-lg shadow-cyan-500/25"
+              >
+                Confirm & Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

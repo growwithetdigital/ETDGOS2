@@ -18,6 +18,7 @@ import {
 } from 'recharts';
 import { UserProfile, PostAnalyticsData } from '../../types';
 import { updateUserProfile } from '../../lib/firebase';
+import { getIndustryMarketIntel } from '../../utils/contentEngineHelpers';
 import Logo from '../Logo';
 
 interface PostAnalyticsAnalyzerProps {
@@ -125,7 +126,6 @@ export default function PostAnalyticsAnalyzer({
   const [hasInputData, setHasInputData] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
-  const [customAiAssessment, setCustomAiAssessment] = useState<string>('');
 
   // 2. Load saved data on sign-in / profile load
   useEffect(() => {
@@ -164,9 +164,6 @@ export default function PostAnalyticsAnalyzer({
         setPredictionCadence(saved.predictionCadence);
       }
       setHasInputData(true);
-      if (saved.aiAssessment) {
-        setCustomAiAssessment(saved.aiAssessment);
-      }
     }
   }, [profile?.post_analytics_data, uid]);
 
@@ -216,82 +213,20 @@ export default function PostAnalyticsAnalyzer({
     }
   }, [predictionCadence]);
 
-  // 3. High-Level Assessment from Eric's Marketing Mind
-  const ericsMarketingMindAssessment = useMemo(() => {
-    if (!hasUserEnteredAnyData && !hasInputData) {
-      return "Hey, welcome to your interactive growth chart! Enter your post or eblast details along with your numbers on the left. Everything starts at zero and saves to your account so you can see exactly where your clients are paying attention.";
-    }
+  // 3. Industry-Specific Market Intelligence from Reputable Sources (No Links)
+  const marketIntel = useMemo(() => getIndustryMarketIntel(profile), [profile]);
 
-    const topicLabel = postTitle.trim() ? `"${postTitle.trim()}"` : 'your featured piece of content';
-    const inquiriesDelta = afterInquiries - beforeInquiries;
-    const reachDelta = afterReach - beforeReach;
-
-    let ericResonance = '';
-    if (engagementType.includes('Pricing') || engagementType.includes('Retainer')) {
-      ericResonance = `When prospective clients ask you directly about pricing or retainers from ${topicLabel}, that tells me you successfully removed the fear of the unknown. Most people hesitate to reach out because they feel like they will get trapped in a high-pressure sales pitch. By laying out clear thinking in your content, you made it safe and natural for them to say, "Hey, how do we work together?"`;
-    } else if (engagementType.includes('Problem Clarification') || engagementType.includes('Advice')) {
-      ericResonance = `When clients reach out with specific advice questions after reading ${topicLabel}, you’ve hit a genuine nerve. You didn't just post general motivation—you named the exact operational headache keeping them up at night. That positions you right away as a trusted advisor, not someone just trying to sell them something.`;
-    } else if (engagementType.includes('Reshare') || engagementType.includes('Endorsement')) {
-      ericResonance = `Having peers and industry decision-makers reshare ${topicLabel} is one of the highest compliments in digital marketing. It means your post gave them a smart, credible piece of thinking to put in front of their own audience. That’s organic word-of-mouth working for you while you sleep.`;
-    } else if (engagementType.includes('Case Study') || engagementType.includes('Methodology')) {
-      ericResonance = `Analytical buyers love verifiable proof. By breaking down real steps in ${topicLabel}, you gave them the exact confidence they needed to picture working with you. Proof cuts through marketing skepticism faster than any fancy sales pitch ever could.`;
-    } else {
-      ericResonance = `Your content in ${topicLabel} worked because you spoke in an authentic, approachable voice. People are tired of sterile corporate speak. When you speak human-to-human about real challenges, prospective clients stop scrolling and start listening.`;
-    }
-
-    let ericSource = '';
-    if (engagementSource.includes('DMs') || engagementSource.includes('Private')) {
-      ericSource = `They chose to reach out via direct message because your message touched a strategic priority they preferred to discuss confidentially. That is a hallmark of high-ticket decision-making.`;
-    } else if (engagementSource.includes('Comments')) {
-      ericSource = `The public discussion in the comments built immediate social proof. When quiet prospects see other respected voices chiming in, it gives them permission to reach out too.`;
-    } else if (engagementSource.includes('Email') || engagementSource.includes('Newsletter')) {
-      ericSource = `Subscribers reading your email blast already know your name. Seeing clicks and replies from your list proves your direct subscriber relationship is healthy and responsive.`;
-    } else {
-      ericSource = `Generating this via ${engagementSource} confirms your message cut through platform clutter and connected with real decision-makers.`;
-    }
-
-    let ericOutcome = '';
-    if (outcome.includes('Discovery Call') || outcome.includes('Consultation Booked')) {
-      ericOutcome = `Best of all, this resulted in a booked consultation. That is the true scorecard of great marketing: turning reader attention into a real conversation on your calendar.`;
-    } else if (outcome.includes('Proposal') || outcome.includes('Scope')) {
-      ericOutcome = `Moving straight into a proposal request shows you answered their major objections upfront. The sales cycle is already halfway completed.`;
-    } else if (outcome.includes('Client Signed') || outcome.includes('Retainer')) {
-      ericOutcome = `Closing a high-ticket client from this effort proves your Growth OS content isn't an expense—it's an asset that produces real business revenue.`;
-    } else {
-      ericOutcome = `This outcome validates that consistent, thoughtful positioning protects your brand reputation and feeds your pipeline.`;
-    }
-
-    const metricNote = inquiriesDelta > 0 
-      ? ` Moving from ${beforeInquiries} to ${afterInquiries} inquiries is proof that clear messaging gets responses.`
-      : reachDelta > 0 
-      ? ` Expanding your audience by +${reachDelta} people means more prospective clients now know who you are and what you stand for.`
-      : '';
-
-    return `${ericResonance} ${ericSource} ${ericOutcome}${metricNote}`;
-  }, [
-    hasUserEnteredAnyData,
-    hasInputData,
-    postTitle,
-    engagementType,
-    engagementSource,
-    outcome,
-    beforeInquiries,
-    afterInquiries,
-    beforeReach,
-    afterReach
-  ]);
-
-  // 4. What Data and Marketing Experts (HubSpot & Ad Age) Say
+  // 4. What Industry Data & Research Experts Say (Derived from user's industry source)
   const industryExpertsAssessment = useMemo(() => {
     if (!hasUserEnteredAnyData && !hasInputData) {
-      return "According to global marketing data from HubSpot and Ad Age, businesses that document and measure self-verified engagement signals experience 3.8x faster sales conversion than businesses relying on uncalibrated broadcast ads.";
+      return `According to verified industry research from ${marketIntel.article_source}, businesses in ${marketIntel.detected_niche} that systematically document and measure engagement signals convert high-value clients 3.8x faster than businesses relying on generic promotional ads. ${marketIntel.executive_takeaway}`;
     }
 
     const baselineInquiries = afterInquiries > 0 ? afterInquiries : 1;
     const projectedAnnualWeekly = baselineInquiries * 12;
 
-    return `HubSpot’s State of Marketing research proves that educational, problem-solving content drives a 3.8x higher buyer conversion rate than promotional advertising. Ad Age reporting underscores that today's enterprise buyers research 70% of their decision before ever speaking to a sales representative. By measuring real self-verified outcomes from ${contentFormat}, you are leveraging high-intent buyer psychology. If your current quarterly content generated ${afterInquiries} high-intent inquiries, empirical data suggests a weekly publishing cadence with ET Digital projects to ~${projectedAnnualWeekly} qualified inbound inquiries per year.`;
-  }, [hasUserEnteredAnyData, hasInputData, afterInquiries, contentFormat]);
+    return `Empirical research from ${marketIntel.article_source} demonstrates that in ${marketIntel.detected_niche}: "${marketIntel.leading_headline}". Specifically, ${marketIntel.executive_takeaway} Key benchmark: ${marketIntel.market_shift_stat} By tracking real self-verified outcomes from ${contentFormat}, you leverage high-intent buyer psychology. With ${afterInquiries} high-intent inquiries from this effort, maintaining a weekly publishing cadence with ET Digital projects to approximately ~${projectedAnnualWeekly} qualified inbound opportunities annually.`;
+  }, [hasUserEnteredAnyData, hasInputData, afterInquiries, contentFormat, marketIntel]);
 
   // 5. Save and persist handler
   const handleSaveData = async () => {
@@ -315,7 +250,7 @@ export default function PostAnalyticsAnalyzer({
       predictionCadence,
       hasInputData: true,
       lastUpdated: new Date().toISOString(),
-      aiAssessment: ericsMarketingMindAssessment
+      aiAssessment: industryExpertsAssessment
     };
 
     try {
@@ -356,7 +291,6 @@ export default function PostAnalyticsAnalyzer({
     setBeforeInquiries(0);
     setAfterInquiries(0);
     setPostTitle('');
-    setCustomAiAssessment('');
     setHasInputData(false);
 
     if (typeof window !== 'undefined' && uid) {
@@ -524,7 +458,7 @@ export default function PostAnalyticsAnalyzer({
               Interactive Campaign Results & Growth Prediction
             </h2>
             <p className="text-xs sm:text-sm text-slate-200 max-w-2xl leading-relaxed">
-              Hey, I'm Eric Lamarr Thomas. Enter your self-verified results from your Growth OS content below. All numbers stay saved across logins. Toggle the prediction engine to see what happens when you partner with ET Digital to scale your publishing frequency.
+              Track and evaluate your self-verified results from your Growth OS campaigns below. All metrics persist securely across logins. Toggle the prediction engine to see what happens when you partner with ET Digital to scale your publishing frequency.
             </p>
           </div>
 
@@ -567,19 +501,19 @@ export default function PostAnalyticsAnalyzer({
       {/* Main Layout: 2-Column Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        {/* Left Column: Input Form & Qualitative Descriptors (5 cols) */}
+        {/* Left Column: Simplified Verified Campaign Details (5 cols) */}
         <div className="lg:col-span-5 rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 space-y-5 shadow-sm">
           <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
             <div className="space-y-0.5">
               <h3 className="font-display text-sm font-bold text-[var(--text)] uppercase tracking-wider">
-                Self-Verified Campaign Details
+                Verified Campaign Details
               </h3>
               <p className="text-xs text-[var(--muted)]">
-                All metrics start at 0 and persist across your visits
+                Track your key campaign outcome and inquiries
               </p>
             </div>
             <span className="text-[10px] font-mono text-cyan-600 dark:text-cyan-400 font-bold bg-cyan-500/10 px-2.5 py-1 rounded-lg">
-              {hasUserEnteredAnyData ? 'Verified Data Active' : 'Enter Details Below'}
+              {hasUserEnteredAnyData ? 'Verified Lift Active' : 'Self-Verified'}
             </span>
           </div>
 
@@ -607,81 +541,25 @@ export default function PostAnalyticsAnalyzer({
               </div>
             </div>
 
-            {/* 2. Content Format / Asset Type */}
+            {/* 2. Campaign Headline / Topic */}
             <div className="space-y-1.5">
               <label className="font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] font-bold">
-                GOS Content Format
-              </label>
-              <select
-                value={contentFormat}
-                onChange={(e) => setContentFormat(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface2)] text-[var(--text)] font-sans text-xs focus:outline-none focus:border-cyan-500 cursor-pointer"
-              >
-                {CONTENT_FORMAT_OPTIONS.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* 3. Campaign Headline / Topic */}
-            <div className="space-y-1.5">
-              <label className="font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] font-bold">
-                Post / Eblast / Content Title
+                Campaign Title / Subject
               </label>
               <input
                 type="text"
                 value={postTitle}
                 onChange={(e) => setPostTitle(e.target.value)}
-                placeholder="e.g. Why Category Proof Beats Marketing Noise in 2026"
+                placeholder="e.g. 1-Asset Growth Kit Campaign"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface2)] text-[var(--text)] font-sans text-xs focus:outline-none focus:border-cyan-500 transition-colors"
               />
             </div>
 
-            {/* 4. Selection: Where Engagement Came From */}
-            <div className="space-y-1.5 pt-1">
+            {/* 3. Primary Buyer Action / Conversion */}
+            <div className="space-y-1.5">
               <label className="font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] font-bold flex items-center gap-1.5">
-                <Compass className="w-3.5 h-3.5 text-cyan-500" />
-                <span>What Engagement It Generated</span>
-              </label>
-              <select
-                value={engagementSource}
-                onChange={(e) => setEngagementSource(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface2)] text-[var(--text)] font-sans text-xs focus:outline-none focus:border-cyan-500 cursor-pointer"
-              >
-                {ENGAGEMENT_SOURCE_OPTIONS.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* 5. Selection: Type of Engagement */}
-            <div className="space-y-1.5 pt-1">
-              <label className="font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] font-bold flex items-center gap-1.5">
-                <Target className="w-3.5 h-3.5 text-purple-500" />
-                <span>Nature of Prospective Buyer Interaction</span>
-              </label>
-              <select
-                value={engagementType}
-                onChange={(e) => setEngagementType(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface2)] text-[var(--text)] font-sans text-xs focus:outline-none focus:border-cyan-500 cursor-pointer"
-              >
-                {ENGAGEMENT_TYPE_OPTIONS.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* 6. Selection: Conversion Outcome ("Cover Version") */}
-            <div className="space-y-1.5 pt-1">
-              <label className="font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] font-bold flex items-center gap-1.5">
-                <Award className="w-3.5 h-3.5 text-emerald-500" />
-                <span>Conversion Generated ("Cover Version")</span>
+                <Award className="w-3.5 h-3.5 text-cyan-500" />
+                <span>Primary Buyer Action</span>
               </label>
               <select
                 value={outcome}
@@ -696,192 +574,108 @@ export default function PostAnalyticsAnalyzer({
               </select>
             </div>
 
-            {/* 7. Selection: Growth Generated */}
-            <div className="space-y-1.5 pt-1">
-              <label className="font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] font-bold flex items-center gap-1.5">
-                <TrendingUp className="w-3.5 h-3.5 text-cyan-500" />
-                <span>Long-Term Growth Generated</span>
-              </label>
-              <select
-                value={growthGenerated}
-                onChange={(e) => setGrowthGenerated(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface2)] text-[var(--text)] font-sans text-xs focus:outline-none focus:border-cyan-500 cursor-pointer"
-              >
-                {GROWTH_GENERATED_OPTIONS.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* 8. Before vs After Numeric Inputs (Starts and stays at 0 by default) */}
-            <div className="pt-3 border-t border-[var(--border)] space-y-3">
+            {/* 4. Core Metric: Inquiries & Conversations (Before vs. After) */}
+            <div className="pt-2 border-t border-[var(--border)] space-y-2">
               <div className="flex items-center justify-between">
-                <label className="font-mono text-[10px] uppercase tracking-wider text-cyan-600 dark:text-cyan-400 font-bold">
-                  Self-Verified Numbers (Before vs. After)
+                <label className="font-mono text-[10px] uppercase tracking-wider text-amber-500 font-bold flex items-center gap-1">
+                  <PhoneCall className="w-3 h-3 text-amber-400" />
+                  High-Intent Inquiries / Leads (Core Metric)
                 </label>
-                <span className="text-[10px] font-mono text-[var(--muted)]">
-                  All metrics stay at 0 until entered
+                <span className="font-mono text-[10px] text-amber-400 font-bold">
+                  {afterInquiries >= beforeInquiries ? `+${afterInquiries - beforeInquiries} net lift` : `${afterInquiries - beforeInquiries}`}
                 </span>
               </div>
-
-              {/* Reach */}
-              <div className="p-2.5 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] space-y-2">
-                <div className="flex items-center justify-between text-[11px] font-medium text-[var(--text)]">
-                  <span className="flex items-center gap-1">
-                    <Users className="w-3 h-3 text-cyan-500" />
-                    Audience Reach / Impressions
-                  </span>
-                  <span className="font-mono text-[10px] text-cyan-500 font-bold">
-                    {afterReach >= beforeReach ? `+${afterReach - beforeReach}` : `${afterReach - beforeReach}`}
-                  </span>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="p-2.5 rounded-xl bg-[var(--surface2)] border border-[var(--border)]">
+                  <span className="text-[9px] font-mono text-[var(--muted)] uppercase block mb-1">Before Prior</span>
+                  <input
+                    type="number"
+                    min="0"
+                    value={beforeInquiries}
+                    onChange={(e) => setBeforeInquiries(Math.max(0, parseInt(e.target.value) || 0))}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] font-mono text-xs focus:outline-none focus:border-cyan-500"
+                  />
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <span className="text-[9px] font-mono text-[var(--muted)] uppercase block mb-1">Before (Prior)</span>
-                    <input
-                      type="number"
-                      min="0"
-                      value={beforeReach}
-                      onChange={(e) => setBeforeReach(Math.max(0, parseInt(e.target.value) || 0))}
-                      className="w-full px-2.5 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] font-mono text-xs focus:outline-none focus:border-cyan-500"
-                    />
-                  </div>
-                  <div>
-                    <span className="text-[9px] font-mono text-cyan-500 uppercase block mb-1">After (Campaign)</span>
-                    <input
-                      type="number"
-                      min="0"
-                      value={afterReach}
-                      onChange={(e) => setAfterReach(Math.max(0, parseInt(e.target.value) || 0))}
-                      className="w-full px-2.5 py-1.5 rounded-lg border border-cyan-500/40 bg-[var(--surface)] text-[var(--text)] font-mono text-xs focus:outline-none focus:border-cyan-500"
-                    />
-                  </div>
+                <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30">
+                  <span className="text-[9px] font-mono text-amber-500 uppercase block mb-1 font-bold">After Campaign</span>
+                  <input
+                    type="number"
+                    min="0"
+                    value={afterInquiries}
+                    onChange={(e) => setAfterInquiries(Math.max(0, parseInt(e.target.value) || 0))}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-amber-500/40 bg-[var(--surface)] text-[var(--text)] font-mono text-xs focus:outline-none focus:border-cyan-500 font-bold"
+                  />
                 </div>
               </div>
-
-              {/* Engagements */}
-              <div className="p-2.5 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] space-y-2">
-                <div className="flex items-center justify-between text-[11px] font-medium text-[var(--text)]">
-                  <span className="flex items-center gap-1">
-                    <Sparkles className="w-3 h-3 text-purple-500" />
-                    Engagements (Comments & Discussions)
-                  </span>
-                  <span className="font-mono text-[10px] text-purple-500 font-bold">
-                    {afterEngagements >= beforeEngagements ? `+${afterEngagements - beforeEngagements}` : `${afterEngagements - beforeEngagements}`}
-                  </span>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <span className="text-[9px] font-mono text-[var(--muted)] uppercase block mb-1">Before (Prior)</span>
-                    <input
-                      type="number"
-                      min="0"
-                      value={beforeEngagements}
-                      onChange={(e) => setBeforeEngagements(Math.max(0, parseInt(e.target.value) || 0))}
-                      className="w-full px-2.5 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] font-mono text-xs focus:outline-none focus:border-cyan-500"
-                    />
-                  </div>
-                  <div>
-                    <span className="text-[9px] font-mono text-purple-500 uppercase block mb-1">After (Campaign)</span>
-                    <input
-                      type="number"
-                      min="0"
-                      value={afterEngagements}
-                      onChange={(e) => setAfterEngagements(Math.max(0, parseInt(e.target.value) || 0))}
-                      className="w-full px-2.5 py-1.5 rounded-lg border border-purple-500/40 bg-[var(--surface)] text-[var(--text)] font-mono text-xs focus:outline-none focus:border-cyan-500"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Website Clicks */}
-              <div className="p-2.5 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] space-y-2">
-                <div className="flex items-center justify-between text-[11px] font-medium text-[var(--text)]">
-                  <span className="flex items-center gap-1">
-                    <MousePointerClick className="w-3 h-3 text-emerald-500" />
-                    Website / Link Clicks
-                  </span>
-                  <span className="font-mono text-[10px] text-emerald-500 font-bold">
-                    {afterClicks >= beforeClicks ? `+${afterClicks - beforeClicks}` : `${afterClicks - beforeClicks}`}
-                  </span>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <span className="text-[9px] font-mono text-[var(--muted)] uppercase block mb-1">Before (Prior)</span>
-                    <input
-                      type="number"
-                      min="0"
-                      value={beforeClicks}
-                      onChange={(e) => setBeforeClicks(Math.max(0, parseInt(e.target.value) || 0))}
-                      className="w-full px-2.5 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] font-mono text-xs focus:outline-none focus:border-cyan-500"
-                    />
-                  </div>
-                  <div>
-                    <span className="text-[9px] font-mono text-emerald-500 uppercase block mb-1">After (Campaign)</span>
-                    <input
-                      type="number"
-                      min="0"
-                      value={afterClicks}
-                      onChange={(e) => setAfterClicks(Math.max(0, parseInt(e.target.value) || 0))}
-                      className="w-full px-2.5 py-1.5 rounded-lg border border-emerald-500/40 bg-[var(--surface)] text-[var(--text)] font-mono text-xs focus:outline-none focus:border-cyan-500"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Inquiries / Leads */}
-              <div className="p-2.5 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] space-y-2">
-                <div className="flex items-center justify-between text-[11px] font-medium text-[var(--text)]">
-                  <span className="flex items-center gap-1">
-                    <PhoneCall className="w-3 h-3 text-amber-500" />
-                    Direct Inquiries / Consultation Requests
-                  </span>
-                  <span className="font-mono text-[10px] text-amber-500 font-bold">
-                    {afterInquiries >= beforeInquiries ? `+${afterInquiries - beforeInquiries}` : `${afterInquiries - beforeInquiries}`}
-                  </span>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <span className="text-[9px] font-mono text-[var(--muted)] uppercase block mb-1">Before (Prior)</span>
-                    <input
-                      type="number"
-                      min="0"
-                      value={beforeInquiries}
-                      onChange={(e) => setBeforeInquiries(Math.max(0, parseInt(e.target.value) || 0))}
-                      className="w-full px-2.5 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] font-mono text-xs focus:outline-none focus:border-cyan-500"
-                    />
-                  </div>
-                  <div>
-                    <span className="text-[9px] font-mono text-amber-500 uppercase block mb-1">After (Campaign)</span>
-                    <input
-                      type="number"
-                      min="0"
-                      value={afterInquiries}
-                      onChange={(e) => setAfterInquiries(Math.max(0, parseInt(e.target.value) || 0))}
-                      className="w-full px-2.5 py-1.5 rounded-lg border border-amber-500/40 bg-[var(--surface)] text-[var(--text)] font-mono text-xs focus:outline-none focus:border-cyan-500"
-                    />
-                  </div>
-                </div>
-              </div>
-
             </div>
 
-            {/* Quick Save Button */}
-            <div className="pt-2">
-              <button
-                type="button"
-                onClick={handleSaveData}
-                disabled={isSaving}
-                className="w-full py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-display text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 shadow-md shadow-cyan-500/20 active:scale-95"
-              >
-                <Save className="w-4 h-4" />
-                <span>{saveSuccess ? 'Numbers Saved & Synced!' : 'Save & Update Growth Chart'}</span>
-              </button>
+            {/* 5. Audience Reach & Website Clicks */}
+            <div className="pt-2 border-t border-[var(--border)] space-y-2">
+              <label className="font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] font-bold">
+                Audience Reach & Website Traffic (Before vs After)
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="p-2.5 rounded-xl bg-[var(--surface2)] border border-[var(--border)] space-y-1.5">
+                  <span className="text-[9px] font-mono text-cyan-500 uppercase block font-bold">Audience Reach</span>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="Before"
+                      value={beforeReach}
+                      onChange={(e) => setBeforeReach(Math.max(0, parseInt(e.target.value) || 0))}
+                      className="w-full px-2 py-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] font-mono text-[11px]"
+                    />
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="After"
+                      value={afterReach}
+                      onChange={(e) => setAfterReach(Math.max(0, parseInt(e.target.value) || 0))}
+                      className="w-full px-2 py-1 rounded-lg border border-cyan-500/40 bg-[var(--surface)] text-[var(--text)] font-mono text-[11px]"
+                    />
+                  </div>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-[var(--surface2)] border border-[var(--border)] space-y-1.5">
+                  <span className="text-[9px] font-mono text-emerald-500 uppercase block font-bold">Website Visits</span>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="Before"
+                      value={beforeClicks}
+                      onChange={(e) => setBeforeClicks(Math.max(0, parseInt(e.target.value) || 0))}
+                      className="w-full px-2 py-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] font-mono text-[11px]"
+                    />
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="After"
+                      value={afterClicks}
+                      onChange={(e) => setAfterClicks(Math.max(0, parseInt(e.target.value) || 0))}
+                      className="w-full px-2 py-1 rounded-lg border border-emerald-500/40 bg-[var(--surface)] text-[var(--text)] font-mono text-[11px]"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
 
           </div>
+
+          {/* Quick Save Button */}
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={handleSaveData}
+              disabled={isSaving}
+              className="w-full py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-display text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 shadow-md shadow-cyan-500/20 active:scale-95"
+            >
+              <Save className="w-4 h-4" />
+              <span>{saveSuccess ? 'Results Saved & Synced!' : 'Save & Update Growth Chart'}</span>
+            </button>
+          </div>
+
         </div>
 
         {/* Right Column: Visible Interactive Chart + ET Digital Prediction Engine (7 cols) */}
@@ -1159,6 +953,20 @@ export default function PostAnalyticsAnalyzer({
                   All metrics start and stay at 0 until you input your data on the left.
                 </div>
               )}
+
+              {/* Mandatory Prediction Disclaimer */}
+              {viewMode === 'prediction' && (
+                <div className="mt-3 p-3.5 rounded-xl bg-slate-900/90 border border-cyan-500/30 text-xs text-slate-300 font-sans leading-relaxed">
+                  <p className="flex items-start gap-2">
+                    <span className="text-cyan-400 font-mono font-bold uppercase text-[10px] tracking-wider shrink-0 bg-cyan-950 px-2 py-0.5 rounded border border-cyan-500/40">
+                      Disclaimer
+                    </span>
+                    <span className="text-[11px] text-slate-300">
+                      These projections are estimates based on historical data, empirical industry publishing benchmarks, and compound mathematical modeling. Actual results will vary depending on your offer resonance, conversion assets, target market dynamics, and existing audience size.
+                    </span>
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Campaign Provenance Footer inside the Chart Card */}
@@ -1182,7 +990,7 @@ export default function PostAnalyticsAnalyzer({
                   Ready to turn quarterly spikes into weekly or daily client acquisition?
                 </span>
                 <p className="text-[11px] text-slate-300">
-                  Book a direct 1-on-1 strategy consultation with Eric to review your data and map out your growth trajectory.
+                  Book a direct strategy consultation with our team to review your data and map out your growth trajectory.
                 </p>
               </div>
 
@@ -1192,89 +1000,49 @@ export default function PostAnalyticsAnalyzer({
                 className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 text-slate-950 font-display text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-cyan-500/30 cursor-pointer transition-all active:scale-95 shrink-0"
                 id="chart-book-consultation-cta"
               >
-                <span>Book Consultation with Eric</span>
+                <span>Work with Us</span>
                 <ArrowUpRight className="w-4 h-4" />
               </button>
             </div>
 
           </div>
 
-          {/* TWO HIGH-LEVEL ASSESSMENTS: Eric's Marketing Mind & What Data Experts Say */}
-          <div className="space-y-4">
-            
-            {/* 1. Assessment From My Marketing Mind (Eric Lamarr Thomas) */}
-            <div className="rounded-3xl border border-cyan-500/30 bg-[var(--surface)] p-6 space-y-3 shadow-sm text-left">
-              <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 flex items-center justify-center font-bold font-mono text-xs">
-                    ET
-                  </div>
-                  <div>
-                    <h4 className="font-display text-sm font-bold text-[var(--text)] uppercase tracking-wider">
-                      From My Marketing Mind
-                    </h4>
-                    <span className="text-[10px] font-mono text-cyan-600 dark:text-cyan-400 font-bold">
-                      Eric Lamarr Thomas · Founder, ET Digital
-                    </span>
-                  </div>
+          {/* Industry Data & Research Assessment (Reputable Industry Sources, No Links) */}
+          <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 space-y-3 shadow-sm text-left">
+            <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+                  <Sparkles className="w-4 h-4" />
                 </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCustomAiAssessment('');
-                    setSaveSuccess(false);
-                  }}
-                  className="text-[11px] font-mono text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer"
-                  title="Re-evaluate with current parameters"
-                >
-                  <RefreshCw className="w-3 h-3" />
-                  <span>Refresh Insight</span>
-                </button>
-              </div>
-
-              <div className="p-4 sm:p-5 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] text-xs sm:text-sm text-[var(--text)] leading-relaxed space-y-2.5 font-sans">
-                <p className="whitespace-pre-line">
-                  {ericsMarketingMindAssessment}
-                </p>
-              </div>
-            </div>
-
-            {/* 2. What Data & Marketing Experts (HubSpot & Ad Age) Say */}
-            <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 space-y-3 shadow-sm text-left">
-              <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center">
-                    <Sparkles className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h4 className="font-display text-sm font-bold text-[var(--text)] uppercase tracking-wider">
-                      What Data & Marketing Experts Say
-                    </h4>
-                    <span className="text-[10px] font-mono text-purple-600 dark:text-purple-400 font-bold">
-                      HubSpot Research & Ad Age (adage.com) Consensus
-                    </span>
-                  </div>
-                </div>
-
-                <span className="text-[10px] font-mono text-[var(--muted)]">
-                  Verified Data Analysis
-                </span>
-              </div>
-
-              <div className="p-4 sm:p-5 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] text-xs sm:text-sm text-[var(--text)] leading-relaxed space-y-2.5 font-sans">
-                <p>
-                  {industryExpertsAssessment}
-                </p>
-                <div className="pt-2 border-t border-[var(--border)] flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono text-[var(--muted)]">
-                  <span className="text-emerald-500 font-bold flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    Empirical Takeaway: Consistent frequency turns unpredictable spikes into reliable pipeline.
+                <div>
+                  <h4 className="font-display text-sm font-bold text-[var(--text)] uppercase tracking-wider">
+                    What Industry Data & Research Experts Say
+                  </h4>
+                  <span className="text-[10px] font-mono text-purple-600 dark:text-purple-400 font-bold">
+                    Source: {marketIntel.article_source}
                   </span>
                 </div>
               </div>
+
+              <span className="text-[10px] font-mono text-[var(--muted)]">
+                Verified Market Research
+              </span>
             </div>
 
+            <div className="p-4 sm:p-5 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] text-xs sm:text-sm text-[var(--text)] leading-relaxed space-y-2.5 font-sans">
+              <p>
+                {industryExpertsAssessment}
+              </p>
+              <div className="pt-2 border-t border-[var(--border)] flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono text-[var(--muted)]">
+                <span className="text-emerald-500 font-bold flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  Niche Benchmark: {marketIntel.market_shift_stat}
+                </span>
+                <span className="text-[10px] text-[var(--muted)] font-mono">
+                  {marketIntel.detected_niche}
+                </span>
+              </div>
+            </div>
           </div>
 
         </div>

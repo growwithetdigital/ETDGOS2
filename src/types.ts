@@ -81,6 +81,22 @@ export interface UserProfile {
   writing_sample?: string;
   is_profile_locked?: boolean;
   profile_locked_at?: string;
+  dna_resets_count?: number;
+  dna_resets_quarter?: string;
+  content_generated_at?: string;
+  content_locked_until?: string;
+  revisions_remaining?: number;
+  custom_blog_post?: {
+    title?: string;
+    markdown_content?: string;
+  };
+  custom_eblast?: {
+    subject?: string;
+    body?: string;
+  };
+  custom_social_caption?: string;
+  custom_gbp_post?: string;
+  downloaded_assets?: DownloadedAsset[];
   selected_tone?: string;
   selected_category?: string;
   post_analytics_data?: PostAnalyticsData;
@@ -219,4 +235,15 @@ export interface GeneratedContentItem {
     executive_takeaway: string;
     market_shift_stat: string;
   };
+}
+
+export interface DownloadedAsset {
+  id: string;
+  title: string;
+  formatId: string;
+  formatName: string;
+  dimensions: string;
+  dataUrl?: string;
+  downloadedAt: string;
+  filename: string;
 }

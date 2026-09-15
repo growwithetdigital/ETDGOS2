@@ -8,7 +8,7 @@ import {
   Instagram, Facebook, Mail, Gift, Search, ArrowLeft, LogOut,
   Crown, Lock, RefreshCw, Clock, Target, BarChart3, BookOpen,
   ShieldCheck, AlertCircle, Copy, Check, Heart, Cpu, Globe,
-  TrendingUp, Zap, HelpCircle, Archive, Tv
+  TrendingUp, Zap, HelpCircle, Archive, Tv, Download
 } from 'lucide-react';
 import { 
   UserProfile, 
@@ -33,6 +33,8 @@ import LearningFeedPanel from './LearningFeedPanel';
 import OwnerTelemetryModal from './OwnerTelemetryModal';
 import MarketReportPanel from './MarketReportPanel';
 import FounderNotePanel from './FounderNotePanel';
+import DownloadsPanel from './DownloadsPanel';
+import { getDownloadedAssets } from '../../utils/downloadStorage';
 import { isAuthorizedForTelemetry } from '../../utils/telemetryAuth';
 import Logo from '../Logo';
 
@@ -126,6 +128,7 @@ export function StatusPill({ status }: { status: string }) {
 export type NavTabId = 
   | 'profile_dna'
   | 'content_studio' 
+  | 'downloads'
   | 'market_report' 
   | 'learning_feed'
   | 'founder_note';
@@ -159,11 +162,25 @@ export default function WhiteboardShell({
   const [copiedDailyTip, setCopiedDailyTip] = useState(false);
   const [lockedTabNotice, setLockedTabNotice] = useState<string | null>(null);
 
+  // Track downloads count in Downloads Vault
+  const [downloadCount, setDownloadCount] = useState(() => getDownloadedAssets(user?.uid).length);
+
+  useEffect(() => {
+    const updateCount = () => {
+      setDownloadCount(getDownloadedAssets(user?.uid).length);
+    };
+    window.addEventListener('et_asset_downloaded', updateCount);
+    return () => window.removeEventListener('et_asset_downloaded', updateCount);
+  }, [user?.uid]);
+
   // Check if current user is owner / admin strictly matching the 3 authorized emails
   const isOwner = isAuthorizedForTelemetry(user?.email, profile?.email);
 
   const isFreeTier = profile?.tier === 'free' || !profile?.tier;
-  const isProfileLocked = Boolean(profile?.is_profile_locked);
+  const isProfileLocked = Boolean(
+    profile?.is_profile_locked || 
+    (typeof window !== 'undefined' && localStorage.getItem(`et_dna_locked_${user?.uid || 'guest'}`) === 'true')
+  );
 
   // Theme Variables - Balanced Contrast: crisp, WCAG-compliant readability on both light and dark surfaces
   const themeStyles = useMemo(() => {
@@ -275,6 +292,14 @@ export default function WhiteboardShell({
       isGated: !isProfileLocked
     },
     { 
+      id: 'downloads' as NavTabId, 
+      label: 'Downloads', 
+      fullLabel: 'Downloads Vault',
+      icon: isProfileLocked ? Download : Lock, 
+      badge: isProfileLocked ? (downloadCount > 0 ? `${downloadCount}` : 'Vault') : 'Locked',
+      isGated: !isProfileLocked
+    },
+    { 
       id: 'market_report' as NavTabId, 
       label: 'Market Report', 
       fullLabel: 'Industry Market Report',
@@ -346,7 +371,7 @@ export default function WhiteboardShell({
               <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500" />
             </span>
             <span className="font-mono text-[10px] tracking-widest text-cyan-400 uppercase font-black">
-              ET DIGITAL GROWTH OS // CORE v2.6 ACTIVE
+              ET DIGITAL GROWTH OS
             </span>
             <span className="hidden lg:inline-block font-mono text-[9px] text-slate-500">
               | LATENCY: 14ms | ENGINE: GEMINI 2.5 FLASH | ENCRYPTION: 256-BIT SECURE
@@ -600,10 +625,24 @@ export default function WhiteboardShell({
                 <ContentStudio
                   item={selectedItem || defaultSampleItem}
                   profile={profile}
+                  user={user}
+                  onRefreshProfile={onRefreshProfile}
                   onOpenBooking={onOpenBooking}
                   onNavigateToBrandDna={() => setActiveTab('profile_dna')}
                 />
               </div>
+            )}
+
+            {/* ==================================================================== */}
+            {/* TAB: SAVED DOWNLOADS VAULT */}
+            {/* ==================================================================== */}
+            {activeTab === 'downloads' && (
+              <DownloadsPanel
+                user={user}
+                profile={profile}
+                onNavigateToContentStudio={() => setActiveTab('content_studio')}
+                onOpenBooking={onOpenBooking}
+              />
             )}
 
             {/* ==================================================================== */}

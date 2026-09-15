@@ -298,7 +298,7 @@ export default function BusinessDnaPanel({
         {/* Right Column: Extracted Brand DNA & 1 Market Report Headline (7 cols) */}
         <div className="lg:col-span-7 space-y-6">
           
-          {/* SECTION 1: The 1 Leading Market Report Headline with Outbound Article Link */}
+          {/* SECTION 1: The 1 Leading Market Report Headline Citing Reputable Source (No Links) */}
           <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-7 shadow-sm space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[var(--border)]">
               <div className="flex items-center gap-2">
@@ -307,7 +307,7 @@ export default function BusinessDnaPanel({
                   Industry Market Report
                 </span>
                 <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30 font-semibold">
-                  1 Leading Headline
+                  1 Relevant Headline
                 </span>
               </div>
 
@@ -329,21 +329,14 @@ export default function BusinessDnaPanel({
                     <span className="font-mono text-[10px] text-[var(--muted)] uppercase tracking-wider font-semibold">
                       Verified Source:
                     </span>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[var(--surface)] border border-[var(--border)] text-[var(--text)]">
+                    <span className="px-2.5 py-0.5 rounded text-[10px] font-mono font-bold bg-[var(--surface)] border border-[var(--border)] text-cyan-600 dark:text-cyan-400">
                       {marketIntel.article_source}
                     </span>
                   </div>
 
-                  {/* Direct Outbound Link to Reputable Article */}
-                  <a
-                    href={marketIntel.article_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-xs font-mono text-cyan-600 dark:text-cyan-400 hover:underline font-bold"
-                  >
-                    <span>Read on {marketIntel.article_source.includes('Ad Age') ? 'adage.com' : 'HubSpot'}</span>
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
+                  <span className="text-[10px] font-mono text-[var(--muted)]">
+                    Direct Intelligence Citation
+                  </span>
                 </div>
 
                 <div className="text-xs text-[var(--text)] font-sans leading-relaxed">

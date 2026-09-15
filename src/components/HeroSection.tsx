@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, Sparkles, BookOpen } from 'lucide-react';
 
 interface HeroSectionProps {
   onOpenBooking: () => void;
@@ -88,13 +88,18 @@ export default function HeroSection({ onOpenBooking }: HeroSectionProps) {
               </h1>
             </div>
 
-            {/* Subtitle / Positioning Copy in Eric's human, approachable voice */}
-            <p className="text-base sm:text-lg text-slate-300 max-w-2xl leading-relaxed font-sans font-normal">
-              Hey, I'm Eric Thomas. At ET Digital, I partner with founders and growing businesses to cut through marketing noise and attract their dream clients. We build clean, high-converting websites, craft messages people actually care about, and set up reliable systems to grow your revenue—without confusing agency jargon.
-            </p>
+            {/* Subtitle / Positioning Copy */}
+            <div className="space-y-3.5 max-w-2xl">
+              <p className="text-base sm:text-lg text-slate-300 leading-relaxed font-sans font-normal">
+                At <strong className="text-white font-semibold">ET Digital</strong>, we engineer data- and results-driven <span className="text-cyan-300 font-medium">Growth Operating Systems™</span> and provide high-touch marketing strategy consultation for ambitious founders and modern businesses. We avoid short-lived gimmicks and generic AI noise in favor of disciplined systems—crafting clear messaging, high-converting digital assets, and reliable client-acquisition pipelines that compound over time.
+              </p>
+              <p className="text-sm sm:text-base text-slate-400 leading-relaxed font-sans">
+                Diagnose your current digital discoverability with our free <button type="button" onClick={() => handleScrollTo('growth-grader')} className="text-brand-cyan hover:underline font-semibold cursor-pointer">Growth &amp; AI Auditor</button>, download the <button type="button" onClick={() => handleScrollTo('playbook-download')} className="text-brand-cyan hover:underline font-semibold cursor-pointer">Executive Growth Playbook</button>, or explore our core services below to see how we build.
+              </p>
+            </div>
 
             {/* Top Two CTA Buttons: Schedule Discovery Call & Explore Services */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-1">
               <button
                 type="button"
                 onClick={onOpenBooking}
@@ -116,6 +121,34 @@ export default function HeroSection({ onOpenBooking }: HeroSectionProps) {
                 <span className="flex items-center gap-2">
                   <span>Explore Services</span>
                 </span>
+              </button>
+            </div>
+
+            {/* Free Resources & Tools Plug Bar: Auditor & Playbook Quick Access */}
+            <div className="pt-2 border-t border-slate-800/80 flex flex-wrap items-center gap-2.5">
+              <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider mr-1">
+                Explore Free Tools:
+              </span>
+              <button
+                type="button"
+                onClick={() => handleScrollTo('growth-grader')}
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-brand-cyan/50 text-slate-300 hover:text-white font-mono text-[11px] transition-all cursor-pointer shadow-sm group"
+                id="hero-plug-auditor"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-brand-cyan group-hover:scale-110 transition-transform" />
+                <span>Growth &amp; AI Auditor</span>
+                <span className="text-[10px] text-brand-cyan font-bold bg-brand-cyan/10 px-1.5 py-0.5 rounded">Interactive</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleScrollTo('playbook-download')}
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-brand-cyan/50 text-slate-300 hover:text-white font-mono text-[11px] transition-all cursor-pointer shadow-sm group"
+                id="hero-plug-playbook"
+              >
+                <BookOpen className="w-3.5 h-3.5 text-brand-cyan group-hover:scale-110 transition-transform" />
+                <span>Growth Playbook</span>
+                <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded">Free PDF</span>
               </button>
             </div>
 
