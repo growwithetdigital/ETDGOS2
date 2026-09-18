@@ -92,7 +92,7 @@ export default function FounderNotePanel({
               Eric Thomas
             </h3>
             <p className="text-xs font-mono text-cyan-600 dark:text-cyan-400 uppercase tracking-wider font-bold">
-              Founder & Chief Growth Architect · ET Digital
+              Founder & Growth Strategist · ET Digital
             </p>
             <p className="text-[11px] text-[var(--muted)]">
               Building category-defining growth systems and authentic brand authority
@@ -125,6 +125,18 @@ export default function FounderNotePanel({
           <p>
             We encourage you to put these insights into immediate practice. Publish your custom dispatches. Distribute your promotional angles. Experience firsthand how the caliber of your client conversations elevates when you show up as a category authority.
           </p>
+
+          <div className="pt-4 border-t border-[var(--border)] space-y-1">
+            <p className="font-display text-sm text-[var(--muted)]">
+              To your continued growth,
+            </p>
+            <p className="font-display text-base font-bold text-[var(--text)]">
+              Eric Thomas
+            </p>
+            <p className="font-mono text-xs text-cyan-600 dark:text-cyan-400 uppercase tracking-wider font-bold">
+              Founder & Growth Strategist · ET Digital
+            </p>
+          </div>
         </div>
 
       </div>
@@ -195,10 +207,10 @@ export default function FounderNotePanel({
             </span>
           </div>
           <h3 className="text-2xl sm:text-3xl font-display font-bold text-white tracking-tight">
-            I'd love to work with you directly on your growth goals
+            Work with Us Directly on Your Growth Goals
           </h3>
           <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
-            If you're ready to expand beyond quarterly content into a predictable growth engine—with weekly or daily content, custom distribution, and direct one-on-one strategy sessions with me—let's grab 20 minutes on the calendar.
+            If you're ready to expand beyond quarterly content into a predictable growth engine—with weekly content, custom distribution, and direct strategic sessions with our team—let's grab 20 minutes on the calendar.
           </p>
         </div>
 

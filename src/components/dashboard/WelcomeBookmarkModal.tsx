@@ -80,10 +80,13 @@ export default function WelcomeBookmarkModal({ uid, isOpen, onClose, onEnterGOS 
         {/* Message */}
         <div className="space-y-3">
           <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-white tracking-tight leading-tight">
-            Congratulations! Welcome to your Growth Operating System.
+            Welcome to Your Growth Operating System
           </h2>
           <p className="font-sans text-xs sm:text-sm text-slate-300 leading-relaxed">
-            Please bookmark this page and add it to your desktop or mobile home screen for easy on-the-go access to your marketing campaigns, SEO generator, and diagnostic whiteboard.
+            We are honored to partner with your business. Real market authority is never built on superficial marketing noise or chasing fleeting algorithms—it is engineered through clarity, authentic storytelling, and disciplined systems.
+          </p>
+          <p className="font-sans text-xs text-slate-400 leading-relaxed">
+            Bookmark this workspace or add it to your home screen for immediate executive access to your quarterly publishing suite, market reports, and brand architecture.
           </p>
         </div>
 

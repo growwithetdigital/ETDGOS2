@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { 
   Download, Image as ImageIcon, Check, 
   RefreshCw, Copy, Share2, Linkedin,
-  Facebook, Instagram, FileText, Layers, Mail, Smartphone, Globe
+  Facebook, Instagram, Layers, Mail, ExternalLink, FileText,
+  Info, X
 } from 'lucide-react';
 import XIcon from '../icons/XIcon';
+import GoogleIcon from '../icons/GoogleIcon';
 import { 
   CURATED_NATURAL_PHOTOS, 
   NaturalPhotoAsset,
@@ -13,10 +15,13 @@ import {
 import { UserProfile } from '../../types';
 import { addDownloadedAsset } from '../../utils/downloadStorage';
 
+export type FormatGroup = 'social' | 'gbp' | 'email';
+
 export interface ImageFormatOption {
   id: string;
   name: string;
   platform: string;
+  group: FormatGroup;
   ratioLabel: string;
   dimensions: string;
   width: number;
@@ -28,10 +33,12 @@ export interface ImageFormatOption {
 }
 
 export const IMAGE_FORMAT_OPTIONS: ImageFormatOption[] = [
+  // 1. Social Media Group
   {
     id: 'linkedin_fb_landscape',
     name: 'LinkedIn / Facebook',
     platform: 'LinkedIn & Facebook',
+    group: 'social',
     ratioLabel: '1.91:1 Landscape',
     dimensions: '1200 x 628',
     width: 1200,
@@ -51,6 +58,7 @@ export const IMAGE_FORMAT_OPTIONS: ImageFormatOption[] = [
     id: 'instagram_square',
     name: 'Instagram',
     platform: 'Instagram Feed',
+    group: 'social',
     ratioLabel: '1:1 Square',
     dimensions: '1080 x 1080',
     width: 1080,
@@ -64,6 +72,7 @@ export const IMAGE_FORMAT_OPTIONS: ImageFormatOption[] = [
     id: 'x_post',
     name: 'X (Twitter)',
     platform: 'X Timeline',
+    group: 'social',
     ratioLabel: '16:9 Landscape',
     dimensions: '1200 x 675',
     width: 1200,
@@ -74,35 +83,10 @@ export const IMAGE_FORMAT_OPTIONS: ImageFormatOption[] = [
     description: 'High-engagement 16:9 widescreen post for X feed'
   },
   {
-    id: 'email_header',
-    name: 'Email Header',
-    platform: 'Email Newsletters & Eblasts',
-    ratioLabel: '3:1 Banner',
-    dimensions: '1200 x 400',
-    width: 1200,
-    height: 400,
-    renderIcons: () => <Mail className="w-4 h-4 text-purple-500" />,
-    aspectClass: 'aspect-[3/1]',
-    fileSuffix: 'email-header',
-    description: 'Horizontal banner sized for email campaigns and client newsletters'
-  },
-  {
-    id: 'gbp_update',
-    name: 'Google Business Profile',
-    platform: 'GBP Updates & Maps',
-    ratioLabel: '4:3 Standard',
-    dimensions: '1200 x 900',
-    width: 1200,
-    height: 900,
-    renderIcons: () => <Globe className="w-4 h-4 text-amber-500" />,
-    aspectClass: 'aspect-[4/3]',
-    fileSuffix: 'gbp-update',
-    description: 'Optimal 4:3 scale for Google Business Profile local search posts'
-  },
-  {
     id: 'story_vertical',
     name: 'IG / FB Story',
-    platform: 'Instagram & Facebook Stories (9:16)',
+    platform: 'Instagram & Facebook Stories',
+    group: 'social',
     ratioLabel: '9:16 Vertical Story',
     dimensions: '1080 x 1920',
     width: 1080,
@@ -117,6 +101,36 @@ export const IMAGE_FORMAT_OPTIONS: ImageFormatOption[] = [
     aspectClass: 'aspect-[9/16] max-h-[520px] mx-auto',
     fileSuffix: 'ig-fb-story-9x16',
     description: 'Full-screen 9:16 vertical format (1080 × 1920) sized specifically for Instagram & Facebook Stories'
+  },
+  // 2. Google Business Profile Group (GBP) with Google Icon
+  {
+    id: 'gbp_update',
+    name: 'Google Business Profile',
+    platform: 'Google Business Profile (GBP)',
+    group: 'gbp',
+    ratioLabel: '4:3 Standard',
+    dimensions: '1200 x 900',
+    width: 1200,
+    height: 900,
+    renderIcons: () => <GoogleIcon className="w-4 h-4" />,
+    aspectClass: 'aspect-[4/3]',
+    fileSuffix: 'gbp-update',
+    description: 'Optimal 4:3 scale for Google Business Profile local search posts'
+  },
+  // 3. Email Group
+  {
+    id: 'email_header',
+    name: 'Email Header',
+    platform: 'Email Newsletters & Eblasts',
+    group: 'email',
+    ratioLabel: '3:1 Banner',
+    dimensions: '1200 x 400',
+    width: 1200,
+    height: 400,
+    renderIcons: () => <Mail className="w-4 h-4 text-purple-500" />,
+    aspectClass: 'aspect-[3/1]',
+    fileSuffix: 'email-header',
+    description: 'Horizontal banner sized for email campaigns and client newsletters'
   }
 ];
 
@@ -127,7 +141,6 @@ interface EditorialThumbnailCardProps {
   profile: UserProfile | null;
   photoUrl?: string;
   onPhotoChange?: (url: string) => void;
-  allTextToCopy?: string;
   socialCaptionToShare?: string;
   caption?: string;
 }
@@ -139,7 +152,6 @@ export default function EditorialThumbnailCard({
   profile,
   photoUrl,
   onPhotoChange,
-  allTextToCopy,
   socialCaptionToShare,
   caption,
 }: EditorialThumbnailCardProps) {
@@ -152,9 +164,9 @@ export default function EditorialThumbnailCard({
   const [showPhotoPicker, setShowPhotoPicker] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadSuccessFormat, setDownloadSuccessFormat] = useState<string | null>(null);
-  const [copiedAll, setCopiedAll] = useState(false);
   const [copiedCaption, setCopiedCaption] = useState(false);
   const [shareToast, setShareToast] = useState<{ platform: string; message: string } | null>(null);
+  const [showSpecsModal, setShowSpecsModal] = useState(false);
 
   const activeFormat = IMAGE_FORMAT_OPTIONS.find(f => f.id === selectedFormatId) || IMAGE_FORMAT_OPTIONS[0];
 
@@ -188,12 +200,6 @@ export default function EditorialThumbnailCard({
     setShowPhotoPicker(false);
   };
 
-  const handleCopyAllText = () => {
-    if (!allTextToCopy) return;
-    navigator.clipboard.writeText(allTextToCopy);
-    setCopiedAll(true);
-    setTimeout(() => setCopiedAll(false), 2500);
-  };
 
   /**
    * Universal Canvas Renderer for Format Ratios
@@ -616,7 +622,7 @@ export default function EditorialThumbnailCard({
     }
   };
 
-  const handleSharePlatform = async (platform: 'x' | 'instagram' | 'facebook' | 'linkedin') => {
+  const handleSharePlatform = async (platform: 'x' | 'instagram' | 'facebook' | 'linkedin' | 'gbp' | 'email') => {
     const captionToCopy = socialCaptionToShare || `${title}\n\nBy ${businessName}`;
 
     try {
@@ -625,9 +631,32 @@ export default function EditorialThumbnailCard({
       console.warn('Clipboard write failed:', e);
     }
 
+    if (platform === 'gbp') {
+      const gbpFormat = IMAGE_FORMAT_OPTIONS.find(f => f.id === 'gbp_update') || activeFormat;
+      handleDownloadSingleFormat(gbpFormat);
+      setShareToast({
+        platform: 'Google Business Profile',
+        message: 'GBP graphic downloaded & post text copied! Opening Google Business Profile...'
+      });
+      setTimeout(() => setShareToast(null), 5500);
+      window.open('https://business.google.com/', '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    if (platform === 'email') {
+      const emailFormat = IMAGE_FORMAT_OPTIONS.find(f => f.id === 'email_header') || activeFormat;
+      handleDownloadSingleFormat(emailFormat);
+      setShareToast({
+        platform: 'Email Campaign',
+        message: 'Email header banner downloaded & campaign copy ready in clipboard!'
+      });
+      setTimeout(() => setShareToast(null), 5500);
+      return;
+    }
+
     handleDownloadSingleFormat(activeFormat);
 
-    const platformLabels = {
+    const platformLabels: Record<string, string> = {
       x: 'X',
       instagram: 'Instagram',
       facebook: 'Facebook',
@@ -635,8 +664,8 @@ export default function EditorialThumbnailCard({
     };
 
     setShareToast({
-      platform: platformLabels[platform],
-      message: `${activeFormat.platform} graphic downloaded & caption copied! Attach your image on ${platformLabels[platform]}.`
+      platform: platformLabels[platform] || platform,
+      message: `${activeFormat.platform} graphic downloaded & caption copied! Attach your image on ${platformLabels[platform] || platform}.`
     });
     setTimeout(() => setShareToast(null), 5500);
 
@@ -737,44 +766,121 @@ export default function EditorialThumbnailCard({
       )}
 
       {/* ==================================================================== */}
-      {/* STREAMLINED PLATFORM SELECTOR: Icons for appropriate platforms + Paired LinkedIn & FB */}
+      {/* GROUPED PLATFORM SELECTOR: Social Media, GBP (Google), then Email */}
       {/* ==================================================================== */}
-      <div className="p-3 sm:p-4 bg-[var(--surface2)] border-b border-[var(--border)]">
-        <div className="flex items-center justify-between mb-2">
-          <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] font-semibold flex items-center gap-1.5">
-            <Layers className="w-3.5 h-3.5 text-cyan-500" />
-            Social Platform Ratio:
-          </span>
+      <div className="p-3 sm:p-4 bg-[var(--surface2)] border-b border-[var(--border)] space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--muted)] font-semibold flex items-center gap-1.5">
+              <Layers className="w-3.5 h-3.5 text-cyan-500" />
+              Platform Formats:
+            </span>
+            <button
+              type="button"
+              onClick={() => setShowSpecsModal(true)}
+              className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[var(--surface)] border border-[var(--border)] text-[var(--muted)] hover:text-cyan-500 hover:border-cyan-500/50 hover:bg-cyan-500/10 transition-all cursor-pointer shadow-xs active:scale-95"
+              title="View optimal image dimensions & platform specs"
+              aria-label="View optimal platform sizes"
+              id="view-platform-specs-btn"
+            >
+              <Info className="w-3 h-3" />
+            </button>
+          </div>
           <span className="text-[10px] font-mono text-cyan-600 dark:text-cyan-400 font-bold">
-            {activeFormat.platform} · {activeFormat.ratioLabel}
+            {activeFormat.platform}
           </span>
         </div>
 
-        {/* Clean icons-first platform selector */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
-          {IMAGE_FORMAT_OPTIONS.map((fmt) => {
-            const isSelected = selectedFormatId === fmt.id;
-            return (
-              <button
-                key={fmt.id}
-                type="button"
-                onClick={() => setSelectedFormatId(fmt.id)}
-                className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between min-h-[58px] ${
-                  isSelected
-                    ? 'bg-cyan-500/15 border-cyan-500 text-cyan-600 dark:text-cyan-300 ring-1 ring-cyan-500 shadow-xs'
-                    : 'bg-[var(--surface)] border-[var(--border)] text-[var(--muted)] hover:text-[var(--text)] hover:border-slate-500'
-                }`}
-              >
-                <div className="flex items-center justify-between w-full">
+        {/* 3 Grouped Sections: Social Media, GBP, Email */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-2.5">
+          {/* 1. Social Media Group (LinkedIn/FB, Instagram, X, Story) */}
+          <div className="md:col-span-6 p-2.5 rounded-2xl bg-[var(--surface)] border border-[var(--border)] space-y-2">
+            <div className="flex items-center justify-between text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--muted)]">
+              <span>1. Social Media</span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+              {IMAGE_FORMAT_OPTIONS.filter(f => f.group === 'social').map((fmt) => {
+                const isSelected = selectedFormatId === fmt.id;
+                return (
+                  <button
+                    key={fmt.id}
+                    type="button"
+                    onClick={() => setSelectedFormatId(fmt.id)}
+                    className={`p-2 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between min-h-[52px] ${
+                      isSelected
+                        ? 'bg-cyan-500/15 border-cyan-500 text-cyan-600 dark:text-cyan-300 ring-1 ring-cyan-500 shadow-xs'
+                        : 'bg-[var(--surface2)] border-[var(--border)] text-[var(--muted)] hover:text-[var(--text)]'
+                    }`}
+                  >
+                    <div className="shrink-0">{fmt.renderIcons()}</div>
+                    <div className="mt-1.5 font-display text-[11px] font-bold leading-snug truncate">
+                      {fmt.name}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 2. Google Business Profile Group (GBP) with Google Icon */}
+          <div className="md:col-span-3 p-2.5 rounded-2xl bg-[var(--surface)] border border-amber-500/30 space-y-2">
+            <div className="flex items-center justify-between text-[10px] font-mono font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+              <span className="flex items-center gap-1.5">
+                <GoogleIcon className="w-3.5 h-3.5" />
+                <span>2. GBP Post</span>
+              </span>
+            </div>
+            {IMAGE_FORMAT_OPTIONS.filter(f => f.group === 'gbp').map((fmt) => {
+              const isSelected = selectedFormatId === fmt.id;
+              return (
+                <button
+                  key={fmt.id}
+                  type="button"
+                  onClick={() => setSelectedFormatId(fmt.id)}
+                  className={`w-full p-2 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between min-h-[52px] ${
+                    isSelected
+                      ? 'bg-amber-500/15 border-amber-500 text-amber-600 dark:text-amber-300 ring-1 ring-amber-500 shadow-xs'
+                      : 'bg-[var(--surface2)] border-[var(--border)] text-[var(--muted)] hover:text-[var(--text)]'
+                  }`}
+                >
                   <div className="shrink-0">{fmt.renderIcons()}</div>
-                  <span className="text-[10px] font-mono font-bold ml-1 opacity-90">{fmt.ratioLabel.split(' ')[0]}</span>
-                </div>
-                <div className="mt-1.5 font-display text-[11px] font-bold truncate">
-                  {fmt.name}
-                </div>
-              </button>
-            );
-          })}
+                  <div className="mt-1.5 font-display text-[11px] font-bold leading-snug truncate">
+                    {fmt.name}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* 3. Email Group */}
+          <div className="md:col-span-3 p-2.5 rounded-2xl bg-[var(--surface)] border border-purple-500/30 space-y-2">
+            <div className="flex items-center justify-between text-[10px] font-mono font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">
+              <span className="flex items-center gap-1.5">
+                <Mail className="w-3.5 h-3.5 text-purple-500" />
+                <span>3. Email Campaign</span>
+              </span>
+            </div>
+            {IMAGE_FORMAT_OPTIONS.filter(f => f.group === 'email').map((fmt) => {
+              const isSelected = selectedFormatId === fmt.id;
+              return (
+                <button
+                  key={fmt.id}
+                  type="button"
+                  onClick={() => setSelectedFormatId(fmt.id)}
+                  className={`w-full p-2 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between min-h-[52px] ${
+                    isSelected
+                      ? 'bg-purple-500/15 border-purple-500 text-purple-600 dark:text-purple-300 ring-1 ring-purple-500 shadow-xs'
+                      : 'bg-[var(--surface2)] border-[var(--border)] text-[var(--muted)] hover:text-[var(--text)]'
+                  }`}
+                >
+                  <div className="shrink-0">{fmt.renderIcons()}</div>
+                  <div className="mt-1.5 font-display text-[11px] font-bold leading-snug truncate">
+                    {fmt.name}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -877,76 +983,87 @@ export default function EditorialThumbnailCard({
         </div>
       </div>
 
-      {/* Actions Bar: Download Specific Size + Download All Formats + Quick Social Share */}
-      <div className="p-4 sm:p-5 border-t border-[var(--border)] bg-[var(--surface2)] flex flex-col lg:flex-row items-center justify-between gap-4">
+      {/* Actions Bar: Grouped by Social Media, GBP, then Email */}
+      <div className="p-4 sm:p-5 border-t border-[var(--border)] bg-[var(--surface2)] flex flex-col xl:flex-row items-center justify-between gap-4">
         
-        {/* Left: Quick Social Platform Share Icons */}
-        <div className="flex items-center gap-2 w-full lg:w-auto justify-center lg:justify-start">
-          <span className="text-[11px] font-mono text-[var(--muted)] font-medium mr-1 flex items-center gap-1">
-            <Share2 className="w-3.5 h-3.5 text-cyan-500" />
-            <span>Share:</span>
-          </span>
+        {/* Left: Quick Actions Grouped by Social Media, GBP, Email */}
+        <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto justify-center xl:justify-start">
+          
+          {/* Group 1: Social Media */}
+          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[var(--surface)] border border-[var(--border)] shadow-2xs">
+            <span className="text-[10px] font-mono text-[var(--muted)] font-semibold px-1.5">Social:</span>
+            <button
+              type="button"
+              onClick={() => handleSharePlatform('linkedin')}
+              title="Share to LinkedIn (Copies caption + Downloads graphic)"
+              className="p-1.5 rounded-lg hover:bg-cyan-500/10 text-[var(--text)] transition-colors cursor-pointer"
+            >
+              <Linkedin className="w-3.5 h-3.5 text-[#0A66C2]" />
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSharePlatform('x')}
+              title="Share to X (Copies caption + Downloads graphic)"
+              className="p-1.5 rounded-lg hover:bg-cyan-500/10 text-[var(--text)] transition-colors cursor-pointer"
+            >
+              <XIcon className="w-3.5 h-3.5 text-[var(--text)]" />
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSharePlatform('facebook')}
+              title="Share to Facebook (Copies caption + Downloads graphic)"
+              className="p-1.5 rounded-lg hover:bg-cyan-500/10 text-[var(--text)] transition-colors cursor-pointer"
+            >
+              <Facebook className="w-3.5 h-3.5 text-[#1877F2]" />
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSharePlatform('instagram')}
+              title="Share to Instagram (Copies caption + Downloads graphic)"
+              className="p-1.5 rounded-lg hover:bg-pink-500/10 text-[var(--text)] transition-colors cursor-pointer"
+            >
+              <Instagram className="w-3.5 h-3.5 text-[#E4405F]" />
+            </button>
+          </div>
 
-          <button
-            type="button"
-            onClick={() => handleSharePlatform('linkedin')}
-            title="Share to LinkedIn (Copies caption + Downloads graphic)"
-            className="p-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:border-cyan-500/50 hover:bg-cyan-500/10 text-[var(--text)] transition-all cursor-pointer"
-          >
-            <Linkedin className="w-4 h-4 text-[#0A66C2]" />
-          </button>
+          {/* Group 2: GBP with Google Icon & Post Action */}
+          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[var(--surface)] border border-amber-500/30 shadow-2xs">
+            <span className="text-[10px] font-mono text-amber-600 dark:text-amber-400 font-semibold px-1.5 flex items-center gap-1">
+              <GoogleIcon className="w-3 h-3" />
+              <span>GBP:</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => handleSharePlatform('gbp')}
+              title="Post on Google Business (Opens Google Business in a new tab, copies update and downloads graphic)"
+              className="px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 font-mono text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
+            >
+              <GoogleIcon className="w-3 h-3" />
+              <span>Post to GBP</span>
+              <ExternalLink className="w-2.5 h-2.5 opacity-70" />
+            </button>
+          </div>
 
-          <button
-            type="button"
-            onClick={() => handleSharePlatform('x')}
-            title="Share to X (Copies caption + Downloads graphic)"
-            className="p-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:border-cyan-500/50 hover:bg-cyan-500/10 text-[var(--text)] transition-all cursor-pointer"
-          >
-            <XIcon className="w-3.5 h-3.5 text-[var(--text)]" />
-          </button>
+          {/* Group 3: Email */}
+          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[var(--surface)] border border-purple-500/30 shadow-2xs">
+            <span className="text-[10px] font-mono text-purple-600 dark:text-purple-400 font-semibold px-1.5 flex items-center gap-1">
+              <Mail className="w-3 h-3 text-purple-500" />
+              <span>Email:</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => handleSharePlatform('email')}
+              title="Download email header graphic and copy text"
+              className="px-2.5 py-1 rounded-lg bg-purple-500/15 hover:bg-purple-500/25 text-purple-700 dark:text-purple-300 font-mono text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
+            >
+              <span>Email Header</span>
+            </button>
+          </div>
 
-          <button
-            type="button"
-            onClick={() => handleSharePlatform('facebook')}
-            title="Share to Facebook (Copies caption + Downloads graphic)"
-            className="p-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:border-cyan-500/50 hover:bg-cyan-500/10 text-[var(--text)] transition-all cursor-pointer"
-          >
-            <Facebook className="w-4 h-4 text-[#1877F2]" />
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleSharePlatform('instagram')}
-            title="Share to Instagram (Copies caption + Downloads graphic)"
-            className="p-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:border-pink-500/50 hover:bg-pink-500/10 text-[var(--text)] transition-all cursor-pointer"
-          >
-            <Instagram className="w-4 h-4 text-[#E4405F]" />
-          </button>
         </div>
 
         {/* Right: Download Actions */}
-        <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto justify-center lg:justify-end">
-          {allTextToCopy && (
-            <button
-              type="button"
-              onClick={handleCopyAllText}
-              className="px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--border)] text-[var(--text)] font-mono text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
-              title="Copy the entire kit: Blog Post, Caption, Eblast, and GBP"
-            >
-              {copiedAll ? (
-                <>
-                  <Check className="w-3.5 h-3.5 text-emerald-500" />
-                  <span className="text-emerald-500">Kit Copied!</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="w-3.5 h-3.5 text-[var(--muted)]" />
-                  <span>Copy All Text</span>
-                </>
-              )}
-            </button>
-          )}
-
+        <div className="flex flex-wrap items-center gap-2.5 w-full xl:w-auto justify-center xl:justify-end">
           {/* Download All Formats Button */}
           <button
             type="button"
@@ -1006,6 +1123,95 @@ export default function EditorialThumbnailCard({
           >
             ✕
           </button>
+        </div>
+      )}
+
+      {/* ==================================================================== */}
+      {/* OPTIMAL SIZES & PLATFORM SPECIFICATIONS MODAL */}
+      {/* ==================================================================== */}
+      {showSpecsModal && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="specs-modal-title"
+          onClick={() => setShowSpecsModal(false)}
+        >
+          <div 
+            className="w-full max-w-xl rounded-3xl bg-[var(--surface)] border border-[var(--border)] shadow-2xl p-6 sm:p-7 space-y-5 text-[var(--text)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-start justify-between pb-3 border-b border-[var(--border)]">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-cyan-500/15 text-cyan-600 dark:text-cyan-400">
+                    <Info className="w-4 h-4" />
+                  </div>
+                  <h3 id="specs-modal-title" className="font-display text-lg sm:text-xl font-bold text-[var(--text)]">
+                    Optimal Social & Platform Image Sizes
+                  </h3>
+                </div>
+                <p className="text-xs text-[var(--muted)] leading-relaxed">
+                  Recommended resolutions, aspect ratios, and best practices for each channel.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowSpecsModal(false)}
+                className="p-1.5 rounded-xl text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--surface2)] transition-colors cursor-pointer"
+                aria-label="Close modal"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Specifications Cards List */}
+            <div className="space-y-2.5 max-h-[60vh] overflow-y-auto pr-1">
+              {IMAGE_FORMAT_OPTIONS.map((fmt) => (
+                <div 
+                  key={fmt.id}
+                  className="p-3.5 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <div className="shrink-0">{fmt.renderIcons()}</div>
+                      <span className="font-display text-sm font-bold text-[var(--text)]">
+                        {fmt.platform}
+                      </span>
+                    </div>
+                    <p className="text-xs text-[var(--muted)] leading-normal">
+                      {fmt.description}
+                    </p>
+                  </div>
+
+                  <div className="shrink-0 sm:text-right flex sm:flex-col items-center sm:items-end justify-between gap-1 pt-1 sm:pt-0 border-t sm:border-t-0 border-[var(--border)]">
+                    <span className="font-mono text-xs font-bold text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 px-2.5 py-0.5 rounded-md">
+                      {fmt.dimensions} px
+                    </span>
+                    <span className="font-mono text-[11px] text-[var(--muted)]">
+                      {fmt.ratioLabel}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Footer */}
+            <div className="pt-2 flex items-center justify-between">
+              <span className="text-[11px] font-mono text-[var(--muted)]">
+                All downloads are exported at full 2x retina clarity.
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowSpecsModal(false)}
+                className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-display text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-95"
+              >
+                Got It
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
