@@ -4,7 +4,8 @@ import {
   Linkedin, Facebook, Instagram, 
   Mail, MapPin, CheckCircle2, Lock, ArrowRight,
   Send, ShieldCheck,
-  AlertTriangle, Edit3, X, Eye, ExternalLink
+  AlertTriangle, Edit3, X, Eye, ExternalLink,
+  Tag, Hash
 } from 'lucide-react';
 import XIcon from '../icons/XIcon';
 import GoogleIcon from '../icons/GoogleIcon';
@@ -12,7 +13,9 @@ import { GeneratedContentItem, UserProfile } from '../../types';
 import { 
   stripMarkdownFormatting, 
   generate300WordBlogPost,
+  generateBlogPostTags,
   generateSingleSocialCaption,
+  generateOptimizedSocialHashtags,
   generate150WordEblast,
   generateGbpPost,
   getIndustryResearchAndQuestion
@@ -91,11 +94,32 @@ export default function ContentStudio({
   const blogTitle = savedRevisions?.blogTitle || defaultBlogPost.title;
   const cleanBlogBody = savedRevisions?.blogBody || stripMarkdownFormatting(defaultBlogPost.markdown_content);
 
+  // Suggested Tags for the Blog Post (Contextual for WordPress / CMS backend tags)
+  const blogTags = useMemo(() => {
+    if (defaultBlogPost.suggested_tags && defaultBlogPost.suggested_tags.length > 0) {
+      return defaultBlogPost.suggested_tags;
+    }
+    return generateBlogPostTags(blogTitle, defaultBlogPost.category || '', defaultBlogPost.target_keyword, profile);
+  }, [defaultBlogPost, blogTitle, profile]);
+
   // 2. The 1 Social Caption
   const defaultSocialCaption = useMemo(() => {
     return generateSingleSocialCaption(profile, blogTitle);
   }, [profile, blogTitle]);
-  const socialCaptionText = savedRevisions?.socialCaption || defaultSocialCaption?.caption || `${blogTitle} — ${businessName}`;
+  const baseSocialCaption = savedRevisions?.socialCaption || defaultSocialCaption?.caption || `${blogTitle} — ${businessName}`;
+
+  // Optimized Hashtags: strictly no more than 5 tags based on the text and copy provided for maximum reach & engagement
+  const socialHashtags = useMemo(() => {
+    return generateOptimizedSocialHashtags(baseSocialCaption, blogTitle, profile);
+  }, [baseSocialCaption, blogTitle, profile]);
+
+  // Ensure social media post text includes the suggested hashtags
+  const socialCaptionText = useMemo(() => {
+    if (!baseSocialCaption.includes('#') && socialHashtags.length > 0) {
+      return `${baseSocialCaption}\n\n${socialHashtags.join(' ')}`;
+    }
+    return baseSocialCaption;
+  }, [baseSocialCaption, socialHashtags]);
 
   // 3. The 1 150-Word Eblast
   const defaultEblast = useMemo(() => {
@@ -114,12 +138,14 @@ export default function ContentStudio({
     return `=== BLOG POST (UP TO 300 WORDS) ===
 TITLE: ${blogTitle}
 KEYWORD: ${defaultBlogPost.target_keyword}
+SUGGESTED TAGS: ${blogTags.join(', ')}
 WORD COUNT: ${defaultBlogPost.word_count || 285} words
 
 ${cleanBlogBody}
 
 === 1 SOCIAL MEDIA CAPTION ===
 ${socialCaptionText}
+SUGGESTED HASHTAGS: ${socialHashtags.join(' ')}
 
 === 1 150-WORD EBLAST ===
 SUBJECT: ${eblastSubject}
@@ -132,7 +158,7 @@ ${gbpData.content}
 CTA: ${gbpData.call_to_action}
 TARGET: ${gbpData.target_keyword}
 `;
-  }, [blogTitle, defaultBlogPost, cleanBlogBody, socialCaptionText, eblastSubject, defaultEblast.preview, eblastBody, gbpData]);
+  }, [blogTitle, defaultBlogPost, blogTags, cleanBlogBody, socialCaptionText, socialHashtags, eblastSubject, defaultEblast.preview, eblastBody, gbpData]);
 
   const copyToClipboard = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
@@ -145,7 +171,8 @@ TARGET: ${gbpData.target_keyword}
     copyToClipboard(socialCaptionText, `share-${platform}`);
 
     if (platform === 'x') {
-      const text = `${defaultSocialCaption?.hook || ''}\n\n"${blogTitle}"\n`;
+      const hashtagsStr = socialHashtags.join(' ');
+      const text = `${defaultSocialCaption?.hook || ''}\n\n"${blogTitle}"\n\n${hashtagsStr}\n`;
       const xUrl = clientWebsite
         ? `https://x.com/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent(clientWebsite)}`
         : `https://x.com/intent/post?text=${encodeURIComponent(text)}`;
@@ -462,6 +489,57 @@ TARGET: ${gbpData.target_keyword}
                 <div className="p-5 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] text-xs sm:text-sm text-[var(--text)] leading-relaxed font-sans whitespace-pre-line space-y-4">
                   {cleanBlogBody}
                 </div>
+
+                {/* Suggested Blog Tags */}
+                <div className="p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] space-y-2.5" id="blog-suggested-tags-container">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Tag className="w-3.5 h-3.5 text-cyan-500" />
+                      <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--muted)]">
+                        Suggested Tags
+                      </span>
+                      <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-semibold border border-cyan-500/20">
+                        {blogTags.length} Tags
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      id="copy-blog-tags-btn"
+                      onClick={() => copyToClipboard(blogTags.join(', '), 'blog-tags')}
+                      className="text-xs font-mono text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer font-bold"
+                      title="Copy comma-separated tags"
+                    >
+                      {copiedKey === 'blog-tags' ? (
+                        <>
+                          <Check className="w-3 h-3 text-emerald-500" />
+                          <span className="text-emerald-500">Copied Tags!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3 h-3" />
+                          <span>Copy Tags</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Tags Pill List */}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {blogTags.map((tag, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => copyToClipboard(tag, `tag-${idx}`)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[var(--surface)] border border-[var(--border)] text-xs font-sans text-[var(--text)] hover:border-cyan-500/50 hover:text-cyan-500 transition-all cursor-pointer shadow-xs active:scale-95"
+                        title={`Click to copy "${tag}"`}
+                      >
+                        <span>{tag}</span>
+                        {copiedKey === `tag-${idx}` && <Check className="w-2.5 h-2.5 text-emerald-500" />}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
             </div>
@@ -494,6 +572,57 @@ TARGET: ${gbpData.target_keyword}
                 {/* Social Caption Preview Box */}
                 <div className="p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] text-xs text-[var(--text)] leading-relaxed font-sans whitespace-pre-line">
                   {socialCaptionText}
+                </div>
+
+                {/* Suggested Hashtags (Max 5 for maximum reach and engagement) */}
+                <div className="p-3.5 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] space-y-2" id="social-suggested-hashtags-container">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <Hash className="w-3.5 h-3.5 text-cyan-500" />
+                      <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--muted)]">
+                        Suggested Hashtags
+                      </span>
+                      <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-semibold border border-cyan-500/20">
+                        {socialHashtags.length} of 5 max
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      id="copy-social-hashtags-btn"
+                      onClick={() => copyToClipboard(socialHashtags.join(' '), 'social-hashtags')}
+                      className="text-xs font-mono text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer font-bold"
+                      title="Copy all hashtags"
+                    >
+                      {copiedKey === 'social-hashtags' ? (
+                        <>
+                          <Check className="w-3 h-3 text-emerald-500" />
+                          <span className="text-emerald-500">Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3 h-3" />
+                          <span>Copy Hashtags</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Hashtag pills */}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {socialHashtags.map((tag, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => copyToClipboard(tag, `ht-${idx}`)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[var(--surface)] border border-[var(--border)] text-[11px] font-mono font-semibold text-cyan-600 dark:text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-500/40 transition-all cursor-pointer shadow-xs active:scale-95"
+                        title={`Click to copy "${tag}"`}
+                      >
+                        <span>{tag}</span>
+                        {copiedKey === `ht-${idx}` && <Check className="w-2.5 h-2.5 text-emerald-500" />}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Platform Share Row */}

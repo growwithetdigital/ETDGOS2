@@ -27,9 +27,13 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isSignedIn() 
-        && request.auth.token.email != null 
-        && request.auth.token.email.lower() == 'ericlamarthomas@gmail.com';
+      return isSignedIn() && (
+        request.auth.uid == 'eYFonrOl1VSckCQz1VDEBEcx7lv2' ||
+        (request.auth.token.email != null && (
+          request.auth.token.email == 'ericlamarthomas@gmail.com' ||
+          request.auth.token.email.matches('(?i)^ericlamarthomas@gmail\\.com$')
+        ))
+      );
     }
 
     function isValidBooking(data) {

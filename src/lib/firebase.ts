@@ -274,6 +274,9 @@ export const submitPlaybookLeadToFirestore = async (lead: { name: string; email:
 
 export const fetchBookingsFromFirestore = async (): Promise<BookingLead[]> => {
   const collectionName = 'bookings';
+  if (!auth.currentUser) {
+    return [];
+  }
   try {
     const querySnapshot = await getDocs(collection(db, collectionName));
     const list: BookingLead[] = [];

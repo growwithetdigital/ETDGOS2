@@ -82,6 +82,8 @@ export default function WorkspaceHub({ isOpen, onClose }: WorkspaceHubProps) {
   };
 
   useEffect(() => {
+    if (!isOpen) return;
+
     const unsubscribe = initAuth(
       (currentUser, activeToken) => {
         setUser(currentUser);
@@ -121,10 +123,12 @@ export default function WorkspaceHub({ isOpen, onClose }: WorkspaceHubProps) {
     }
 
     return () => unsubscribe();
-  }, []);
+  }, [isOpen]);
 
   // Sync specific tabs on tab activation or token verification
   useEffect(() => {
+    if (!isOpen) return;
+
     if (token) {
       if (activeTab === 'calendar') {
         loadCalendarEvents();
@@ -136,7 +140,7 @@ export default function WorkspaceHub({ isOpen, onClose }: WorkspaceHubProps) {
         loadDriveFiles();
       }
     }
-  }, [activeTab, token]);
+  }, [isOpen, activeTab, token]);
 
   const loadAllData = async (activeToken?: string) => {
     setLoading(true);
@@ -152,12 +156,24 @@ export default function WorkspaceHub({ isOpen, onClose }: WorkspaceHubProps) {
   };
 
   const loadFirestoreBookings = async () => {
+    if (!user) {
+      return;
+    }
+    const userEmail = (user.email || '').toLowerCase();
+    const userUid = user.uid;
+    const isAdmin = userUid === 'eYFonrOl1VSckCQz1VDEBEcx7lv2' || userEmail === 'ericlamarthomas@gmail.com';
+    if (!isAdmin) {
+      appendLog('Notice: CRM Leads access requires Eric Thomas administrator credentials.');
+      setBookings([]);
+      return;
+    }
+
     try {
       const data = await fetchBookingsFromFirestore();
       setBookings(data);
       appendLog(`Fetched ${data.length} leads from Cloud Firestore.`);
     } catch (err) {
-      console.error(err);
+      console.warn('Firestore fetch notice:', err);
       appendLog('Firestore fetch skipped or unauthenticated.');
     }
   };

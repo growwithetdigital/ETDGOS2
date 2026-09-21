@@ -190,6 +190,7 @@ export interface GeneratedContentItem {
     natural_photo_url?: string;
     photo_caption?: string;
     read_time?: string;
+    suggested_tags?: string[];
   };
   social_captions: {
     linkedin: string;

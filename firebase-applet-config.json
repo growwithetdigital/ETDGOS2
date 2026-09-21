@@ -1,11 +1,12 @@
 {
   "projectId": "et-digital-gos",
-  "appId": "1:649979304641:web:be99baabc60c3967291240",
+  "appId": "1:649979304641:web:0c84f0708c4ff4d1291240",
   "apiKey": "AIzaSyCrUPG-qI6HIvpDmLzSAUlKOJ-wxkD8O3E",
   "authDomain": "et-digital-gos.firebaseapp.com",
-  "firestoreDatabaseId": "",
+  "firestoreDatabaseId": "ai-studio-etdigitalgrowtho-ddf7f10e-0d75-41a6-b859-4f2b1e66d530",
   "storageBucket": "et-digital-gos.firebasestorage.app",
   "messagingSenderId": "649979304641",
-  "measurementId": "G-NZ3FP4E8GZ",
+  "measurementId": "",
+  "oAuthClientId": "649979304641-36ie1u0cuo3p2ut3ijf1mnd4a3kfek1v.apps.googleusercontent.com",
   "recaptchaSiteKey": ""
 }

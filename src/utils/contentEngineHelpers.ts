@@ -473,6 +473,7 @@ export interface EvergreenBlogPost {
   category: string;
   industry_question?: string;
   research_signals?: IndustryResearchData;
+  suggested_tags?: string[];
 }
 
 /**
@@ -979,6 +980,161 @@ export function generateReverseEngineeredBusinessDna(params: {
 }
 
 /**
+ * Generates 4 to 5 contextual, optimized tags for WordPress and CMS backend tag sections.
+ * Synthesizes keywords from the title, category, target keyword, and Brand DNA.
+ */
+export function generateBlogPostTags(
+  title: string,
+  category: string,
+  targetKeyword: string,
+  profile: UserProfile | null
+): string[] {
+  const tags: string[] = [];
+  const normalizedTitle = (title || '').toLowerCase();
+  const normalizedCategory = (category || '').trim();
+  const industry = (profile?.industry || profile?.brand_dna?.industry || '').trim();
+
+  // 1. Core Category Tag
+  if (normalizedCategory && !tags.includes(normalizedCategory)) {
+    tags.push(normalizedCategory);
+  }
+
+  // 2. Industry Context Tag
+  if (industry && !tags.some(t => t.toLowerCase() === industry.toLowerCase())) {
+    const primaryIndustry = industry.split('&')[0].trim();
+    if (primaryIndustry && primaryIndustry.length <= 28) {
+      tags.push(primaryIndustry);
+    }
+  }
+
+  // 3. High-intent topical tags inferred from Title & Copy
+  if (normalizedTitle.includes('ai') || normalizedTitle.includes('search') || normalizedTitle.includes('aeo') || normalizedTitle.includes('google')) {
+    tags.push('AI Search Strategy');
+  }
+  if (normalizedTitle.includes('client') || normalizedTitle.includes('customer') || normalizedTitle.includes('acquisition') || normalizedTitle.includes('hire')) {
+    tags.push('Client Acquisition');
+  }
+  if (normalizedTitle.includes('revenue') || normalizedTitle.includes('growth') || normalizedTitle.includes('scale')) {
+    tags.push('Business Growth');
+  }
+  if (normalizedTitle.includes('advisory') || normalizedTitle.includes('consult') || normalizedTitle.includes('framework')) {
+    tags.push('Strategic Advisory');
+  }
+  if (normalizedTitle.includes('authority') || normalizedTitle.includes('reputation') || normalizedTitle.includes('proof')) {
+    tags.push('Category Authority');
+  }
+  if (normalizedTitle.includes('founder') || normalizedTitle.includes('leader') || normalizedTitle.includes('executive')) {
+    tags.push('Executive Leadership');
+  }
+  if (normalizedTitle.includes('friction') || normalizedTitle.includes('convert') || normalizedTitle.includes('intake')) {
+    tags.push('Conversion Optimization');
+  }
+
+  // 4. Default high-relevance fallbacks to guarantee 4-5 high-value tags
+  const fallbackTags = [
+    'Market Positioning',
+    'Business Strategy',
+    'B2B Leadership',
+    'Customer Retention',
+    'Operations Roadmap'
+  ];
+
+  for (const fallback of fallbackTags) {
+    if (tags.length >= 5) break;
+    if (!tags.includes(fallback)) {
+      tags.push(fallback);
+    }
+  }
+
+  return tags.slice(0, 5);
+}
+
+/**
+ * Generates no more than 5 optimized hashtags for social media posts based on the text and copy provided.
+ * Calibrated for maximum reach, discoverability, and audience engagement across
+ * LinkedIn, X, Facebook, and Instagram.
+ */
+export function generateOptimizedSocialHashtags(
+  captionText: string,
+  blogTitle: string,
+  profile: UserProfile | null
+): string[] {
+  // If the caption already contains explicit hashtags, extract them (up to 5)
+  const existingMatches = captionText.match(/#[A-Za-z0-9_]+/g);
+  if (existingMatches && existingMatches.length >= 3) {
+    const unique = Array.from(new Set(existingMatches));
+    return unique.slice(0, 5);
+  }
+
+  const combinedText = `${captionText} ${blogTitle}`.toLowerCase();
+  const business = (profile?.business_name || profile?.displayName || '').replace(/[^a-zA-Z0-9]/g, '');
+  const location = (profile?.location || '').split(',')[0].replace(/[^a-zA-Z0-9]/g, '');
+  const category = (profile?.selected_category || profile?.brand_dna?.voice_archetype || '').toLowerCase();
+
+  const candidates: string[] = [];
+
+  // 1. Topic & Intent-specific reach tags based on the actual text & copy
+  if (combinedText.includes('ai') || combinedText.includes('search') || combinedText.includes('overview') || combinedText.includes('google')) {
+    candidates.push('#AISearch', '#SearchOptimization');
+  }
+  if (combinedText.includes('growth') || combinedText.includes('scale') || combinedText.includes('revenue')) {
+    candidates.push('#BusinessGrowth');
+  }
+  if (combinedText.includes('client') || combinedText.includes('customer') || combinedText.includes('acquisition') || combinedText.includes('buyer')) {
+    candidates.push('#ClientAcquisition');
+  }
+  if (combinedText.includes('authority') || combinedText.includes('reputation') || combinedText.includes('proof')) {
+    candidates.push('#CategoryAuthority');
+  }
+  if (combinedText.includes('founder') || combinedText.includes('leader') || combinedText.includes('executive') || combinedText.includes('ceo')) {
+    candidates.push('#LeadershipStrategy');
+  }
+  if (combinedText.includes('strategy') || combinedText.includes('roadmap') || combinedText.includes('advisory')) {
+    candidates.push('#StrategicAdvisory');
+  }
+  if (combinedText.includes('friction') || combinedText.includes('convert') || combinedText.includes('intake')) {
+    candidates.push('#ConversionStrategy');
+  }
+  if (combinedText.includes('b2b') || combinedText.includes('partner') || combinedText.includes('decision')) {
+    candidates.push('#B2BMarketing');
+  }
+
+  // 2. High-volume engagement tags matching the tone/persona
+  if (category.includes('bold') || category.includes('direct')) {
+    candidates.push('#DirectResponse');
+  }
+
+  // 3. Location / Community tag if available and space permits
+  if (location && location.length > 2 && location.length <= 18) {
+    candidates.push(`#${location}Business`);
+  }
+
+  // 4. Fallbacks if copy is brief
+  const coreReachTags = [
+    '#BusinessGrowth',
+    '#CategoryAuthority',
+    '#ExecutiveLeadership',
+    '#ClientAcquisition',
+    '#MarketStrategy'
+  ];
+
+  for (const tag of coreReachTags) {
+    if (!candidates.includes(tag)) {
+      candidates.push(tag);
+    }
+  }
+
+  // If branded tag is concise, include it as one of the tags
+  if (business && business.length > 2 && business.length <= 16 && !candidates.includes(`#${business}`)) {
+    candidates.splice(3, 0, `#${business}`);
+  }
+
+  // STRICT REQUIREMENT: No more than 5 hashtags
+  const uniqueHashtags = Array.from(new Set(candidates));
+  return uniqueHashtags.slice(0, 5);
+}
+
+/**
  * Generates 1 concise, high-impact Blog Post of up to 300 words (~280-295 words).
  * Answers a specific question for their particular industry as found in the DNA.
  * Researched, data-driven, SEO/AEO optimized, and in their voice according to their Business DNA.
@@ -1053,6 +1209,8 @@ Strategic Takeaway:
 This briefing provides the essential answer for your category. Deploying the comprehensive multi-vector growth architecture, competitor entity moat, and custom syndication matrix is reserved for deep-dive implementation. Visit ${website} or connect with leadership to explore the full roadmap.`;
   }
 
+  const suggested_tags = generateBlogPostTags(title, research.primary_topic, target_keyword, profile);
+
   return {
     title,
     target_keyword,
@@ -1064,11 +1222,13 @@ This briefing provides the essential answer for your category. Deploying the com
     category: research.primary_topic,
     industry_question: question,
     research_signals: research,
+    suggested_tags,
   };
 }
 
 /**
  * Generates 1 engaging social media caption to promote the story in the 300-word blog post.
+ * Includes no more than 5 optimized hashtags based on the text and copy provided for maximum reach and engagement.
  */
 export function generateSingleSocialCaption(profile: UserProfile | null, blogTitle: string): {
   caption: string;
@@ -1091,7 +1251,7 @@ export function generateSingleSocialCaption(profile: UserProfile | null, blogTit
     hook = `Unpopular truth: The loudest brand in ${location} is rarely the most profitable.`;
   }
 
-  const caption = `${hook}
+  const baseBody = `${hook}
 
 In today's market, high-intent ${audience} in ${location} are exhausted by promotional noise. They aren't looking for another pitch—they are looking for verified proof and clear answers before they ever book a call.
 
@@ -1107,10 +1267,16 @@ Read the full 1.5-minute read at ${website}
 
 What is the biggest friction point in your customer acquisition right now? Let's discuss below.`;
 
+  // Generate no more than 5 optimized hashtags based on the text and copy provided
+  const hashtags = generateOptimizedSocialHashtags(baseBody, blogTitle, profile);
+
+  // Social media post includes the suggested hashtags at the end of the post
+  const caption = `${baseBody}\n\n${hashtags.join(' ')}`;
+
   return {
     caption,
     hook,
-    hashtags: ['#CategoryAuthority', '#BusinessGrowth', '#DirectResponse', `#${business.replace(/\s+/g, '')}`, `#${location.replace(/\s+/g, '')}`]
+    hashtags
   };
 }
 
