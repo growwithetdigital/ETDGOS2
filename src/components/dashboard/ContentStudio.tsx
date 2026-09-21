@@ -77,9 +77,7 @@ export default function ContentStudio({
 
   const businessName = profile?.business_name || profile?.displayName || 'My Brand';
   const location = profile?.location || 'Local & National';
-  const clientWebsite = profile?.website_url && !profile.website_url.includes('growwithetdigital.com')
-    ? profile.website_url.trim()
-    : '';
+  const clientWebsite = profile?.website_url ? profile.website_url.trim() : '';
 
   // 1. The 1 Blog Post (Up to 300 words, SEO/AEO optimized in Brand DNA)
   const defaultBlogPost = useMemo(() => {

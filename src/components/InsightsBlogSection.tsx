@@ -12,7 +12,7 @@ export default function InsightsBlogSection({
   onOpenBooking,
   onOpenCalendar
 }: InsightsBlogSectionProps) {
-  const beehiivUrl = "https://growwithetdigital.beehiiv.com";
+  const beehiivUrl = "https://growwithetdigital.beehiiv.com/subscribe";
   const [selectedArticle, setSelectedArticle] = useState<ArticleData | null>(null);
   const [isArticleModalOpen, setIsArticleModalOpen] = useState(false);
 

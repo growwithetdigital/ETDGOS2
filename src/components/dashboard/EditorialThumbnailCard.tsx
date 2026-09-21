@@ -14,6 +14,7 @@ import {
 } from '../../utils/contentEngineHelpers';
 import { UserProfile } from '../../types';
 import { addDownloadedAsset } from '../../utils/downloadStorage';
+import { recordUserDownload } from '../../utils/userTelemetry';
 
 export type FormatGroup = 'social' | 'gbp' | 'email';
 
@@ -173,11 +174,10 @@ export default function EditorialThumbnailCard({
   const businessName = profile?.business_name || profile?.displayName || 'My Brand';
   const location = profile?.location || 'Local & National';
   
-  const clientOwnWebsite = profile?.website_url && !profile.website_url.includes('growwithetdigital.com')
-    ? profile.website_url.trim()
-    : '';
+  // Ensure whatever website the user saved and locked in Business DNA appears on their media downloads
+  const clientOwnWebsite = profile?.website_url ? profile.website_url.trim() : '';
   const website = clientOwnWebsite 
-    ? clientOwnWebsite.replace(/^https?:\/\//, '').replace(/\/$/, '')
+    ? clientOwnWebsite.replace(/^https?:\/\//i, '').replace(/\/$/, '')
     : `${businessName.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`;
 
   const captionToDisplay = caption || socialCaptionToShare || (
@@ -534,6 +534,7 @@ export default function EditorialThumbnailCard({
               downloadedAt: new Date().toISOString(),
               filename: `${safeSlug}-${format.fileSuffix}.png`
             });
+            recordUserDownload(profile?.uid, title || 'Editorial Graphic', `${format.name} (${format.dimensions})`, 'Social Media Graphic');
           } catch (storageErr) {
             console.warn('Downloads vault save notice:', storageErr);
           }
@@ -786,9 +787,6 @@ export default function EditorialThumbnailCard({
               <Info className="w-3 h-3" />
             </button>
           </div>
-          <span className="text-[10px] font-mono text-cyan-600 dark:text-cyan-400 font-bold">
-            {activeFormat.platform}
-          </span>
         </div>
 
         {/* 3 Grouped Sections: Social Media, GBP, Email */}

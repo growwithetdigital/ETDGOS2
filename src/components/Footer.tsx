@@ -79,7 +79,7 @@ export default function Footer({
   onOpenSecurity: () => void;
 }) {
   const instagramUrl = "https://www.instagram.com/growwithetdigital";
-  const beehiivUrl = "https://growwithetdigital.beehiiv.com";
+  const beehiivUrl = "https://growwithetdigital.beehiiv.com/subscribe";
 
   const handleScrollTo = (id: string) => {
     if (id === 'home') {

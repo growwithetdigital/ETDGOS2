@@ -36,6 +36,7 @@ import FounderNotePanel from './FounderNotePanel';
 import DownloadsPanel from './DownloadsPanel';
 import { getDownloadedAssets } from '../../utils/downloadStorage';
 import { isAuthorizedForTelemetry } from '../../utils/telemetryAuth';
+import { recordSectionTime, recordSectionVisit } from '../../utils/userTelemetry';
 import Logo from '../Logo';
 
 interface WhiteboardShellProps {
@@ -172,6 +173,31 @@ export default function WhiteboardShell({
     window.addEventListener('et_asset_downloaded', updateCount);
     return () => window.removeEventListener('et_asset_downloaded', updateCount);
   }, [user?.uid]);
+
+  // Track user active time and visits per section for personal telemetry
+  useEffect(() => {
+    const userId = user?.uid || profile?.uid || 'guest_user';
+    const tabNameMap: Record<string, string> = {
+      profile_dna: 'Business DNA',
+      content_studio: 'Content Studio',
+      downloads: 'Downloads Vault',
+      market_report: 'Market Report',
+      learning_feed: 'Learning Feed',
+      founder_note: "Founder's Note"
+    };
+    const tabName = tabNameMap[activeTab] || activeTab;
+
+    recordSectionVisit(userId, activeTab, tabName);
+
+    const interval = setInterval(() => {
+      // Record time if user is active/window has focus
+      if (typeof document !== 'undefined' && document.hasFocus()) {
+        recordSectionTime(userId, activeTab, tabName, 3);
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [user?.uid, profile?.uid, activeTab]);
 
   // Check if current user is owner / admin strictly matching the 3 authorized emails
   const isOwner = isAuthorizedForTelemetry(user?.email, profile?.email);
@@ -468,19 +494,18 @@ export default function WhiteboardShell({
               </button>
             )}
 
-            {/* Owner Telemetry Modal Toggle */}
-            {isOwner && (
-              <button
-                type="button"
-                onClick={() => setIsTelemetryOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-cyan-500/40 bg-cyan-950/50 text-cyan-300 font-mono text-[11px] font-bold hover:bg-cyan-900/60 transition-all cursor-pointer shadow-sm min-h-[40px]"
-                title="View Platform Usage Telemetry"
-              >
-                <BarChart3 className="w-3.5 h-3.5 text-brand-cyan" />
-                <span className="hidden md:inline">Telemetry</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              </button>
-            )}
+            {/* Telemetry Modal Toggle - Available to all users to see their private metrics */}
+            <button
+              type="button"
+              onClick={() => setIsTelemetryOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-cyan-500/40 bg-cyan-950/50 text-cyan-300 font-mono text-[11px] font-bold hover:bg-cyan-900/60 transition-all cursor-pointer shadow-sm min-h-[40px]"
+              title={isOwner ? "View Platform & Executive Telemetry" : "View Your Activity & Usage Telemetry"}
+              id="telemetry-modal-toggle-btn"
+            >
+              <BarChart3 className="w-3.5 h-3.5 text-brand-cyan" />
+              <span className="hidden md:inline">Telemetry</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            </button>
 
             {/* Book Consultation Button */}
             <button
@@ -681,14 +706,18 @@ export default function WhiteboardShell({
         </AnimatePresence>
       </main>
 
-      {/* Owner Platform Usage Telemetry Modal - Strictly Render for isOwner */}
-      {isOwner && (
-        <OwnerTelemetryModal
-          isOpen={isTelemetryOpen}
-          onClose={() => setIsTelemetryOpen(false)}
-          currentEmail={user?.email || profile?.email}
-        />
-      )}
+      {/* Platform Usage & Personal Activity Telemetry Modal */}
+      <OwnerTelemetryModal
+        isOpen={isTelemetryOpen}
+        onClose={() => setIsTelemetryOpen(false)}
+        currentEmail={user?.email || profile?.email}
+        user={user}
+        profile={profile}
+        onSelectTab={(tabId) => {
+          setActiveTab(tabId as NavTabId);
+          setIsTelemetryOpen(false);
+        }}
+      />
 
     </div>
   );

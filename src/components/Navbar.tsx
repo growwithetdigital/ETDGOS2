@@ -29,7 +29,7 @@ export default function Navbar({
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const beehiivUrl = "https://growwithetdigital.beehiiv.com";
+  const beehiivUrl = "https://growwithetdigital.beehiiv.com/subscribe";
 
   useEffect(() => {
     const handleScroll = () => {

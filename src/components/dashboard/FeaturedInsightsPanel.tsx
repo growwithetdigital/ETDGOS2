@@ -128,7 +128,7 @@ export default function FeaturedInsightsPanel({
           </div>
 
           <a
-            href="https://growwithetdigital.beehiiv.com"
+            href="https://growwithetdigital.beehiiv.com/subscribe"
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-750 text-brand-cyan text-xs font-mono font-bold border border-slate-700 transition-colors self-start sm:self-auto cursor-pointer shrink-0"
