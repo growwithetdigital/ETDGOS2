@@ -20,6 +20,7 @@ import { UserProfile, PostAnalyticsData } from '../../types';
 import { updateUserProfile } from '../../lib/firebase';
 import { getIndustryMarketIntel } from '../../utils/contentEngineHelpers';
 import Logo from '../Logo';
+import AnimatedLogo from '../AnimatedLogo';
 
 interface PostAnalyticsAnalyzerProps {
   user?: any;
@@ -674,6 +675,30 @@ export default function PostAnalyticsAnalyzer({
               <Save className="w-4 h-4" />
               <span>{saveSuccess ? 'Results Saved & Synced!' : 'Save & Update Growth Chart'}</span>
             </button>
+          </div>
+
+          {/* Animated Brand Logo in Content Studio */}
+          <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm space-y-3" id="content-studio-animated-logo-card">
+            <div className="flex items-center justify-between pb-2 border-b border-[var(--border)]">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-cyan-500">
+                  Growth OS Brand Engine
+                </span>
+              </div>
+              <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-semibold border border-cyan-500/20">
+                Official Motion
+              </span>
+            </div>
+
+            <div className="pt-1 flex items-center justify-center">
+              <AnimatedLogo
+                showAura={true}
+                aspect="square"
+                caption="Engage · Convert · Grow"
+                containerClassName="w-full max-w-[320px]"
+              />
+            </div>
           </div>
 
         </div>
