@@ -5,7 +5,7 @@ import {
   Mail, MapPin, CheckCircle2, Lock, ArrowRight,
   Send, ShieldCheck,
   AlertTriangle, Edit3, X, Eye, ExternalLink,
-  Tag, Hash
+  Tag
 } from 'lucide-react';
 import XIcon from '../icons/XIcon';
 import GoogleIcon from '../icons/GoogleIcon';
@@ -572,57 +572,6 @@ TARGET: ${gbpData.target_keyword}
                 {/* Social Caption Preview Box */}
                 <div className="p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] text-xs text-[var(--text)] leading-relaxed font-sans whitespace-pre-line">
                   {socialCaptionText}
-                </div>
-
-                {/* Suggested Hashtags (Max 5 for maximum reach and engagement) */}
-                <div className="p-3.5 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] space-y-2" id="social-suggested-hashtags-container">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5">
-                      <Hash className="w-3.5 h-3.5 text-cyan-500" />
-                      <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--muted)]">
-                        Suggested Hashtags
-                      </span>
-                      <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-semibold border border-cyan-500/20">
-                        {socialHashtags.length} of 5 max
-                      </span>
-                    </div>
-
-                    <button
-                      type="button"
-                      id="copy-social-hashtags-btn"
-                      onClick={() => copyToClipboard(socialHashtags.join(' '), 'social-hashtags')}
-                      className="text-xs font-mono text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer font-bold"
-                      title="Copy all hashtags"
-                    >
-                      {copiedKey === 'social-hashtags' ? (
-                        <>
-                          <Check className="w-3 h-3 text-emerald-500" />
-                          <span className="text-emerald-500">Copied!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-3 h-3" />
-                          <span>Copy Hashtags</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-
-                  {/* Hashtag pills */}
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    {socialHashtags.map((tag, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => copyToClipboard(tag, `ht-${idx}`)}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[var(--surface)] border border-[var(--border)] text-[11px] font-mono font-semibold text-cyan-600 dark:text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-500/40 transition-all cursor-pointer shadow-xs active:scale-95"
-                        title={`Click to copy "${tag}"`}
-                      >
-                        <span>{tag}</span>
-                        {copiedKey === `ht-${idx}` && <Check className="w-2.5 h-2.5 text-emerald-500" />}
-                      </button>
-                    ))}
-                  </div>
                 </div>
 
                 {/* Platform Share Row */}
