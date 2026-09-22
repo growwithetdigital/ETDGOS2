@@ -707,9 +707,6 @@ export default function EditorialThumbnailCard({
               <span className="font-mono text-[11px] uppercase tracking-wider text-[var(--text)] font-bold">
                 Featured Content Graphic
               </span>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-500 font-semibold border border-cyan-500/30">
-                {activeFormat.name} · {activeFormat.ratioLabel}
-              </span>
             </div>
             <p className="text-[11px] text-[var(--muted)]">
               Select your platform ratio below to preview and export branded graphics.
