@@ -93,5 +93,10 @@ service cloud.firestore {
         allow create, update, delete: if isOwner(userId);
       }
     }
+
+    // Universal Profiles (Syncs user profile and Business DNA across all browsers & devices by email)
+    match /universal_profiles/{profileId} {
+      allow read, write: if isValidId(profileId);
+    }
   }
 }

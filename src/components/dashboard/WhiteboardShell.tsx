@@ -203,9 +203,15 @@ export default function WhiteboardShell({
   const isOwner = isAuthorizedForTelemetry(user?.email, profile?.email);
 
   const isFreeTier = profile?.tier === 'free' || !profile?.tier;
+  const userEmail = (user?.email || profile?.email || '').trim().toLowerCase();
+  const emailKey = userEmail ? userEmail.replace(/[^a-zA-Z0-9]/g, '_') : '';
   const isProfileLocked = Boolean(
     profile?.is_profile_locked || 
-    (typeof window !== 'undefined' && localStorage.getItem(`et_dna_locked_${user?.uid || 'guest'}`) === 'true')
+    (typeof window !== 'undefined' && (
+      localStorage.getItem(`et_dna_locked_${user?.uid || 'guest'}`) === 'true' ||
+      (emailKey && localStorage.getItem(`et_dna_locked_${emailKey}`) === 'true') ||
+      (userEmail && localStorage.getItem(`et_dna_locked_${userEmail}`) === 'true')
+    ))
   );
 
   // Theme Variables - Balanced Contrast: crisp, WCAG-compliant readability on both light and dark surfaces

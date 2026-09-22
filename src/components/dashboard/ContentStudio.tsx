@@ -433,7 +433,7 @@ TARGET: ${gbpData.target_keyword}
                 socialCaptionToShare={socialCaptionText}
               />
 
-              {/* Asset 2: 1 Blog Post (Up to 300 Words, SEO/AEO Optimized) */}
+              {/* Asset 2: SEO/AEO Optimized Blog (Up to 300 Words) */}
               <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-7 space-y-5 shadow-sm">
                 
                 {/* Header with Word Count & AEO Badge */}
@@ -441,7 +441,7 @@ TARGET: ${gbpData.target_keyword}
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-cyan-500">
-                        1 Evergreen Blog Post
+                        2. SEO / AEO Optimized Blog
                       </span>
                       <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-500 font-semibold border border-cyan-500/30">
                         {defaultBlogPost.word_count || 285} Words (Up to 300)
@@ -544,18 +544,18 @@ TARGET: ${gbpData.target_keyword}
 
             </div>
 
-            {/* Right Column: Social, Eblast, GBP */}
+            {/* Right Column: Social, GBP Post, Eblast */}
             <div className="lg:col-span-5 space-y-6">
               
-              {/* Asset 3: 1 Social Media Post */}
+              {/* Asset 3: 1 Social Media Caption (Encouraging Engagement) */}
               <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm space-y-4">
                 <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-cyan-500">
-                      1 Social Media Post
+                      3. Social Media Caption
                     </span>
                     <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-semibold border border-cyan-500/20">
-                      Multi-Platform
+                      Encouraging Engagement
                     </span>
                   </div>
 
@@ -667,12 +667,56 @@ TARGET: ${gbpData.target_keyword}
                 </div>
               </div>
 
-              {/* Asset 4: 1 150-Word Eblast */}
+              {/* Asset 4: 1 Google Business Profile (GBP) Post */}
+              <div className="rounded-3xl border border-amber-500/30 bg-[var(--surface)] p-6 shadow-sm space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[var(--border)]">
+                  <div className="flex items-center gap-2">
+                    <GoogleIcon className="w-4 h-4 shrink-0" />
+                    <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                      4. GBP Post
+                    </span>
+                    <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-700 dark:text-amber-400 font-semibold border border-amber-500/20">
+                      Local Authority & Maps
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => copyToClipboard(gbpData.content, 'gbp')}
+                      className="text-xs font-mono text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      {copiedKey === 'gbp' ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+                      <span>{copiedKey === 'gbp' ? 'Copied' : 'Copy Text'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleOpenGoogleBusiness}
+                      className="px-2.5 py-1 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 font-mono text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer border border-amber-500/30 active:scale-95"
+                      title="Copies post update and opens Google Business Profile in a new tab"
+                    >
+                      <GoogleIcon className="w-3.5 h-3.5" />
+                      <span>Post to GBP</span>
+                      <ExternalLink className="w-2.5 h-2.5 opacity-70" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] text-xs text-[var(--text)] leading-relaxed font-sans space-y-2">
+                  <p>{gbpData.content}</p>
+                  <div className="pt-2 border-t border-[var(--border)] flex items-center justify-between text-[11px] font-mono text-[var(--muted)]">
+                    <span>CTA: <strong className="text-[var(--text)]">{gbpData.call_to_action}</strong></span>
+                    <span>Links to website</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Asset 5: 1 150-Word Eblast */}
               <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm space-y-4">
                 <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">
-                      1 150-Word Eblast
+                      5. Eblast
                     </span>
                     <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-purple-500/10 text-purple-600 dark:text-purple-400 font-semibold border border-purple-500/20">
                       150 Words
@@ -705,50 +749,6 @@ TARGET: ${gbpData.target_keyword}
 
                   <div className="p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] text-xs text-[var(--text)] leading-relaxed whitespace-pre-line font-sans">
                     {eblastBody}
-                  </div>
-                </div>
-              </div>
-
-              {/* Asset 5: 1 Google Business Profile (GBP) Post */}
-              <div className="rounded-3xl border border-amber-500/30 bg-[var(--surface)] p-6 shadow-sm space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[var(--border)]">
-                  <div className="flex items-center gap-2">
-                    <GoogleIcon className="w-4 h-4 shrink-0" />
-                    <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
-                      1 Google Business Profile Post
-                    </span>
-                    <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-700 dark:text-amber-400 font-semibold border border-amber-500/20">
-                      Local SEO
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => copyToClipboard(gbpData.content, 'gbp')}
-                      className="text-xs font-mono text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1 cursor-pointer"
-                    >
-                      {copiedKey === 'gbp' ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
-                      <span>{copiedKey === 'gbp' ? 'Copied' : 'Copy Text'}</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleOpenGoogleBusiness}
-                      className="px-2.5 py-1 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 font-mono text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer border border-amber-500/30 active:scale-95"
-                      title="Copies post update and opens Google Business Profile in a new tab"
-                    >
-                      <GoogleIcon className="w-3.5 h-3.5" />
-                      <span>Post to GBP</span>
-                      <ExternalLink className="w-2.5 h-2.5 opacity-70" />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] text-xs text-[var(--text)] leading-relaxed font-sans space-y-2">
-                  <p>{gbpData.content}</p>
-                  <div className="pt-2 border-t border-[var(--border)] flex items-center justify-between text-[11px] font-mono text-[var(--muted)]">
-                    <span>CTA: <strong className="text-[var(--text)]">{gbpData.call_to_action}</strong></span>
-                    <span>Links to website</span>
                   </div>
                 </div>
               </div>

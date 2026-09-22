@@ -51,13 +51,16 @@ export default function ProfileBusinessDnaPanel({
   onOpenBooking,
 }: ProfileBusinessDnaPanelProps) {
   const uid = user?.uid || profile?.uid || 'guest';
+  const userEmail = (user?.email || profile?.email || '').trim().toLowerCase();
+  const emailKey = userEmail ? userEmail.replace(/[^a-zA-Z0-9]/g, '_') : '';
   const currentQuarterKey = getCurrentQuarterKey();
 
   // Check persistent lock status from both profile and local cache
   const [localLocked, setLocalLocked] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
-      const cached = localStorage.getItem(`et_dna_locked_${uid}`);
-      if (cached === 'true') return true;
+      if (localStorage.getItem(`et_dna_locked_${uid}`) === 'true') return true;
+      if (emailKey && localStorage.getItem(`et_dna_locked_${emailKey}`) === 'true') return true;
+      if (userEmail && localStorage.getItem(`et_dna_locked_${userEmail}`) === 'true') return true;
     }
     return Boolean(profile?.is_profile_locked);
   });
@@ -110,10 +113,12 @@ export default function ProfileBusinessDnaPanel({
         setLocalLocked(true);
         if (typeof window !== 'undefined') {
           localStorage.setItem(`et_dna_locked_${uid}`, 'true');
+          if (emailKey) localStorage.setItem(`et_dna_locked_${emailKey}`, 'true');
+          if (userEmail) localStorage.setItem(`et_dna_locked_${userEmail}`, 'true');
         }
       }
     }
-  }, [profile, uid]);
+  }, [profile, uid, userEmail, emailKey]);
 
   // Reverse engineered Business DNA structure (Matching user's website pattern)
   const dnaData: ReverseEngineeredDnaResult = useMemo(() => {
@@ -214,14 +219,20 @@ export default function ProfileBusinessDnaPanel({
     if (typeof window !== 'undefined') {
       localStorage.setItem(`et_dna_locked_${uid}`, 'true');
       localStorage.setItem(`et_dna_profile_${uid}`, JSON.stringify(updatedProfilePayload));
+      if (emailKey) {
+        localStorage.setItem(`et_dna_locked_${emailKey}`, 'true');
+        localStorage.setItem(`et_dna_profile_${emailKey}`, JSON.stringify(updatedProfilePayload));
+      }
+      if (userEmail) {
+        localStorage.setItem(`et_dna_locked_${userEmail}`, 'true');
+        localStorage.setItem(`et_dna_profile_${userEmail}`, JSON.stringify(updatedProfilePayload));
+      }
     }
     setLocalLocked(true);
     setShowConfirmModal(false);
 
     try {
-      if (user?.uid) {
-        await updateUserProfile(user.uid, updatedProfilePayload);
-      }
+      await updateUserProfile(user?.uid || uid, updatedProfilePayload, userEmail);
       onRefreshProfile({
         ...(profile || {} as UserProfile),
         ...updatedProfilePayload,
@@ -263,14 +274,14 @@ export default function ProfileBusinessDnaPanel({
 
     if (typeof window !== 'undefined') {
       localStorage.removeItem(`et_dna_locked_${uid}`);
+      if (emailKey) localStorage.removeItem(`et_dna_locked_${emailKey}`);
+      if (userEmail) localStorage.removeItem(`et_dna_locked_${userEmail}`);
     }
     setLocalLocked(false);
     setShowResetModal(false);
 
     try {
-      if (user?.uid) {
-        await updateUserProfile(user.uid, resetPayload);
-      }
+      await updateUserProfile(user?.uid || uid, resetPayload, userEmail);
       onRefreshProfile({
         ...(profile || {} as UserProfile),
         ...resetPayload,

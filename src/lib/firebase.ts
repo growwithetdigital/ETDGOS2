@@ -759,36 +759,52 @@ export const resetPasswordEmail = async (email: string): Promise<boolean> => {
   }
 };
 
+export const getEmailDocId = (email: string): string => {
+  const normalized = (email || '').toLowerCase().trim();
+  return 'email_' + normalized.replace(/[^a-zA-Z0-9]/g, '_');
+};
+
 export const signInWithInstantAccess = async (
   customEmail = 'ericlamarthomas@gmail.com',
   customName = 'Eric Thomas'
 ): Promise<User> => {
-  const localUid = 'et_owner_' + btoa(customEmail).replace(/[^a-zA-Z0-9]/g, '').slice(0, 16);
+  const normalizedEmail = customEmail.toLowerCase().trim();
+  const localUid = 'et_owner_' + btoa(normalizedEmail).replace(/[^a-zA-Z0-9]/g, '').slice(0, 16);
   const localUser: any = {
     uid: localUid,
-    email: customEmail,
+    email: normalizedEmail,
     displayName: customName,
     emailVerified: true,
     isAnonymous: false,
-    providerData: [{ providerId: 'instant_access', email: customEmail }]
+    providerData: [{ providerId: 'instant_access', email: normalizedEmail }]
   };
+
+  const emailDocId = getEmailDocId(normalizedEmail);
 
   if (typeof window !== 'undefined') {
     localStorage.removeItem('et_signed_out');
     localStorage.setItem('et_growth_os_local_user', JSON.stringify(localUser));
     localStorage.setItem('et_growth_os_active_uid', localUid);
 
-    const initialProfile: UserProfile = {
+    // Look for existing locked profile or DNA in local storage
+    const existingDnaStr = localStorage.getItem(`et_dna_profile_${normalizedEmail}`) ||
+      localStorage.getItem(`et_dna_profile_${emailDocId}`) ||
+      localStorage.getItem(`et_dna_profile_${localUid}`);
+    const isLocked = localStorage.getItem(`et_dna_locked_${normalizedEmail}`) === 'true' ||
+      localStorage.getItem(`et_dna_locked_${emailDocId}`) === 'true' ||
+      localStorage.getItem(`et_dna_locked_${localUid}`) === 'true';
+
+    let initialProfile: UserProfile = {
       uid: localUid,
-      email: customEmail,
+      email: normalizedEmail,
       displayName: customName,
       business_name: 'ET Digital Growth OS',
       contact: customName,
       website_url: 'https://growwithetdigital.com',
-      location: '',
-      mission_statement: '',
-      competitor_website: '',
-      target_audience: '',
+      location: 'Los Angeles',
+      mission_statement: 'business coaching to inspire storytelling',
+      competitor_website: 'https://ericthomas.com/',
+      target_audience: 'small business owners near Agoura hills',
       brand_voice: 'Authoritative & Strategic',
       tier: 'consultation',
       status: 'active',
@@ -797,13 +813,26 @@ export const signInWithInstantAccess = async (
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
+
+    if (existingDnaStr) {
+      try {
+        const parsedDna = JSON.parse(existingDnaStr);
+        initialProfile = { ...initialProfile, ...parsedDna, uid: localUid, email: normalizedEmail };
+      } catch (e) {}
+    }
+    if (isLocked) {
+      initialProfile.is_profile_locked = true;
+    }
+
     localStorage.setItem(`et_profile_${localUid}`, JSON.stringify(initialProfile));
+    localStorage.setItem(`et_profile_${emailDocId}`, JSON.stringify(initialProfile));
+    localStorage.setItem(`et_profile_email_${normalizedEmail}`, JSON.stringify(initialProfile));
   }
 
-  // Background non-blocking sync (safe, non-intrusive)
+  // Background non-blocking sync to Firestore universal_profiles & platform telemetry
   Promise.resolve().then(async () => {
     try {
-      await trackPlatformUsage(localUid, customEmail, customName, 'login');
+      await trackPlatformUsage(localUid, normalizedEmail, customName, 'login');
     } catch (e) {}
     try {
       await bindPendingAuditToUser(localUid);
@@ -907,11 +936,60 @@ export const googleSignInWithProfile = async (): Promise<User> => {
   }
 };
 
-export const getUserProfile = async (uid: string): Promise<UserProfile | null> => {
-  // Stale-while-revalidate: check local profile cache first for instantaneous 0ms response
+export const getUserProfile = async (uid: string, userEmail?: string): Promise<UserProfile | null> => {
+  let detectedEmail = (userEmail || auth.currentUser?.email || '').trim().toLowerCase();
+
+  if (!detectedEmail && typeof window !== 'undefined') {
+    try {
+      const localUser = JSON.parse(localStorage.getItem('et_growth_os_local_user') || '{}');
+      if (localUser?.email) detectedEmail = localUser.email.trim().toLowerCase();
+      if (!detectedEmail) {
+        const cached = localStorage.getItem(`et_profile_${uid}`);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed?.email) detectedEmail = parsed.email.trim().toLowerCase();
+        }
+      }
+    } catch (e) {}
+  }
+
+  // 1. Cross-Device Source of Truth: Check universal_profiles in Firestore by email
+  if (detectedEmail) {
+    const emailDocId = getEmailDocId(detectedEmail);
+    try {
+      const universalSnap = await Promise.race([
+        getDoc(doc(db, 'universal_profiles', emailDocId)),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 1800))
+      ]);
+      if (universalSnap && (universalSnap as any).exists && (universalSnap as any).exists()) {
+        const profileData = (universalSnap as any).data() as UserProfile;
+        const normalized: UserProfile = {
+          ...profileData,
+          uid: uid || profileData.uid,
+          email: detectedEmail,
+        };
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(`et_profile_${uid}`, JSON.stringify(normalized));
+          localStorage.setItem(`et_profile_${emailDocId}`, JSON.stringify(normalized));
+          localStorage.setItem(`et_profile_email_${detectedEmail}`, JSON.stringify(normalized));
+          if (normalized.is_profile_locked) {
+            localStorage.setItem(`et_dna_locked_${uid}`, 'true');
+            localStorage.setItem(`et_dna_locked_${emailDocId}`, 'true');
+            localStorage.setItem(`et_dna_locked_${detectedEmail}`, 'true');
+          }
+        }
+        return normalized;
+      }
+    } catch (err) {
+      console.warn('universal_profiles remote fetch notice:', err);
+    }
+  }
+
+  // 2. Stale-while-revalidate: check local profile cache
   let cachedProfile: UserProfile | null = null;
   if (typeof window !== 'undefined') {
-    const cached = localStorage.getItem(`et_profile_${uid}`);
+    const cached = localStorage.getItem(`et_profile_${uid}`) ||
+      (detectedEmail ? localStorage.getItem(`et_profile_email_${detectedEmail}`) : null);
     if (cached) {
       try {
         const parsed = JSON.parse(cached);
@@ -933,7 +1011,6 @@ export const getUserProfile = async (uid: string): Promise<UserProfile | null> =
         if (snap && (snap as any).exists && (snap as any).exists()) {
           const profileData = (snap as any).data() as UserProfile;
           if (typeof window !== 'undefined') {
-            // Keep locked status and essential fields if locally locked
             const merged = {
               ...profileData,
               is_profile_locked: cachedProfile?.is_profile_locked ? true : profileData.is_profile_locked,
@@ -947,6 +1024,7 @@ export const getUserProfile = async (uid: string): Promise<UserProfile | null> =
     return cachedProfile;
   }
 
+  // 3. Fallback: check Firestore users/{uid}
   try {
     const snap = await Promise.race([
       getDoc(doc(db, 'users', uid)),
@@ -956,6 +1034,9 @@ export const getUserProfile = async (uid: string): Promise<UserProfile | null> =
       const profileData = (snap as any).data() as UserProfile;
       if (typeof window !== 'undefined') {
         localStorage.setItem(`et_profile_${uid}`, JSON.stringify(profileData));
+        if (profileData.is_profile_locked) {
+          localStorage.setItem(`et_dna_locked_${uid}`, 'true');
+        }
       }
       return profileData;
     }
@@ -966,7 +1047,6 @@ export const getUserProfile = async (uid: string): Promise<UserProfile | null> =
   const welcomeSeen = typeof window !== 'undefined' ? localStorage.getItem(`et_welcome_seen_${uid}`) === 'true' : false;
 
   // Check if this UID belongs to a registered local account or session user
-  let detectedEmail = auth.currentUser?.email || '';
   let detectedName = auth.currentUser?.displayName || '';
 
   if (typeof window !== 'undefined') {
@@ -994,7 +1074,7 @@ export const getUserProfile = async (uid: string): Promise<UserProfile | null> =
     uid,
     email: finalEmail,
     displayName: finalName,
-    business_name: finalName,
+    business_name: isOwner ? 'ET Digital Growth OS' : finalName,
     contact: finalName,
     website_url: isOwner ? 'https://growwithetdigital.com' : '',
     location: isOwner ? 'Los Angeles' : '',
@@ -1114,7 +1194,26 @@ export const bindPendingAuditToUser = async (uid: string): Promise<void> => {
   }
 };
 
-export const updateUserProfile = async (uid: string, profileData: Partial<UserProfile>): Promise<void> => {
+export const updateUserProfile = async (
+  uid: string,
+  profileData: Partial<UserProfile>,
+  userEmail?: string
+): Promise<void> => {
+  let detectedEmail = (userEmail || profileData.email || auth.currentUser?.email || '').trim().toLowerCase();
+  if (!detectedEmail && typeof window !== 'undefined') {
+    try {
+      const cached = localStorage.getItem(`et_profile_${uid}`);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed?.email) detectedEmail = parsed.email.trim().toLowerCase();
+      }
+      if (!detectedEmail) {
+        const localUser = JSON.parse(localStorage.getItem('et_growth_os_local_user') || '{}');
+        if (localUser?.email) detectedEmail = localUser.email.trim().toLowerCase();
+      }
+    } catch (e) {}
+  }
+
   let mergedProfile: any = null;
   if (typeof window !== 'undefined') {
     try {
@@ -1124,16 +1223,28 @@ export const updateUserProfile = async (uid: string, profileData: Partial<UserPr
         ...parsed,
         ...profileData,
         uid,
+        email: detectedEmail || parsed.email || profileData.email || '',
         updated_at: new Date().toISOString()
       };
       localStorage.setItem(`et_profile_${uid}`, JSON.stringify(mergedProfile));
+
+      if (detectedEmail) {
+        const emailDocId = getEmailDocId(detectedEmail);
+        localStorage.setItem(`et_profile_${emailDocId}`, JSON.stringify(mergedProfile));
+        localStorage.setItem(`et_profile_email_${detectedEmail}`, JSON.stringify(mergedProfile));
+        if (mergedProfile.is_profile_locked) {
+          localStorage.setItem(`et_dna_locked_${uid}`, 'true');
+          localStorage.setItem(`et_dna_locked_${emailDocId}`, 'true');
+          localStorage.setItem(`et_dna_locked_${detectedEmail}`, 'true');
+        }
+      }
 
       // Also ensure local user mirror is kept up to date
       const localUserStr = localStorage.getItem('et_growth_os_local_user');
       if (localUserStr) {
         try {
           const localUser = JSON.parse(localUserStr);
-          if (localUser && localUser.uid === uid) {
+          if (localUser && (localUser.uid === uid || (detectedEmail && localUser.email === detectedEmail))) {
             localStorage.setItem('et_growth_os_local_user', JSON.stringify({
               ...localUser,
               displayName: profileData.business_name || profileData.displayName || localUser.displayName,
@@ -1146,9 +1257,25 @@ export const updateUserProfile = async (uid: string, profileData: Partial<UserPr
     }
   }
 
-  // Attempt remote Firestore write with a 2-second timeout.
-  // If user is offline, permissions are restricted, or Firestore is delayed,
-  // we log a warning instead of throwing an error, so the dashboard locks and functions reliably.
+  // 1. Universal Firestore Sync (Email-based universal profile: accessible on Chrome, Mobile, Incognito)
+  if (detectedEmail) {
+    try {
+      const emailDocId = getEmailDocId(detectedEmail);
+      const universalDocRef = doc(db, 'universal_profiles', emailDocId);
+      await Promise.race([
+        setDoc(universalDocRef, {
+          ...(mergedProfile || profileData),
+          email: detectedEmail,
+          updated_at: serverTimestamp(),
+        }, { merge: true }),
+        new Promise((resolve) => setTimeout(resolve, 3000))
+      ]);
+    } catch (universalErr) {
+      console.warn('Universal profile sync notice:', universalErr);
+    }
+  }
+
+  // 2. Also write to users/{uid} in Firestore
   try {
     const userDocRef = doc(db, 'users', uid);
     await Promise.race([

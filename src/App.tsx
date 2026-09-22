@@ -22,7 +22,7 @@ import LegalModals from './components/LegalModals';
 import AuthModal from './components/dashboard/AuthModal';
 import WelcomeBookmarkModal from './components/dashboard/WelcomeBookmarkModal';
 import WhiteboardShell from './components/dashboard/WhiteboardShell';
-import { auth, getUserProfile, updateUserWelcomeFlag, googleSignOut } from './lib/firebase';
+import { auth, getUserProfile, updateUserProfile, updateUserWelcomeFlag, googleSignOut } from './lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { UserProfile } from './types';
 
@@ -77,14 +77,19 @@ export default function App() {
     return null;
   })();
 
-  const fetchProfile = async (uid: string, overrideProfile?: UserProfile) => {
+  const fetchProfile = async (uid: string, overrideProfile?: UserProfile, emailHint?: string) => {
     if (overrideProfile) {
       setUserProfile(overrideProfile);
       return;
     }
-    // 1. Immediately hydrate from cache to eliminate UI delay (0ms)
+    const detectedEmail = (emailHint || currentUser?.email || auth.currentUser?.email || '').trim().toLowerCase();
+    const emailKey = detectedEmail ? detectedEmail.replace(/[^a-zA-Z0-9]/g, '_') : '';
+
+    // 1. Immediately hydrate from cache to eliminate UI delay
     if (typeof window !== 'undefined') {
-      const cached = localStorage.getItem(`et_profile_${uid}`);
+      const cached = localStorage.getItem(`et_profile_${uid}`) ||
+        (detectedEmail ? localStorage.getItem(`et_profile_email_${detectedEmail}`) : null) ||
+        (emailKey ? localStorage.getItem(`et_profile_${emailKey}`) : null);
       if (cached) {
         try {
           const parsed = JSON.parse(cached);
@@ -92,9 +97,36 @@ export default function App() {
         } catch (e) {}
       }
     }
+
     try {
-      const p = await getUserProfile(uid);
-      if (p) setUserProfile(p);
+      const p = await getUserProfile(uid, detectedEmail);
+      if (p) {
+        // If this local machine already has a locked Business DNA, make sure it syncs up to Firestore
+        if (typeof window !== 'undefined') {
+          const hasLocalLock = localStorage.getItem(`et_dna_locked_${uid}`) === 'true' ||
+            (detectedEmail && localStorage.getItem(`et_dna_locked_${detectedEmail}`) === 'true') ||
+            (emailKey && localStorage.getItem(`et_dna_locked_${emailKey}`) === 'true');
+          const localDnaStr = localStorage.getItem(`et_dna_profile_${uid}`) ||
+            (detectedEmail && localStorage.getItem(`et_dna_profile_${detectedEmail}`)) ||
+            (emailKey && localStorage.getItem(`et_dna_profile_${emailKey}`));
+
+          if (hasLocalLock && !p.is_profile_locked) {
+            let merged = { ...p, is_profile_locked: true };
+            if (localDnaStr) {
+              try {
+                const parsedDna = JSON.parse(localDnaStr);
+                merged = { ...merged, ...parsedDna, is_profile_locked: true };
+              } catch (e) {}
+            }
+            updateUserProfile(uid, merged, detectedEmail);
+            setUserProfile(merged);
+            return;
+          }
+        }
+
+        setUserProfile(p);
+      }
+
       const welcomeSeen = typeof window !== 'undefined' ? localStorage.getItem(`et_welcome_seen_${uid}`) === 'true' : false;
       if (p && p.has_seen_welcome === false && !welcomeSeen) {
         setShowWelcomeModal(true);
@@ -227,38 +259,9 @@ export default function App() {
       }
 
       if (user) {
-        if (typeof window !== 'undefined') {
-          const existing = localStorage.getItem(`et_profile_${user.uid}`);
-          if (!existing) {
-            const isOwner = user.email === 'ericlamarthomas@gmail.com' || user.uid.includes('owner');
-            const immediateProfile: UserProfile = {
-              uid: user.uid,
-              email: user.email || '',
-              displayName: user.displayName || (isOwner ? 'Eric Thomas' : 'Growth Partner'),
-              photoURL: user.photoURL || undefined,
-              emailVerified: user.emailVerified,
-              business_name: user.displayName || (isOwner ? 'ET Digital Growth OS' : 'Growth Partner'),
-              contact: user.displayName || 'Growth Partner',
-              website_url: '',
-              location: '',
-              mission_statement: '',
-              competitor_website: '',
-              target_audience: '',
-              brand_voice: 'Authoritative & Strategic',
-              tier: isOwner ? 'consultation' : 'free',
-              status: 'active',
-              has_seen_welcome: false,
-              total_generations_count: 0,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            };
-            localStorage.setItem(`et_profile_${user.uid}`, JSON.stringify(immediateProfile));
-            setUserProfile(immediateProfile);
-          }
-        }
         setCurrentUser(user);
         setIsAuthModalOpen(false);
-        fetchProfile(user.uid);
+        fetchProfile(user.uid, undefined, user.email || undefined);
       } else {
         const localUserJson = typeof window !== 'undefined' ? localStorage.getItem('et_growth_os_local_user') : null;
         if (localUserJson && !currentlySignedOut) {
@@ -267,7 +270,7 @@ export default function App() {
             if (localUser && localUser.uid) {
               setCurrentUser(localUser as User);
               setIsAuthModalOpen(false);
-              fetchProfile(localUser.uid);
+              fetchProfile(localUser.uid, undefined, localUser.email || undefined);
               return;
             }
           } catch (e) {}

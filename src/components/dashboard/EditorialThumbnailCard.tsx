@@ -705,7 +705,7 @@ export default function EditorialThumbnailCard({
           <div>
             <div className="flex items-center gap-2">
               <span className="font-mono text-[11px] uppercase tracking-wider text-[var(--text)] font-bold">
-                Featured Content Graphic
+                1. Content Featured Image
               </span>
             </div>
             <p className="text-[11px] text-[var(--muted)]">
@@ -944,127 +944,22 @@ export default function EditorialThumbnailCard({
         </div>
       </div>
 
-      {/* Visible Caption Section */}
-      <div className="p-4 sm:p-5 border-t border-[var(--border)] bg-[var(--surface)] space-y-2.5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <FileText className="w-4 h-4 text-cyan-500" />
-            <span className="font-mono text-[11px] uppercase tracking-wider text-cyan-600 dark:text-cyan-400 font-bold">
-              Caption & Promo Copy ({activeFormat.name})
-            </span>
-          </div>
-          <button
-            type="button"
-            onClick={handleCopyCaption}
-            className="text-xs font-mono text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1.5 cursor-pointer font-semibold"
-            id="copy-image-caption-btn"
-            title="Copy image caption to clipboard"
-          >
-            {copiedCaption ? (
-              <>
-                <Check className="w-3.5 h-3.5 text-emerald-500" />
-                <span className="text-emerald-500">Caption Copied!</span>
-              </>
-            ) : (
-              <>
-                <Copy className="w-3.5 h-3.5" />
-                <span>Copy Caption</span>
-              </>
-            )}
-          </button>
-        </div>
-        <div className="p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] text-xs sm:text-sm font-sans text-[var(--text)] leading-relaxed select-text shadow-xs">
-          {captionToDisplay}
-        </div>
-      </div>
-
-      {/* Actions Bar: Grouped by Social Media, GBP, then Email */}
-      <div className="p-4 sm:p-5 border-t border-[var(--border)] bg-[var(--surface2)] flex flex-col xl:flex-row items-center justify-between gap-4">
+      {/* Actions Bar: Format Info & Direct Downloads */}
+      <div className="p-4 sm:p-5 border-t border-[var(--border)] bg-[var(--surface2)] flex flex-col sm:flex-row items-center justify-between gap-4">
         
-        {/* Left: Quick Actions Grouped by Social Media, GBP, Email */}
-        <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto justify-center xl:justify-start">
-          
-          {/* Group 1: Social Media */}
-          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[var(--surface)] border border-[var(--border)] shadow-2xs">
-            <span className="text-[10px] font-mono text-[var(--muted)] font-semibold px-1.5">Social:</span>
-            <button
-              type="button"
-              onClick={() => handleSharePlatform('linkedin')}
-              title="Share to LinkedIn (Copies caption + Downloads graphic)"
-              className="p-1.5 rounded-lg hover:bg-cyan-500/10 text-[var(--text)] transition-colors cursor-pointer"
-            >
-              <Linkedin className="w-3.5 h-3.5 text-[#0A66C2]" />
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSharePlatform('x')}
-              title="Share to X (Copies caption + Downloads graphic)"
-              className="p-1.5 rounded-lg hover:bg-cyan-500/10 text-[var(--text)] transition-colors cursor-pointer"
-            >
-              <XIcon className="w-3.5 h-3.5 text-[var(--text)]" />
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSharePlatform('facebook')}
-              title="Share to Facebook (Copies caption + Downloads graphic)"
-              className="p-1.5 rounded-lg hover:bg-cyan-500/10 text-[var(--text)] transition-colors cursor-pointer"
-            >
-              <Facebook className="w-3.5 h-3.5 text-[#1877F2]" />
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSharePlatform('instagram')}
-              title="Share to Instagram (Copies caption + Downloads graphic)"
-              className="p-1.5 rounded-lg hover:bg-pink-500/10 text-[var(--text)] transition-colors cursor-pointer"
-            >
-              <Instagram className="w-3.5 h-3.5 text-[#E4405F]" />
-            </button>
-          </div>
-
-          {/* Group 2: GBP with Google Icon & Post Action */}
-          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[var(--surface)] border border-amber-500/30 shadow-2xs">
-            <span className="text-[10px] font-mono text-amber-600 dark:text-amber-400 font-semibold px-1.5 flex items-center gap-1">
-              <GoogleIcon className="w-3 h-3" />
-              <span>GBP:</span>
-            </span>
-            <button
-              type="button"
-              onClick={() => handleSharePlatform('gbp')}
-              title="Post on Google Business (Opens Google Business in a new tab, copies update and downloads graphic)"
-              className="px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 font-mono text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
-            >
-              <GoogleIcon className="w-3 h-3" />
-              <span>Post to GBP</span>
-              <ExternalLink className="w-2.5 h-2.5 opacity-70" />
-            </button>
-          </div>
-
-          {/* Group 3: Email */}
-          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[var(--surface)] border border-purple-500/30 shadow-2xs">
-            <span className="text-[10px] font-mono text-purple-600 dark:text-purple-400 font-semibold px-1.5 flex items-center gap-1">
-              <Mail className="w-3 h-3 text-purple-500" />
-              <span>Email:</span>
-            </span>
-            <button
-              type="button"
-              onClick={() => handleSharePlatform('email')}
-              title="Download email header graphic and copy text"
-              className="px-2.5 py-1 rounded-lg bg-purple-500/15 hover:bg-purple-500/25 text-purple-700 dark:text-purple-300 font-mono text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
-            >
-              <span>Email Header</span>
-            </button>
-          </div>
-
+        <div className="flex items-center gap-2 text-xs font-mono text-[var(--muted)]">
+          <Layers className="w-4 h-4 text-cyan-500" />
+          <span>Active Export: <strong className="text-[var(--text)]">{activeFormat.name} ({activeFormat.ratioLabel})</strong> · {activeFormat.dimensions}</span>
         </div>
 
         {/* Right: Download Actions */}
-        <div className="flex flex-wrap items-center gap-2.5 w-full xl:w-auto justify-center xl:justify-end">
+        <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto justify-center sm:justify-end">
           {/* Download All Formats Button */}
           <button
             type="button"
             onClick={handleDownloadAllFormats}
             disabled={isDownloading}
-            className="px-3 py-2 rounded-xl border border-cyan-500/40 bg-[var(--surface)] hover:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-mono text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+            className="px-3.5 py-2 rounded-xl border border-cyan-500/40 bg-[var(--surface)] hover:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-mono text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
             title="Download all formats at once"
           >
             {downloadSuccessFormat === 'all' ? (
@@ -1103,23 +998,6 @@ export default function EditorialThumbnailCard({
         </div>
 
       </div>
-
-      {/* Share Toast Confirmation */}
-      {shareToast && (
-        <div className="p-3 bg-cyan-500/10 border-t border-cyan-500/30 flex items-center justify-between text-xs font-mono text-cyan-600 dark:text-cyan-300">
-          <div className="flex items-center gap-2">
-            <Check className="w-4 h-4 text-emerald-500 shrink-0" />
-            <span>{shareToast.message}</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setShareToast(null)}
-            className="text-[var(--muted)] hover:text-[var(--text)] ml-2 cursor-pointer"
-          >
-            ✕
-          </button>
-        </div>
-      )}
 
       {/* ==================================================================== */}
       {/* OPTIMAL SIZES & PLATFORM SPECIFICATIONS MODAL */}

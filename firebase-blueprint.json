@@ -119,6 +119,10 @@
     "users/{userId}/content_library/{contentId}": {
       "schema": "content_library_item",
       "description": "User generated content library items."
+    },
+    "universal_profiles/{profileId}": {
+      "schema": "user_profile",
+      "description": "Universal user profile and Business DNA synchronized across all devices by email."
     }
   }
 }
