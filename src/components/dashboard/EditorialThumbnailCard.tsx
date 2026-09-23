@@ -533,7 +533,7 @@ export default function EditorialThumbnailCard({
               dataUrl: previewData,
               downloadedAt: new Date().toISOString(),
               filename: `${safeSlug}-${format.fileSuffix}.png`
-            });
+            }, profile?.email);
             recordUserDownload(profile?.uid, title || 'Editorial Graphic', `${format.name} (${format.dimensions})`, 'Social Media Graphic');
           } catch (storageErr) {
             console.warn('Downloads vault save notice:', storageErr);
@@ -596,7 +596,7 @@ export default function EditorialThumbnailCard({
                     dataUrl: previewData,
                     downloadedAt: new Date().toISOString(),
                     filename: `${safeSlug}-${format.fileSuffix}.png`
-                  });
+                  }, profile?.email);
                 } catch (e) {}
 
                 setTimeout(() => {
@@ -952,14 +952,14 @@ export default function EditorialThumbnailCard({
           <span>Active Export: <strong className="text-[var(--text)]">{activeFormat.name} ({activeFormat.ratioLabel})</strong> · {activeFormat.dimensions}</span>
         </div>
 
-        {/* Right: Download Actions */}
-        <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto justify-center sm:justify-end">
+        {/* Right: Download Actions - Full-width touch friendly buttons on mobile */}
+        <div className="grid grid-cols-1 sm:flex sm:items-center gap-2.5 w-full sm:w-auto justify-stretch sm:justify-end">
           {/* Download All Formats Button */}
           <button
             type="button"
             onClick={handleDownloadAllFormats}
             disabled={isDownloading}
-            className="px-3.5 py-2 rounded-xl border border-cyan-500/40 bg-[var(--surface)] hover:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-mono text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+            className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-cyan-500/40 bg-[var(--surface)] hover:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-mono text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95 disabled:opacity-50 min-h-[44px]"
             title="Download all formats at once"
           >
             {downloadSuccessFormat === 'all' ? (
@@ -970,7 +970,7 @@ export default function EditorialThumbnailCard({
             ) : (
               <>
                 <Layers className="w-3.5 h-3.5 text-cyan-500" />
-                <span>Download All</span>
+                <span>Download All 6 Formats</span>
               </>
             )}
           </button>
@@ -980,7 +980,7 @@ export default function EditorialThumbnailCard({
             type="button"
             onClick={() => handleDownloadSingleFormat(activeFormat)}
             disabled={isDownloading}
-            className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-display text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-md shadow-cyan-500/20 active:scale-95 disabled:opacity-50"
+            className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-display text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-md shadow-cyan-500/20 active:scale-95 disabled:opacity-50 min-h-[44px]"
             title={`Export ${activeFormat.name} Graphic`}
           >
             {downloadSuccessFormat === activeFormat.id ? (

@@ -38,6 +38,41 @@ export interface CaseStudy {
 
 export type UserTier = 'free' | 'monthly' | 'consultation';
 
+export type NavTabId = 
+  | 'profile_dna'
+  | 'content_studio' 
+  | 'downloads'
+  | 'market_report' 
+  | 'learning_feed'
+  | 'founder_note';
+
+export interface DashboardProgress {
+  active_tab?: NavTabId;
+  dna_locked?: boolean;
+  completed_tabs?: string[];
+  content_studio_viewed?: boolean;
+  downloads_count?: number;
+  market_report_viewed?: boolean;
+  learning_feed_viewed?: boolean;
+  last_visited_tab?: string;
+  last_active_at?: string;
+  theme?: 'dark' | 'light';
+  completion_percentage?: number;
+}
+
+export interface UniversalSession {
+  sessionId: string;
+  uid: string;
+  email: string;
+  displayName: string;
+  authProvider: 'google' | 'email' | 'instant_access';
+  isAuthenticated: boolean;
+  lastActiveAt: string;
+  deviceType?: 'desktop' | 'mobile' | 'tablet';
+  browser?: string;
+  dashboardProgress?: DashboardProgress;
+}
+
 export interface UserProfile {
   uid: string;
   email: string;
@@ -100,6 +135,8 @@ export interface UserProfile {
   selected_tone?: string;
   selected_category?: string;
   post_analytics_data?: PostAnalyticsData;
+  dashboard_progress?: DashboardProgress;
+  active_session?: UniversalSession;
   login_count?: number;
   last_sign_in_at?: string;
   last_active_at?: string;

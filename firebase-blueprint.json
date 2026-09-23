@@ -45,7 +45,7 @@
     },
     "user_profile": {
       "title": "User Profile",
-      "description": "User account and tier status with 90-day rate limit tracking.",
+      "description": "User account and tier status with 90-day rate limit tracking, Business DNA, and cross-device dashboard progress.",
       "type": "object",
       "properties": {
         "uid": { "type": "string" },
@@ -60,6 +60,13 @@
         "audit_id": { "type": "string" },
         "business_name": { "type": "string" },
         "website_url": { "type": "string" },
+        "industry": { "type": "string" },
+        "selected_tone": { "type": "string" },
+        "is_profile_locked": { "type": "boolean" },
+        "profile_locked_at": { "type": "string", "format": "date-time" },
+        "brand_dna": { "type": "object" },
+        "dashboard_progress": { "type": "object" },
+        "active_session": { "type": "object" },
         "created_at": { "type": "string", "format": "date-time" },
         "updated_at": { "type": "string", "format": "date-time" }
       },
@@ -93,6 +100,23 @@
         "timestamp": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "uid", "action", "timestamp"]
+    },
+    "downloaded_asset": {
+      "title": "Downloaded Asset",
+      "description": "Archived high-resolution editorial graphics and promotional assets synced across desktop and mobile devices.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "uid": { "type": "string" },
+        "title": { "type": "string" },
+        "formatId": { "type": "string" },
+        "formatName": { "type": "string" },
+        "dimensions": { "type": "string" },
+        "dataUrl": { "type": "string" },
+        "downloadedAt": { "type": "string", "format": "date-time" },
+        "filename": { "type": "string" }
+      },
+      "required": ["id", "title", "formatId", "formatName", "dimensions", "downloadedAt", "filename"]
     }
   },
   "firestore": {
@@ -120,9 +144,21 @@
       "schema": "content_library_item",
       "description": "User generated content library items."
     },
+    "users/{userId}/downloaded_assets/{assetId}": {
+      "schema": "downloaded_asset",
+      "description": "User archived graphic assets synchronized across devices."
+    },
     "universal_profiles/{profileId}": {
       "schema": "user_profile",
       "description": "Universal user profile and Business DNA synchronized across all devices by email."
+    },
+    "universal_profiles/{profileId}/downloaded_assets/{assetId}": {
+      "schema": "downloaded_asset",
+      "description": "Universal archived graphic assets synchronized across all browsers and devices by email."
+    },
+    "universal_sessions/{sessionId}": {
+      "schema": "user_profile",
+      "description": "Universal active session persistence records synchronized across all devices and browsers."
     }
   }
 }

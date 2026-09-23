@@ -21,17 +21,18 @@ import {
   collection, 
   doc, 
   setDoc, 
-  getDoc,
-  getDocs,
-  updateDoc,
-  deleteDoc,
-  serverTimestamp,
-  increment,
-  query,
-  where,
-  orderBy
+  getDoc, 
+  getDocs, 
+  updateDoc, 
+  deleteDoc, 
+  serverTimestamp, 
+  increment, 
+  query, 
+  where, 
+  orderBy,
+  onSnapshot
 } from 'firebase/firestore';
-import { UserProfile, AuditRecord, GeneratedContentItem, PlatformTelemetryEvent } from '../types';
+import { UserProfile, AuditRecord, GeneratedContentItem, PlatformTelemetryEvent, DownloadedAsset, DashboardProgress, UniversalSession } from '../types';
 import defaultFirebaseConfig from '../../firebase-applet-config.json';
 
 // Support embedded config and optional Vercel environment variables
@@ -620,6 +621,7 @@ export const signUpWithEmail = async (email: string, pass: string, displayName: 
   try {
     const userDocRef = doc(db, 'users', uid);
     await setDoc(userDocRef, userProfile, { merge: true });
+    await persistUniversalSessionToFirestore(firebaseUser, 'email');
   } catch (fsErr) {
     console.warn('Firestore profile initialization sync deferred:', fsErr);
   }
@@ -644,9 +646,10 @@ export const signInWithEmail = async (email: string, pass: string): Promise<User
       localStorage.removeItem('et_signed_out');
       localStorage.setItem('et_growth_os_local_user', JSON.stringify(cred.user));
     }
-    // Run audit binding and usage tracking in background (non-blocking)
+    // Run session persistence, audit binding and usage tracking in background
     Promise.resolve().then(async () => {
       try {
+        await persistUniversalSessionToFirestore(cred.user, 'email');
         await bindPendingAuditToUser(cred.user.uid);
         await trackPlatformUsage(cred.user.uid, normalizedEmail, cred.user.displayName || normalizedEmail, 'login');
       } catch (e) {}
@@ -764,6 +767,247 @@ export const getEmailDocId = (email: string): string => {
   return 'email_' + normalized.replace(/[^a-zA-Z0-9]/g, '_');
 };
 
+export const getSessionIdForEmail = (email: string): string => {
+  const normalized = (email || '').toLowerCase().trim();
+  return 'sess_' + normalized.replace(/[^a-zA-Z0-9]/g, '_');
+};
+
+/**
+ * Creates or updates a universal session in Firestore and local storage.
+ * Ensures authentication state, active tab, and dashboard progress are synchronized across all devices.
+ */
+export const persistUniversalSessionToFirestore = async (
+  user: User | { uid: string; email: string; displayName?: string },
+  authProvider: 'google' | 'email' | 'instant_access' = 'instant_access',
+  progress?: Partial<DashboardProgress>
+): Promise<UniversalSession> => {
+  const normalizedEmail = (user.email || '').toLowerCase().trim();
+  const emailDocId = getEmailDocId(normalizedEmail);
+  const sessionId = getSessionIdForEmail(normalizedEmail);
+  
+  const isMobile = typeof window !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  const isTablet = typeof window !== 'undefined' && /iPad|Tablet/i.test(navigator.userAgent);
+  const deviceType: 'desktop' | 'mobile' | 'tablet' = isTablet ? 'tablet' : isMobile ? 'mobile' : 'desktop';
+
+  const sessionPayload: UniversalSession = {
+    sessionId,
+    uid: user.uid,
+    email: normalizedEmail,
+    displayName: user.displayName || normalizedEmail.split('@')[0],
+    authProvider,
+    isAuthenticated: true,
+    lastActiveAt: new Date().toISOString(),
+    deviceType,
+    browser: typeof window !== 'undefined' ? navigator.userAgent.slice(0, 80) : 'Browser',
+    dashboardProgress: progress || {
+      active_tab: 'profile_dna',
+      dna_locked: false,
+      last_active_at: new Date().toISOString()
+    }
+  };
+
+  // Local storage caching for zero-latency session recovery
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('et_signed_out');
+    localStorage.setItem('et_growth_os_active_uid', user.uid);
+    localStorage.setItem('et_growth_os_active_email', normalizedEmail);
+    localStorage.setItem('et_active_session_token', sessionId);
+    localStorage.setItem('et_universal_session', JSON.stringify(sessionPayload));
+    localStorage.setItem('et_growth_os_local_user', JSON.stringify({
+      uid: user.uid,
+      email: normalizedEmail,
+      displayName: sessionPayload.displayName,
+      emailVerified: true
+    }));
+  }
+
+  // Firestore remote persistence across devices
+  try {
+    const sessionDocRef = doc(db, 'universal_sessions', sessionId);
+    const universalDocRef = doc(db, 'universal_profiles', emailDocId);
+    const userDocRef = doc(db, 'users', user.uid);
+
+    await Promise.allSettled([
+      setDoc(sessionDocRef, {
+        ...sessionPayload,
+        updated_at: serverTimestamp(),
+      }, { merge: true }),
+      setDoc(universalDocRef, {
+        email: normalizedEmail,
+        uid: user.uid,
+        displayName: sessionPayload.displayName,
+        active_session: sessionPayload,
+        ...(progress ? { dashboard_progress: progress } : {}),
+        updated_at: serverTimestamp(),
+      }, { merge: true }),
+      setDoc(userDocRef, {
+        email: normalizedEmail,
+        active_session: sessionPayload,
+        ...(progress ? { dashboard_progress: progress } : {}),
+        updated_at: serverTimestamp(),
+      }, { merge: true }),
+    ]);
+  } catch (err) {
+    console.warn('Universal session persistence notice (cached locally):', err);
+  }
+
+  return sessionPayload;
+};
+
+/**
+ * Recovers an active universal session from Firestore given an email or sessionId.
+ */
+export const recoverUniversalSessionFromFirestore = async (
+  emailOrSessionId: string
+): Promise<{ user: User; profile: UserProfile | null; session: UniversalSession | null } | null> => {
+  const normalized = emailOrSessionId.toLowerCase().trim();
+  const emailDocId = getEmailDocId(normalized);
+  const sessionId = normalized.startsWith('sess_') ? normalized : getSessionIdForEmail(normalized);
+
+  let remoteProfile: UserProfile | null = null;
+  let remoteSession: UniversalSession | null = null;
+
+  try {
+    // 1. Check universal_profiles
+    const profileSnap = await Promise.race([
+      getDoc(doc(db, 'universal_profiles', emailDocId)),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 2500))
+    ]);
+
+    if (profileSnap && (profileSnap as any).exists && (profileSnap as any).exists()) {
+      remoteProfile = (profileSnap as any).data() as UserProfile;
+      if (remoteProfile.active_session) {
+        remoteSession = remoteProfile.active_session;
+      }
+    }
+
+    // 2. Check universal_sessions if not found
+    if (!remoteSession) {
+      const sessionSnap = await Promise.race([
+        getDoc(doc(db, 'universal_sessions', sessionId)),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000))
+      ]);
+      if (sessionSnap && (sessionSnap as any).exists && (sessionSnap as any).exists()) {
+        remoteSession = (sessionSnap as any).data() as UniversalSession;
+      }
+    }
+  } catch (e) {
+    console.warn('Session recovery notice:', e);
+  }
+
+  if (!remoteProfile && !remoteSession) {
+    return null;
+  }
+
+  const effectiveEmail = remoteProfile?.email || remoteSession?.email || normalized;
+  const effectiveName = remoteProfile?.displayName || remoteSession?.displayName || effectiveEmail.split('@')[0];
+  const effectiveUid = remoteProfile?.uid || remoteSession?.uid || ('usr_' + btoa(effectiveEmail).replace(/[^a-zA-Z0-9]/g, '').slice(0, 12));
+
+  const restoredUser = createSessionUser(effectiveEmail, effectiveName);
+  (restoredUser as any).uid = effectiveUid;
+
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('et_signed_out');
+    localStorage.setItem('et_growth_os_local_user', JSON.stringify(restoredUser));
+    localStorage.setItem('et_growth_os_active_uid', effectiveUid);
+    localStorage.setItem('et_growth_os_active_email', effectiveEmail);
+    if (remoteProfile) {
+      localStorage.setItem(`et_profile_${effectiveUid}`, JSON.stringify(remoteProfile));
+      localStorage.setItem(`et_profile_${emailDocId}`, JSON.stringify(remoteProfile));
+      localStorage.setItem(`et_profile_email_${effectiveEmail}`, JSON.stringify(remoteProfile));
+      if (remoteProfile.is_profile_locked) {
+        localStorage.setItem(`et_dna_locked_${effectiveUid}`, 'true');
+        localStorage.setItem(`et_dna_locked_${emailDocId}`, 'true');
+        localStorage.setItem(`et_dna_locked_${effectiveEmail}`, 'true');
+      }
+    }
+    if (remoteSession) {
+      localStorage.setItem('et_universal_session', JSON.stringify(remoteSession));
+      localStorage.setItem('et_active_session_token', remoteSession.sessionId);
+    }
+  }
+
+  return { user: restoredUser, profile: remoteProfile, session: remoteSession };
+};
+
+/**
+ * Subscribes to real-time updates for a universal profile and Business DNA from Firestore.
+ * Triggers callback whenever changes occur on desktop, mobile, or other devices.
+ */
+export const subscribeToUniversalProfile = (
+  userEmail: string,
+  onUpdate: (profile: UserProfile) => void
+): (() => void) => {
+  if (!userEmail) return () => {};
+  const emailDocId = getEmailDocId(userEmail);
+  try {
+    const unsub = onSnapshot(doc(db, 'universal_profiles', emailDocId), (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data() as UserProfile;
+        onUpdate(data);
+      }
+    }, (error) => {
+      console.warn('universal_profiles snapshot listener notice:', error);
+    });
+    return unsub;
+  } catch (e) {
+    console.warn('Could not establish real-time profile subscription:', e);
+    return () => {};
+  }
+};
+
+/**
+ * Updates dashboard progress in Firestore and local state for cross-device synchronization.
+ */
+export const updateDashboardProgress = async (
+  uid: string,
+  userEmail: string,
+  progress: Partial<DashboardProgress>
+): Promise<void> => {
+  const normalizedEmail = (userEmail || auth.currentUser?.email || '').trim().toLowerCase();
+  const emailDocId = getEmailDocId(normalizedEmail);
+  const sessionId = getSessionIdForEmail(normalizedEmail);
+
+  if (typeof window !== 'undefined') {
+    try {
+      const cachedSessionStr = localStorage.getItem('et_universal_session');
+      if (cachedSessionStr) {
+        const parsed = JSON.parse(cachedSessionStr);
+        parsed.dashboardProgress = { ...(parsed.dashboardProgress || {}), ...progress, last_active_at: new Date().toISOString() };
+        localStorage.setItem('et_universal_session', JSON.stringify(parsed));
+      }
+      const cachedProfileStr = localStorage.getItem(`et_profile_${uid}`);
+      if (cachedProfileStr) {
+        const parsed = JSON.parse(cachedProfileStr);
+        parsed.dashboard_progress = { ...(parsed.dashboard_progress || {}), ...progress };
+        localStorage.setItem(`et_profile_${uid}`, JSON.stringify(parsed));
+      }
+    } catch (e) {}
+  }
+
+  try {
+    const universalDocRef = doc(db, 'universal_profiles', emailDocId);
+    const sessionDocRef = doc(db, 'universal_sessions', sessionId);
+    const userDocRef = doc(db, 'users', uid);
+
+    const updatePayload = {
+      dashboard_progress: {
+        ...progress,
+        last_active_at: new Date().toISOString(),
+      },
+      updated_at: serverTimestamp(),
+    };
+
+    await Promise.allSettled([
+      setDoc(universalDocRef, updatePayload, { merge: true }),
+      setDoc(sessionDocRef, { dashboardProgress: progress, lastActiveAt: new Date().toISOString() }, { merge: true }),
+      setDoc(userDocRef, updatePayload, { merge: true }),
+    ]);
+  } catch (err) {
+    console.warn('Dashboard progress Firestore sync notice (saved locally):', err);
+  }
+};
+
 export const signInWithInstantAccess = async (
   customEmail = 'ericlamarthomas@gmail.com',
   customName = 'Eric Thomas'
@@ -781,6 +1025,18 @@ export const signInWithInstantAccess = async (
 
   const emailDocId = getEmailDocId(normalizedEmail);
 
+  // Check Firestore first for existing universal profile & Business DNA
+  let existingRemoteProfile: UserProfile | null = null;
+  try {
+    const remoteSnap = await Promise.race([
+      getDoc(doc(db, 'universal_profiles', emailDocId)),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 1500))
+    ]);
+    if (remoteSnap && (remoteSnap as any).exists && (remoteSnap as any).exists()) {
+      existingRemoteProfile = (remoteSnap as any).data() as UserProfile;
+    }
+  } catch (e) {}
+
   if (typeof window !== 'undefined') {
     localStorage.removeItem('et_signed_out');
     localStorage.setItem('et_growth_os_local_user', JSON.stringify(localUser));
@@ -790,11 +1046,12 @@ export const signInWithInstantAccess = async (
     const existingDnaStr = localStorage.getItem(`et_dna_profile_${normalizedEmail}`) ||
       localStorage.getItem(`et_dna_profile_${emailDocId}`) ||
       localStorage.getItem(`et_dna_profile_${localUid}`);
-    const isLocked = localStorage.getItem(`et_dna_locked_${normalizedEmail}`) === 'true' ||
+    const isLocked = existingRemoteProfile?.is_profile_locked ||
+      localStorage.getItem(`et_dna_locked_${normalizedEmail}`) === 'true' ||
       localStorage.getItem(`et_dna_locked_${emailDocId}`) === 'true' ||
       localStorage.getItem(`et_dna_locked_${localUid}`) === 'true';
 
-    let initialProfile: UserProfile = {
+    let initialProfile: UserProfile = existingRemoteProfile || {
       uid: localUid,
       email: normalizedEmail,
       displayName: customName,
@@ -814,7 +1071,7 @@ export const signInWithInstantAccess = async (
       updated_at: new Date().toISOString(),
     };
 
-    if (existingDnaStr) {
+    if (existingDnaStr && !existingRemoteProfile?.brand_dna) {
       try {
         const parsedDna = JSON.parse(existingDnaStr);
         initialProfile = { ...initialProfile, ...parsedDna, uid: localUid, email: normalizedEmail };
@@ -829,12 +1086,11 @@ export const signInWithInstantAccess = async (
     localStorage.setItem(`et_profile_email_${normalizedEmail}`, JSON.stringify(initialProfile));
   }
 
-  // Background non-blocking sync to Firestore universal_profiles & platform telemetry
+  // Background non-blocking sync to Firestore universal_sessions, universal_profiles & platform telemetry
   Promise.resolve().then(async () => {
     try {
+      await persistUniversalSessionToFirestore(localUser, 'instant_access', existingRemoteProfile?.dashboard_progress);
       await trackPlatformUsage(localUid, normalizedEmail, customName, 'login');
-    } catch (e) {}
-    try {
       await bindPendingAuditToUser(localUid);
     } catch (e) {}
   });
@@ -914,6 +1170,7 @@ export const googleSignInWithProfile = async (): Promise<User> => {
       }
 
       try {
+        await persistUniversalSessionToFirestore(user, 'google');
         await bindPendingAuditToUser(user.uid);
       } catch (e) {}
 
@@ -1987,3 +2244,158 @@ export const createGoogleClassroomAnnouncement = async (
 
   return res.json();
 };
+
+// ============================================================================
+// Cross-Device Universal Downloaded Assets Archiving & Synchronization
+// ============================================================================
+
+export const saveDownloadedAssetToFirestore = async (
+  userId: string | undefined,
+  asset: DownloadedAsset,
+  userEmail?: string
+): Promise<void> => {
+  let detectedEmail = (userEmail || auth.currentUser?.email || '').trim().toLowerCase();
+  if (!detectedEmail && typeof window !== 'undefined') {
+    try {
+      const localUser = JSON.parse(localStorage.getItem('et_growth_os_local_user') || '{}');
+      if (localUser?.email) detectedEmail = localUser.email.trim().toLowerCase();
+    } catch (e) {}
+  }
+
+  const cleanAsset: DownloadedAsset = {
+    id: asset.id,
+    title: asset.title || 'Editorial Graphic',
+    formatId: asset.formatId,
+    formatName: asset.formatName,
+    dimensions: asset.dimensions,
+    dataUrl: asset.dataUrl || '',
+    downloadedAt: asset.downloadedAt || new Date().toISOString(),
+    filename: asset.filename || 'asset.png',
+  };
+
+  // 1. Sync to universal_profiles/{emailDocId}/downloaded_assets/{assetId}
+  if (detectedEmail) {
+    try {
+      const emailDocId = getEmailDocId(detectedEmail);
+      const assetDocRef = doc(db, 'universal_profiles', emailDocId, 'downloaded_assets', asset.id);
+      await Promise.race([
+        setDoc(assetDocRef, cleanAsset, { merge: true }),
+        new Promise((resolve) => setTimeout(resolve, 3000))
+      ]);
+    } catch (err) {
+      console.warn('Universal downloaded asset sync notice:', err);
+    }
+  }
+
+  // 2. Also write to users/{userId}/downloaded_assets/{assetId}
+  if (userId) {
+    try {
+      const userAssetDocRef = doc(db, 'users', userId, 'downloaded_assets', asset.id);
+      await Promise.race([
+        setDoc(userAssetDocRef, cleanAsset, { merge: true }),
+        new Promise((resolve) => setTimeout(resolve, 3000))
+      ]);
+    } catch (err) {
+      console.warn('User downloaded asset sync notice:', err);
+    }
+  }
+};
+
+export const fetchDownloadedAssetsFromFirestore = async (
+  userId?: string,
+  userEmail?: string
+): Promise<DownloadedAsset[]> => {
+  let detectedEmail = (userEmail || auth.currentUser?.email || '').trim().toLowerCase();
+  if (!detectedEmail && typeof window !== 'undefined') {
+    try {
+      const localUser = JSON.parse(localStorage.getItem('et_growth_os_local_user') || '{}');
+      if (localUser?.email) detectedEmail = localUser.email.trim().toLowerCase();
+    } catch (e) {}
+  }
+
+  const assetMap = new Map<string, DownloadedAsset>();
+
+  // 1. Fetch from universal_profiles/{emailDocId}/downloaded_assets
+  if (detectedEmail) {
+    try {
+      const emailDocId = getEmailDocId(detectedEmail);
+      const colRef = collection(db, 'universal_profiles', emailDocId, 'downloaded_assets');
+      const snap = await Promise.race([
+        getDocs(colRef),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 2500))
+      ]);
+      if (snap && (snap as any).forEach) {
+        (snap as any).forEach((docSnap: any) => {
+          const data = docSnap.data() as DownloadedAsset;
+          if (data && data.id) {
+            assetMap.set(data.id, data);
+          }
+        });
+      }
+    } catch (err) {
+      console.warn('Universal downloaded assets fetch notice:', err);
+    }
+  }
+
+  // 2. Fetch from users/{userId}/downloaded_assets
+  if (userId) {
+    try {
+      const colRef = collection(db, 'users', userId, 'downloaded_assets');
+      const snap = await Promise.race([
+        getDocs(colRef),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000))
+      ]);
+      if (snap && (snap as any).forEach) {
+        (snap as any).forEach((docSnap: any) => {
+          const data = docSnap.data() as DownloadedAsset;
+          if (data && data.id && !assetMap.has(data.id)) {
+            assetMap.set(data.id, data);
+          }
+        });
+      }
+    } catch (err) {
+      console.warn('User downloaded assets fetch notice:', err);
+    }
+  }
+
+  // Sort by downloadedAt descending (most recent first)
+  const list = Array.from(assetMap.values()).sort((a, b) => {
+    return new Date(b.downloadedAt).getTime() - new Date(a.downloadedAt).getTime();
+  });
+
+  return list;
+};
+
+export const deleteDownloadedAssetFromFirestore = async (
+  userId: string | undefined,
+  assetId: string,
+  userEmail?: string
+): Promise<void> => {
+  let detectedEmail = (userEmail || auth.currentUser?.email || '').trim().toLowerCase();
+  if (!detectedEmail && typeof window !== 'undefined') {
+    try {
+      const localUser = JSON.parse(localStorage.getItem('et_growth_os_local_user') || '{}');
+      if (localUser?.email) detectedEmail = localUser.email.trim().toLowerCase();
+    } catch (e) {}
+  }
+
+  if (detectedEmail) {
+    try {
+      const emailDocId = getEmailDocId(detectedEmail);
+      await Promise.race([
+        deleteDoc(doc(db, 'universal_profiles', emailDocId, 'downloaded_assets', assetId)),
+        new Promise((resolve) => setTimeout(resolve, 2000))
+      ]);
+    } catch (err) {}
+  }
+
+  if (userId) {
+    try {
+      await Promise.race([
+        deleteDoc(doc(db, 'users', userId, 'downloaded_assets', assetId)),
+        new Promise((resolve) => setTimeout(resolve, 2000))
+      ]);
+    } catch (err) {}
+  }
+};
+

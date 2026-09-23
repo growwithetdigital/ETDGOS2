@@ -145,7 +145,6 @@ ${cleanBlogBody}
 
 === 1 SOCIAL MEDIA CAPTION ===
 ${socialCaptionText}
-SUGGESTED HASHTAGS: ${socialHashtags.join(' ')}
 
 === 1 150-WORD EBLAST ===
 SUBJECT: ${eblastSubject}
@@ -158,7 +157,7 @@ ${gbpData.content}
 CTA: ${gbpData.call_to_action}
 TARGET: ${gbpData.target_keyword}
 `;
-  }, [blogTitle, defaultBlogPost, blogTags, cleanBlogBody, socialCaptionText, socialHashtags, eblastSubject, defaultEblast.preview, eblastBody, gbpData]);
+  }, [blogTitle, defaultBlogPost, blogTags, cleanBlogBody, socialCaptionText, eblastSubject, defaultEblast.preview, eblastBody, gbpData]);
 
   const copyToClipboard = (text: string, key: string) => {
     navigator.clipboard.writeText(text);

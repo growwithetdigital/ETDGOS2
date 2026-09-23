@@ -1,4 +1,9 @@
 import { DownloadedAsset, UserProfile } from '../types';
+import { 
+  saveDownloadedAssetToFirestore, 
+  fetchDownloadedAssetsFromFirestore, 
+  deleteDownloadedAssetFromFirestore 
+} from '../lib/firebase';
 
 export function getCurrentQuarterKey(): string {
   const now = new Date();
@@ -12,12 +17,19 @@ export function getCurrentQuarterLabel(): string {
   return `Q${q} ${now.getFullYear()}`;
 }
 
-// Downloaded assets management
-export function getDownloadedAssets(userId?: string): DownloadedAsset[] {
+// Downloaded assets management with Firestore cross-device synchronization
+export function getDownloadedAssets(userId?: string, userEmail?: string): DownloadedAsset[] {
   if (typeof window === 'undefined') return [];
   try {
     const key = `et_downloaded_assets_${userId || 'guest'}`;
-    const stored = localStorage.getItem(key);
+    let stored = localStorage.getItem(key);
+    
+    // Also check email-keyed storage if userEmail provided
+    if (!stored && userEmail) {
+      const emailKey = `et_downloaded_assets_${userEmail.replace(/[^a-zA-Z0-9]/g, '_')}`;
+      stored = localStorage.getItem(emailKey);
+    }
+
     if (!stored) return [];
     const parsed = JSON.parse(stored);
     return Array.isArray(parsed) ? parsed : [];
@@ -27,16 +39,46 @@ export function getDownloadedAssets(userId?: string): DownloadedAsset[] {
   }
 }
 
-export function addDownloadedAsset(userId: string | undefined, asset: DownloadedAsset): DownloadedAsset[] {
+export function addDownloadedAsset(
+  userId: string | undefined, 
+  asset: DownloadedAsset, 
+  userEmail?: string
+): DownloadedAsset[] {
   if (typeof window === 'undefined') return [asset];
   try {
-    const current = getDownloadedAssets(userId);
+    const current = getDownloadedAssets(userId, userEmail);
     // Keep most recent first, prevent duplicates
     const filtered = current.filter(a => a.id !== asset.id);
     const updated = [asset, ...filtered];
-    const key = `et_downloaded_assets_${userId || 'guest'}`;
-    localStorage.setItem(key, JSON.stringify(updated.slice(0, 50))); // Cap at 50 to conserve storage
     
+    const key = `et_downloaded_assets_${userId || 'guest'}`;
+    try {
+      localStorage.setItem(key, JSON.stringify(updated.slice(0, 50))); // Cap at 50
+    } catch (quotaErr) {
+      // If local storage is full, strip dataUrl for older items in local cache
+      const optimized = updated.map((item, idx) => {
+        if (idx > 5) {
+          return { ...item, dataUrl: undefined };
+        }
+        return item;
+      });
+      try {
+        localStorage.setItem(key, JSON.stringify(optimized.slice(0, 30)));
+      } catch (e) {}
+    }
+
+    if (userEmail) {
+      const emailKey = `et_downloaded_assets_${userEmail.replace(/[^a-zA-Z0-9]/g, '_')}`;
+      try {
+        localStorage.setItem(emailKey, JSON.stringify(updated.slice(0, 50)));
+      } catch (e) {}
+    }
+    
+    // Asynchronously sync to Firestore (universal across mobile, desktop & incognito)
+    saveDownloadedAssetToFirestore(userId, asset, userEmail).catch((fsErr) => {
+      console.warn('Firestore asset save deferred:', fsErr);
+    });
+
     // Dispatch custom event for reactive UI updates
     window.dispatchEvent(new CustomEvent('et_asset_downloaded', { detail: asset }));
     return updated;
@@ -46,17 +88,100 @@ export function addDownloadedAsset(userId: string | undefined, asset: Downloaded
   }
 }
 
-export function removeDownloadedAsset(userId: string | undefined, assetId: string): DownloadedAsset[] {
+export function removeDownloadedAsset(
+  userId: string | undefined, 
+  assetId: string, 
+  userEmail?: string
+): DownloadedAsset[] {
   if (typeof window === 'undefined') return [];
   try {
-    const current = getDownloadedAssets(userId);
+    const current = getDownloadedAssets(userId, userEmail);
     const updated = current.filter(a => a.id !== assetId);
     const key = `et_downloaded_assets_${userId || 'guest'}`;
     localStorage.setItem(key, JSON.stringify(updated));
+
+    if (userEmail) {
+      const emailKey = `et_downloaded_assets_${userEmail.replace(/[^a-zA-Z0-9]/g, '_')}`;
+      try {
+        localStorage.setItem(emailKey, JSON.stringify(updated));
+      } catch (e) {}
+    }
+
+    // Delete from Firestore
+    deleteDownloadedAssetFromFirestore(userId, assetId, userEmail).catch(() => {});
+
     window.dispatchEvent(new CustomEvent('et_asset_downloaded', { detail: { id: assetId, deleted: true } }));
     return updated;
   } catch (e) {
     return [];
+  }
+}
+
+/**
+ * Synchronizes downloaded assets with Firestore across desktop and mobile devices.
+ * Returns the combined, deduplicated assets sorted by downloadedAt.
+ */
+export async function syncDownloadedAssetsAcrossDevices(
+  userId?: string, 
+  userEmail?: string
+): Promise<DownloadedAsset[]> {
+  const localList = getDownloadedAssets(userId, userEmail);
+  try {
+    const remoteList = await fetchDownloadedAssetsFromFirestore(userId, userEmail);
+    if (!remoteList || remoteList.length === 0) {
+      // If we have local items that aren't in Firestore yet, backfill to Firestore
+      if (localList.length > 0) {
+        Promise.all(localList.map(item => saveDownloadedAssetToFirestore(userId, item, userEmail))).catch(() => {});
+      }
+      return localList;
+    }
+
+    // Merge remote and local by id
+    const map = new Map<string, DownloadedAsset>();
+    // First insert remote
+    remoteList.forEach(item => {
+      if (item && item.id) map.set(item.id, item);
+    });
+    // Then merge local (preserving dataUrl if local has richer data)
+    localList.forEach(item => {
+      if (item && item.id) {
+        const existing = map.get(item.id);
+        if (existing) {
+          map.set(item.id, {
+            ...existing,
+            dataUrl: item.dataUrl || existing.dataUrl
+          });
+        } else {
+          map.set(item.id, item);
+          // Backfill this local item to Firestore
+          saveDownloadedAssetToFirestore(userId, item, userEmail).catch(() => {});
+        }
+      }
+    });
+
+    const merged = Array.from(map.values()).sort((a, b) => {
+      return new Date(b.downloadedAt).getTime() - new Date(a.downloadedAt).getTime();
+    });
+
+    // Update local storage
+    if (typeof window !== 'undefined') {
+      const key = `et_downloaded_assets_${userId || 'guest'}`;
+      try {
+        localStorage.setItem(key, JSON.stringify(merged.slice(0, 50)));
+      } catch (e) {}
+      if (userEmail) {
+        const emailKey = `et_downloaded_assets_${userEmail.replace(/[^a-zA-Z0-9]/g, '_')}`;
+        try {
+          localStorage.setItem(emailKey, JSON.stringify(merged.slice(0, 50)));
+        } catch (e) {}
+      }
+      window.dispatchEvent(new CustomEvent('et_asset_downloaded', { detail: { synced: true } }));
+    }
+
+    return merged;
+  } catch (err) {
+    console.warn('syncDownloadedAssetsAcrossDevices error:', err);
+    return localList;
   }
 }
 

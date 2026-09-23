@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import Navbar from './components/Navbar';
 import HeroSection from './components/HeroSection';
@@ -15,14 +15,25 @@ import PlaybookLeadMagnet from './components/PlaybookLeadMagnet';
 import FAQSection from './components/FAQSection';
 import InsightsBlogSection from './components/InsightsBlogSection';
 import Footer from './components/Footer';
-import BookingModal from './components/BookingModal';
-import CalendarModal from './components/CalendarModal';
-import WorkspaceHub from './components/WorkspaceHub';
-import LegalModals from './components/LegalModals';
-import AuthModal from './components/dashboard/AuthModal';
-import WelcomeBookmarkModal from './components/dashboard/WelcomeBookmarkModal';
-import WhiteboardShell from './components/dashboard/WhiteboardShell';
-import { auth, getUserProfile, updateUserProfile, updateUserWelcomeFlag, googleSignOut } from './lib/firebase';
+
+// Code-split heavy modals and executive dashboard for peak mobile performance
+const BookingModal = lazy(() => import('./components/BookingModal'));
+const CalendarModal = lazy(() => import('./components/CalendarModal'));
+const WorkspaceHub = lazy(() => import('./components/WorkspaceHub'));
+const LegalModals = lazy(() => import('./components/LegalModals'));
+const AuthModal = lazy(() => import('./components/dashboard/AuthModal'));
+const WelcomeBookmarkModal = lazy(() => import('./components/dashboard/WelcomeBookmarkModal'));
+const WhiteboardShell = lazy(() => import('./components/dashboard/WhiteboardShell'));
+
+import { 
+  auth, 
+  getUserProfile, 
+  updateUserProfile, 
+  updateUserWelcomeFlag, 
+  googleSignOut,
+  recoverUniversalSessionFromFirestore,
+  subscribeToUniversalProfile
+} from './lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { UserProfile } from './types';
 
@@ -249,6 +260,32 @@ export default function App() {
       return;
     }
 
+    // 1. Cross-Device Deep Link / URL Session Synchronization (e.g., ?sync_email=ericlamarthomas@gmail.com)
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const syncEmail = urlParams.get('sync_email') || urlParams.get('email');
+      const sessionToken = urlParams.get('session');
+
+      if (syncEmail || sessionToken) {
+        const queryTarget = syncEmail || sessionToken || '';
+        recoverUniversalSessionFromFirestore(queryTarget).then((recovered) => {
+          if (recovered?.user) {
+            setCurrentUser(recovered.user);
+            if (recovered.profile) {
+              setUserProfile(recovered.profile);
+            }
+            setIsWhiteboardOpen(true);
+            setShowWelcomeModal(false);
+            // Clean query parameters from address bar gracefully
+            const cleanUrl = window.location.pathname;
+            window.history.replaceState({}, '', cleanUrl);
+          }
+        }).catch((e) => {
+          console.warn('Cross-device deep sync notice:', e);
+        });
+      }
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       // Re-verify signed out flag before restoring session
       const currentlySignedOut = typeof window !== 'undefined' ? localStorage.getItem('et_signed_out') === 'true' : false;
@@ -275,6 +312,21 @@ export default function App() {
             }
           } catch (e) {}
         }
+
+        // Try universal session recovery from Firestore token/email if stored
+        if (typeof window !== 'undefined' && !currentlySignedOut) {
+          const storedEmail = localStorage.getItem('et_growth_os_active_email') || 'ericlamarthomas@gmail.com';
+          const sessionToken = localStorage.getItem('et_active_session_token');
+          if (storedEmail || sessionToken) {
+            recoverUniversalSessionFromFirestore(storedEmail || sessionToken || '').then((rec) => {
+              if (rec?.user) {
+                setCurrentUser(rec.user);
+                if (rec.profile) setUserProfile(rec.profile);
+              }
+            }).catch(() => {});
+          }
+        }
+
         const activeUid = typeof window !== 'undefined' ? localStorage.getItem('et_growth_os_active_uid') : null;
         if (currentlySignedOut || !activeUid) {
           setCurrentUser(null);
@@ -286,6 +338,28 @@ export default function App() {
     });
     return () => unsubscribe();
   }, []);
+
+  // 2. Real-Time Universal Synchronization Listener across Desktop, Mobile, and Incognito
+  useEffect(() => {
+    const activeEmail = currentUser?.email || userProfile?.email;
+    if (!activeEmail) return;
+
+    const unsub = subscribeToUniversalProfile(activeEmail, (incomingProfile) => {
+      if (incomingProfile) {
+        setUserProfile((prev) => {
+          if (!prev) return incomingProfile;
+          return {
+            ...prev,
+            ...incomingProfile,
+            // Preserve locked status if already established
+            is_profile_locked: prev.is_profile_locked || incomingProfile.is_profile_locked
+          };
+        });
+      }
+    });
+
+    return () => unsub();
+  }, [currentUser?.email, userProfile?.email]);
 
   const handleOpenBooking = () => {
     setIsBookingOpen(true);
@@ -365,41 +439,57 @@ export default function App() {
     } as User;
 
     return (
-      <motion.div 
-        key="dashboard-view"
-        initial={{ opacity: 0, scale: 0.995, filter: 'blur(3px)' }}
-        animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
-        exit={{ opacity: 0, scale: 0.995, filter: 'blur(3px)' }}
-        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-        className="min-h-screen selection:bg-brand-cyan/30"
-      >
-        <WhiteboardShell
-          user={activeSessionUser}
-          profile={userProfile}
-          onRefreshProfile={(updatedProfile?: UserProfile) => {
-            if (updatedProfile) {
-              setUserProfile(updatedProfile);
-            } else {
-              fetchProfile(activeSessionUser.uid);
-            }
-          }}
-          onCloseDashboard={() => setIsWhiteboardOpen(false)}
-          onOpenBooking={handleOpenBooking}
-          onSignOut={handleSignOut}
-        />
-
-        {showWelcomeModal && (
-          <WelcomeBookmarkModal
-            uid={activeSessionUser.uid}
-            isOpen={showWelcomeModal}
-            onClose={handleEnterGrowthOS}
-            onEnterGOS={handleEnterGrowthOS}
+      <Suspense fallback={
+        <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-center space-y-4">
+          <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+            <div className="w-6 h-6 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+          </div>
+          <div className="space-y-1">
+            <h3 className="font-display text-sm font-bold uppercase tracking-widest text-white">
+              Loading Growth OS...
+            </h3>
+            <p className="font-mono text-xs text-slate-400">
+              Synchronizing Universal Workspace & Downloads
+            </p>
+          </div>
+        </div>
+      }>
+        <motion.div 
+          key="dashboard-view"
+          initial={{ opacity: 0, scale: 0.995, filter: 'blur(3px)' }}
+          animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+          exit={{ opacity: 0, scale: 0.995, filter: 'blur(3px)' }}
+          transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+          className="min-h-screen selection:bg-brand-cyan/30"
+        >
+          <WhiteboardShell
+            user={activeSessionUser}
+            profile={userProfile}
+            onRefreshProfile={(updatedProfile?: UserProfile) => {
+              if (updatedProfile) {
+                setUserProfile(updatedProfile);
+              } else {
+                fetchProfile(activeSessionUser.uid);
+              }
+            }}
+            onCloseDashboard={() => setIsWhiteboardOpen(false)}
+            onOpenBooking={handleOpenBooking}
+            onSignOut={handleSignOut}
           />
-        )}
 
-        <BookingModal isOpen={isBookingOpen} onClose={() => setIsBookingOpen(false)} />
-        <CalendarModal isOpen={isCalendarOpen} onClose={() => setIsCalendarOpen(false)} />
-      </motion.div>
+          {showWelcomeModal && (
+            <WelcomeBookmarkModal
+              uid={activeSessionUser.uid}
+              isOpen={showWelcomeModal}
+              onClose={handleEnterGrowthOS}
+              onEnterGOS={handleEnterGrowthOS}
+            />
+          )}
+
+          <BookingModal isOpen={isBookingOpen} onClose={() => setIsBookingOpen(false)} />
+          <CalendarModal isOpen={isCalendarOpen} onClose={() => setIsCalendarOpen(false)} />
+        </motion.div>
+      </Suspense>
     );
   }
 
@@ -479,44 +569,46 @@ export default function App() {
         onOpenSecurity={() => handleOpenLegal('security')}
       />
 
-      {/* INTEGRATIONS & PORTAL POPUPS */}
-      <BookingModal isOpen={isBookingOpen} onClose={() => setIsBookingOpen(false)} />
-      <CalendarModal isOpen={isCalendarOpen} onClose={() => setIsCalendarOpen(false)} />
-      <WorkspaceHub isOpen={isWorkspaceOpen} onClose={() => setIsWorkspaceOpen(false)} />
-      
-      {/* Auth Modal */}
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-        onSuccess={(user) => {
-          if (typeof window !== 'undefined') {
-            localStorage.removeItem('et_signed_out');
-            localStorage.setItem('et_growth_os_active_uid', user.uid);
-            localStorage.setItem('et_growth_os_local_user', JSON.stringify(user));
-          }
-          setCurrentUser(user);
-          fetchProfile(user.uid);
-          setShowWelcomeModal(false);
-          setIsWhiteboardOpen(true);
-        }}
-      />
-
-      {/* First-time Welcome & Bookmark Modal */}
-      {showWelcomeModal && (
-        <WelcomeBookmarkModal
-          uid={effectiveUser?.uid || 'guest_user'}
-          isOpen={showWelcomeModal}
-          onClose={handleEnterGrowthOS}
-          onEnterGOS={handleEnterGrowthOS}
+      {/* INTEGRATIONS & PORTAL POPUPS (Lazy Loaded) */}
+      <Suspense fallback={null}>
+        <BookingModal isOpen={isBookingOpen} onClose={() => setIsBookingOpen(false)} />
+        <CalendarModal isOpen={isCalendarOpen} onClose={() => setIsCalendarOpen(false)} />
+        <WorkspaceHub isOpen={isWorkspaceOpen} onClose={() => setIsWorkspaceOpen(false)} />
+        
+        {/* Auth Modal */}
+        <AuthModal
+          isOpen={isAuthModalOpen}
+          onClose={() => setIsAuthModalOpen(false)}
+          onSuccess={(user) => {
+            if (typeof window !== 'undefined') {
+              localStorage.removeItem('et_signed_out');
+              localStorage.setItem('et_growth_os_active_uid', user.uid);
+              localStorage.setItem('et_growth_os_local_user', JSON.stringify(user));
+            }
+            setCurrentUser(user);
+            fetchProfile(user.uid);
+            setShowWelcomeModal(false);
+            setIsWhiteboardOpen(true);
+          }}
         />
-      )}
 
-      {/* Dynamic Legal Modals */}
-      <LegalModals 
-        isOpen={isLegalOpen} 
-        onClose={() => setIsLegalOpen(false)} 
-        type={legalType} 
-      />
+        {/* First-time Welcome & Bookmark Modal */}
+        {showWelcomeModal && (
+          <WelcomeBookmarkModal
+            uid={effectiveUser?.uid || 'guest_user'}
+            isOpen={showWelcomeModal}
+            onClose={handleEnterGrowthOS}
+            onEnterGOS={handleEnterGrowthOS}
+          />
+        )}
+
+        {/* Dynamic Legal Modals */}
+        <LegalModals 
+          isOpen={isLegalOpen} 
+          onClose={() => setIsLegalOpen(false)} 
+          type={legalType} 
+        />
+      </Suspense>
 
       {/* Interactive Toast Notification Panel */}
       <AnimatePresence>

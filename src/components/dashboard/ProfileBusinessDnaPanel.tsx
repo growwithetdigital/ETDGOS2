@@ -198,6 +198,11 @@ export default function ProfileBusinessDnaPanel({
       brand_voice: desiredTone,
       is_profile_locked: true,
       profile_locked_at: new Date().toISOString(),
+      dashboard_progress: {
+        active_tab: 'profile_dna',
+        dna_locked: true,
+        last_active_at: new Date().toISOString(),
+      },
       brand_dna: {
         voice_archetype: desiredTone,
         industry: detectedIndustry,

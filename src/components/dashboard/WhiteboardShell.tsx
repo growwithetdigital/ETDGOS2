@@ -18,7 +18,8 @@ import {
   checkUserGenerationEligibility, 
   fetchUserContentLibrary, 
   saveContentToLibrary,
-  googleSignOut 
+  googleSignOut,
+  updateDashboardProgress
 } from '../../lib/firebase';
 import { 
   stripMarkdownFormatting, 
@@ -163,16 +164,19 @@ export default function WhiteboardShell({
   const [copiedDailyTip, setCopiedDailyTip] = useState(false);
   const [lockedTabNotice, setLockedTabNotice] = useState<string | null>(null);
 
-  // Track downloads count in Downloads Vault
-  const [downloadCount, setDownloadCount] = useState(() => getDownloadedAssets(user?.uid).length);
+  const userEmail = (user?.email || profile?.email || '').trim().toLowerCase();
+  const emailKey = userEmail ? userEmail.replace(/[^a-zA-Z0-9]/g, '_') : '';
+
+  // Track downloads count in Downloads Vault (synced across devices)
+  const [downloadCount, setDownloadCount] = useState(() => getDownloadedAssets(user?.uid, userEmail).length);
 
   useEffect(() => {
     const updateCount = () => {
-      setDownloadCount(getDownloadedAssets(user?.uid).length);
+      setDownloadCount(getDownloadedAssets(user?.uid, userEmail).length);
     };
     window.addEventListener('et_asset_downloaded', updateCount);
     return () => window.removeEventListener('et_asset_downloaded', updateCount);
-  }, [user?.uid]);
+  }, [user?.uid, userEmail]);
 
   // Track user active time and visits per section for personal telemetry
   useEffect(() => {
@@ -203,8 +207,6 @@ export default function WhiteboardShell({
   const isOwner = isAuthorizedForTelemetry(user?.email, profile?.email);
 
   const isFreeTier = profile?.tier === 'free' || !profile?.tier;
-  const userEmail = (user?.email || profile?.email || '').trim().toLowerCase();
-  const emailKey = userEmail ? userEmail.replace(/[^a-zA-Z0-9]/g, '_') : '';
   const isProfileLocked = Boolean(
     profile?.is_profile_locked || 
     (typeof window !== 'undefined' && (
@@ -359,6 +361,16 @@ export default function WhiteboardShell({
 
   const activeNavItems = dashboardTabs;
 
+  // Cross-device tab hydration from Firestore session progress
+  useEffect(() => {
+    if (profile?.dashboard_progress?.active_tab) {
+      const remoteTab = profile.dashboard_progress.active_tab as NavTabId;
+      if (remoteTab === 'profile_dna' || isProfileLocked) {
+        setActiveTab(remoteTab);
+      }
+    }
+  }, [profile?.dashboard_progress?.active_tab, isProfileLocked]);
+
   const handleTabClick = (tabId: NavTabId, isGated: boolean) => {
     if (isGated && !isProfileLocked) {
       setLockedTabNotice('🔒 Profile & Business DNA Lock Required. Please calibrate your website and click "Save & Lock Profile" in Tab 1 to unlock your Content Studio, Industry Market Report, and Learning Feed.');
@@ -368,6 +380,14 @@ export default function WhiteboardShell({
     }
     setActiveTab(tabId);
     setLockedTabNotice(null);
+    if (user?.uid) {
+      updateDashboardProgress(user.uid, userEmail, {
+        active_tab: tabId,
+        last_visited_tab: tabId,
+        dna_locked: isProfileLocked,
+        last_active_at: new Date().toISOString()
+      });
+    }
   };
 
   const handleSignOutClick = async () => {
@@ -393,9 +413,9 @@ export default function WhiteboardShell({
     >
       
       {/* ==================================================================== */}
-      {/* 1. GAMING CONSOLE / APPLE OS BOOT HUD BAR (Top Deck) */}
+      {/* 1. GAMING CONSOLE / APPLE OS BOOT HUD BAR (Top Deck - Hidden on mobile to save vertical space) */}
       {/* ==================================================================== */}
-      <div className="bg-slate-950/90 border-b border-cyan-500/20 px-4 sm:px-8 py-2 text-left backdrop-blur-xl">
+      <div className="hidden sm:block bg-slate-950/90 border-b border-cyan-500/20 px-4 sm:px-8 py-2 text-left backdrop-blur-xl">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-3">
             <span className="relative flex h-2 w-2">
@@ -467,7 +487,7 @@ export default function WhiteboardShell({
           </div>
 
           {/* Right: Controls, Theme, Telemetry & Clean Sign Out */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3">
             
             {/* Theme Balance Toggle (Balanced Light/Dark vs Midnight) */}
             <button
@@ -479,7 +499,7 @@ export default function WhiteboardShell({
                   localStorage.setItem('et_gos_theme', next ? 'dark' : 'balanced');
                 }
               }}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-[var(--border)] bg-[var(--surface2)] text-[var(--text)] hover:bg-[var(--surface)] font-mono text-xs transition-all cursor-pointer shadow-xs min-h-[40px]"
+              className="inline-flex items-center justify-center gap-1.5 p-2 sm:px-2.5 sm:py-1.5 rounded-xl border border-[var(--border)] bg-[var(--surface2)] text-[var(--text)] hover:bg-[var(--surface)] font-mono text-xs transition-all cursor-pointer shadow-xs min-h-[38px] sm:min-h-[40px]"
               title={dark ? "Switch to Balanced Contrast (Website Match)" : "Switch to Midnight Dark"}
             >
               {dark ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5 text-cyan-600" />}
@@ -504,11 +524,11 @@ export default function WhiteboardShell({
             <button
               type="button"
               onClick={() => setIsTelemetryOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-cyan-500/40 bg-cyan-950/50 text-cyan-300 font-mono text-[11px] font-bold hover:bg-cyan-900/60 transition-all cursor-pointer shadow-sm min-h-[40px]"
+              className="inline-flex items-center justify-center gap-1.5 p-2 sm:px-3 sm:py-1.5 rounded-xl border border-cyan-500/40 bg-cyan-950/50 text-cyan-300 font-mono text-[11px] font-bold hover:bg-cyan-900/60 transition-all cursor-pointer shadow-sm min-h-[38px] sm:min-h-[40px]"
               title={isOwner ? "View Platform & Executive Telemetry" : "View Your Activity & Usage Telemetry"}
               id="telemetry-modal-toggle-btn"
             >
-              <BarChart3 className="w-3.5 h-3.5 text-brand-cyan" />
+              <BarChart3 className="w-3.5 h-3.5 text-cyan-400" />
               <span className="hidden md:inline">Telemetry</span>
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             </button>
@@ -517,18 +537,18 @@ export default function WhiteboardShell({
             <button
               type="button"
               onClick={onOpenBooking}
-              className="inline-flex items-center gap-1.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 text-white font-display text-[11px] font-bold uppercase tracking-wider px-3.5 py-1.5 rounded-xl transition-all cursor-pointer shadow-sm min-h-[40px]"
+              className="inline-flex items-center justify-center gap-1.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 text-white font-display text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 sm:px-3.5 py-1.5 rounded-xl transition-all cursor-pointer shadow-sm min-h-[38px] sm:min-h-[40px]"
             >
               <Crown className="w-3.5 h-3.5 text-amber-300" />
               <span className="hidden sm:inline">Speak with Us</span>
               <span className="sm:hidden">Consult</span>
             </button>
 
-            {/* Sign Out Button (Unmistakable & Guaranteed to keep user signed out) */}
+            {/* Sign Out Button */}
             <button
               type="button"
               onClick={handleSignOutClick}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono font-bold text-[var(--muted)] hover:text-white rounded-xl bg-[var(--surface2)] hover:bg-rose-950/60 hover:text-rose-300 hover:border-rose-500/40 border border-[var(--border)] transition-all cursor-pointer shadow-xs min-h-[40px]"
+              className="inline-flex items-center justify-center gap-1.5 p-2 sm:px-3 sm:py-1.5 text-xs font-mono font-bold text-[var(--muted)] hover:text-white rounded-xl bg-[var(--surface2)] hover:bg-rose-950/60 hover:text-rose-300 hover:border-rose-500/40 border border-[var(--border)] transition-all cursor-pointer shadow-xs min-h-[38px] sm:min-h-[40px]"
               title="Sign Out of Growth OS"
               id="whiteboard-signout-btn"
             >
@@ -541,10 +561,10 @@ export default function WhiteboardShell({
       </header>
 
       {/* ==================================================================== */}
-      {/* 3. DYNAMIC NAVIGATION DOCK (100% VISIBLE, NO HORIZONTAL SCROLL) */}
+      {/* 3. DYNAMIC NAVIGATION DOCK (Responsive 3x2 on Mobile, 6 Cols on Desktop) */}
       {/* ==================================================================== */}
       <div className="bg-[var(--surface2)]/90 border-b border-[var(--border)] px-2 sm:px-4 md:px-8 sticky top-[57px] z-30 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto grid grid-cols-5 gap-1 sm:gap-2 py-2 w-full">
+        <div className="max-w-7xl mx-auto grid grid-cols-3 sm:grid-cols-6 gap-1.5 sm:gap-2 py-2 w-full">
           {activeNavItems.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -557,7 +577,7 @@ export default function WhiteboardShell({
                 onClick={() => handleTabClick(tab.id as NavTabId, tab.isGated)}
                 id={`dashboard-tab-${tab.id}`}
                 title={tab.fullLabel || tab.label}
-                className={`relative px-1 sm:px-3 py-2 rounded-xl font-display text-[10px] sm:text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1 sm:gap-1.5 transition-all cursor-pointer w-full text-center truncate ${
+                className={`relative px-1.5 sm:px-3 py-2 sm:py-2 rounded-xl font-display text-[10px] sm:text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1 sm:gap-1.5 transition-all cursor-pointer w-full text-center truncate min-h-[38px] ${
                   isActive
                     ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-slate-950 shadow-md shadow-cyan-500/25 font-black'
                     : tab.isGated
@@ -568,7 +588,7 @@ export default function WhiteboardShell({
                 <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-slate-950' : tab.isGated ? 'text-amber-400/80' : 'text-[var(--accent)]'}`} />
                 <span className="truncate">{tab.label}</span>
                 {'badge' in tab && (
-                  <span className={`hidden lg:inline-flex text-[9px] font-mono px-1.5 py-0.5 rounded font-semibold shrink-0 ${
+                  <span className={`text-[8px] sm:text-[9px] font-mono px-1 sm:px-1.5 py-0.5 rounded font-semibold shrink-0 ${
                     isActive ? 'bg-slate-950/20 text-slate-950' : tab.isGated ? 'bg-amber-950/60 text-amber-400 border border-amber-500/30' : 'bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/30'
                   }`}>
                     {tab.badge}
@@ -602,7 +622,7 @@ export default function WhiteboardShell({
       {/* ==================================================================== */}
       {/* 4. MAIN WORKSPACE BODY (With Operating System motion transitions) */}
       {/* ==================================================================== */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
