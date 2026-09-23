@@ -668,34 +668,10 @@ export default function PostAnalyticsAnalyzer({
             </button>
           </div>
 
-          {/* Animated Brand Logo in Content Studio */}
-          <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm space-y-3" id="content-studio-animated-logo-card">
-            <div className="flex items-center justify-between pb-2 border-b border-[var(--border)]">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-                <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-cyan-500">
-                  Growth OS Brand Engine
-                </span>
-              </div>
-              <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-semibold border border-cyan-500/20">
-                Official Motion
-              </span>
-            </div>
-
-            <div className="pt-1 flex items-center justify-center">
-              <AnimatedLogo
-                showAura={true}
-                aspect="square"
-                caption="Engage · Convert · Grow"
-                containerClassName="w-full max-w-[320px]"
-              />
-            </div>
-          </div>
-
         </div>
 
         {/* Right Column: Visible Interactive Chart + ET Digital Prediction Engine (7 cols) */}
-        <div className="lg:col-span-7 space-y-6">
+        <div className="lg:col-span-7">
           
           {/* THE INTERACTIVE VISIBLE CHART & GRAPH */}
           <div className="rounded-3xl border border-cyan-500/30 bg-slate-950 p-6 sm:p-7 shadow-xl space-y-5 text-white relative overflow-hidden">
@@ -1023,8 +999,47 @@ export default function PostAnalyticsAnalyzer({
 
           </div>
 
-          {/* Industry Data & Research Assessment (Reputable Industry Sources, No Links) */}
-          <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 space-y-3 shadow-sm text-left">
+        </div>
+
+      </div>
+
+      {/* Paired Bottom Row: Animated Brand Engine Logo aligned side-by-side with Industry Research text */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+        
+        {/* Left Column: Animated Brand Logo (5 cols) */}
+        <div className="lg:col-span-5 flex">
+          <div className="w-full rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm flex flex-col justify-between" id="content-studio-animated-logo-card">
+            <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-cyan-500">
+                  Growth OS Brand Engine
+                </span>
+              </div>
+              <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-semibold border border-cyan-500/20">
+                Official Motion
+              </span>
+            </div>
+
+            <div className="py-4 flex items-center justify-center flex-1">
+              <AnimatedLogo
+                showAura={true}
+                aspect="square"
+                caption="Engage · Convert · Grow"
+                containerClassName="w-full max-w-[260px] sm:max-w-[280px]"
+              />
+            </div>
+
+            <div className="pt-3 border-t border-[var(--border)] flex items-center justify-between text-[10px] font-mono text-[var(--muted)]">
+              <span className="text-cyan-500 font-semibold">Brand Identity</span>
+              <span>Universal Motion Engine</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column: Industry Data & Research Assessment (7 cols) */}
+        <div className="lg:col-span-7 flex">
+          <div className="w-full rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 space-y-3 shadow-sm text-left flex flex-col justify-between">
             <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center">
@@ -1045,7 +1060,7 @@ export default function PostAnalyticsAnalyzer({
               </span>
             </div>
 
-            <div className="p-4 sm:p-5 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] text-xs sm:text-sm text-[var(--text)] leading-relaxed space-y-2.5 font-sans">
+            <div className="p-4 sm:p-5 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] text-xs sm:text-sm text-[var(--text)] leading-relaxed space-y-2.5 font-sans flex-1 flex flex-col justify-between">
               <p>
                 {industryExpertsAssessment}
               </p>
@@ -1060,7 +1075,6 @@ export default function PostAnalyticsAnalyzer({
               </div>
             </div>
           </div>
-
         </div>
 
       </div>
