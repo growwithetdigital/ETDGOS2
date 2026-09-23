@@ -464,38 +464,19 @@ export default function PostAnalyticsAnalyzer({
           </div>
 
           {/* Action Header Controls */}
-          <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
-            <button
-              type="button"
-              onClick={handleSaveData}
-              disabled={isSaving}
-              className="px-5 py-3 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 text-slate-950 font-display text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-cyan-500/20 cursor-pointer transition-all active:scale-95 disabled:opacity-50"
-              id="save-campaign-data-btn"
-            >
-              {saveSuccess ? (
-                <>
-                  <Check className="w-4 h-4 text-slate-950" />
-                  <span>Saved to Profile!</span>
-                </>
-              ) : (
-                <>
-                  <Save className={`w-4 h-4 ${isSaving ? 'animate-spin' : ''}`} />
-                  <span>{isSaving ? 'Saving...' : 'Save & Sync Results'}</span>
-                </>
-              )}
-            </button>
-
-            {hasUserEnteredAnyData && (
+          {hasUserEnteredAnyData && (
+            <div className="flex items-center gap-2.5 shrink-0">
               <button
                 type="button"
                 onClick={handleResetToZero}
-                className="px-3.5 py-3 rounded-xl border border-slate-700 hover:border-red-500/50 bg-slate-900/80 hover:bg-red-500/10 text-slate-400 hover:text-red-400 font-mono text-xs transition-all cursor-pointer"
+                className="px-3.5 py-2.5 rounded-xl border border-slate-700 hover:border-red-500/50 bg-slate-900/80 hover:bg-red-500/10 text-slate-400 hover:text-red-400 font-mono text-xs transition-all cursor-pointer flex items-center gap-1.5"
                 title="Reset all metrics to 0"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Reset to 0</span>
               </button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -664,16 +645,26 @@ export default function PostAnalyticsAnalyzer({
 
           </div>
 
-          {/* Quick Save Button */}
+          {/* Unified Primary CTA directly under manual data inputs */}
           <div className="pt-2">
             <button
               type="button"
               onClick={handleSaveData}
               disabled={isSaving}
-              className="w-full py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-display text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 shadow-md shadow-cyan-500/20 active:scale-95"
+              id="save-campaign-data-btn"
+              className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-slate-950 font-display text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 shadow-lg shadow-cyan-500/20 active:scale-95"
             >
-              <Save className="w-4 h-4" />
-              <span>{saveSuccess ? 'Results Saved & Synced!' : 'Save & Update Growth Chart'}</span>
+              {saveSuccess ? (
+                <>
+                  <Check className="w-4 h-4 text-slate-950" />
+                  <span>Results Saved & Synced!</span>
+                </>
+              ) : (
+                <>
+                  <Save className={`w-4 h-4 text-slate-950 ${isSaving ? 'animate-spin' : ''}`} />
+                  <span>{isSaving ? 'Saving & Syncing...' : 'Save & Sync Results'}</span>
+                </>
+              )}
             </button>
           </div>
 
